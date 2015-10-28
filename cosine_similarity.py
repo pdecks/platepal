@@ -1,4 +1,6 @@
 """
+Documentation and comments by Patricia Decker. 2015-10-27
+
 Basic Statistical NLP Part 2 - TF-IDF and Cosine Similarity
 by: Bill Chambers, 2014-12-22
 http://billchambers.me/tutorials/2014/12/22/cosine-similarity-explained-in-python.html

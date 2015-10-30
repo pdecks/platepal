@@ -100,7 +100,7 @@ pdecks_tfidf = tfidf_transformer.fit_transform(pdecks_counts)
 # cv = ShuffleSplit(X_train.shape[0], n_iter=10, test_size=0.2, random_state=0)
 
 # Split the dataset into a test set and a training set
-pdb.set_trace()  # debugging
+
 X = pdecks_tfidf
 y = pdecks_reviews.target
 
@@ -127,40 +127,38 @@ for doc, category in zip(new_doc, predicted):
 ## CROSS-VALIDATING CLASSIFIERS ##
 
 
-## CREATING PIPELINES FOR CLASSIFIERS ##
-# Pipeline([(vectorizer), (transformer), (classifier)])
-text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
-                     ('tfidf', TfidfTransformer()),
-                     ('clf', LinearSVC()),
-                     ])
+# ## CREATING PIPELINES FOR CLASSIFIERS ##
+# # Pipeline([(vectorizer), (transformer), (classifier)])
+# text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
+#                      ('tfidf', TfidfTransformer()),
+#                      ('clf', LinearSVC()),
+#                      ])
 
-# train the model
-text_clf = text_clf.fit(X_train, y_train)
-predicted = text_clf.predict(new_doc)
+# # train the model
+# text_clf = text_clf.fit(X_train, y_train)
+# predicted = text_clf.predict(new_doc)
 
-for doc, category in zip(new_doc, predicted):
-    print "%r => %s" % (doc, pdecks_reviews.target_names[category])
+# for doc, category in zip(new_doc, predicted):
+#     print "%r => %s" % (doc, pdecks_reviews.target_names[category])
 
 
-## EVALUATE PERFORMANCE ##
-predicted = text_clf.predict(X_test)
-np.mean(predicted == y_test) # was 33.3% with 75-25 split on 45 reviews. Ouch.
+# ## EVALUATE PERFORMANCE ##
+# predicted = text_clf.predict(X_test)
+# np.mean(predicted == y_test) # was 33.3% with 75-25 split on 45 reviews. Ouch.
 
 ## TUNE THE HYPERPARAMETERS ##
 # apply the cross-validation iterator on the training set
 tuned_parameters = [{'C': [1, 10, 100, 1000],
-                     'penalty': ['l1', 'l2'],
                      'tol': [1e-3, 1e-4, 1e-5]
                      }]
 
 scores = ['precision', 'recall']
-
+# pdb.set_trace()  # debugging
 for score in scores:
     print "# Tuning hyper-parameters for %s" % score
     print
 
-    clf = GridSearchCV(LinearSVC(), tuned_parameters, cv=10,
-                       scoring='%s_weighted' % score)
+    clf = GridSearchCV(LinearSVC(), tuned_parameters, cv=5)
 
     clf.fit(X_train, y_train)
 

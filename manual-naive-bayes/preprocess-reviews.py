@@ -1,7 +1,7 @@
 """
 Preprocesses .txt review files for importing into sklearn
 as a dataset of bunches. Splits the text on pipes and rewrites the files,
-leaving only the review text.
+leaving only the review text. ONLY RUN ONCE if text files contain pipes.
 
 by Patricia Decker 10/29/2015
 """

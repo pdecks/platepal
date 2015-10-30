@@ -105,16 +105,16 @@ X = pdecks_tfidf
 y = pdecks_reviews.target
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=0)
+    X, y, test_size=0.2, random_state=0) ## shuffle here? need equal representation of features in each
 
 ## DEVELOP CLASSIFIER
 # Linear SVC, recommended by sklearn machine learning map
 # clf = Classifier().fit(features_matrix, targets_vector)
-clf = LinearSVC().fit(X_train, y_train)
+clf = LinearSVC().fit(X_train, y_train) ## double check that this is/isn't full set
 
 new_doc = ['I love gluten-free foods. This restaurant is the best.']
 
-X_new_counts = count_vect.transform(new_doc)  # transform only, as vectorizer is fit to training data
+X_new_counts = count_vect.transform(new_doc)  ## transform only, as vectorizer is fit to training data
 X_new_tfidf = tfidf_transformer.transform(X_new_counts)
 
 # predict label (target) for new document
@@ -176,7 +176,7 @@ for score in scores:
     print "Detailed classification report:"
     print
     print "The model is trained on the full development set."
-    print "The scores are computed on the full evaluatin set."
+    print "The scores are computed on the full evaluation set."
     print
     y_true, y_pred = y_test, clf.predict(X_test)
     print classification_report(y_true, y_pred)

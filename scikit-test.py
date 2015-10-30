@@ -17,7 +17,7 @@ The classifier will be classifying on review_dict['text'], the review.
 target
 """
 import numpy as np
-from sklearn.datasets import base as sk_base
+from sklearn import base as sk_base
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer

@@ -2,3 +2,4 @@ env/
 *.pyc
 *secret*
 sklearn_tut_workspace/
+misc/

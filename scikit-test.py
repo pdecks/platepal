@@ -1,8 +1,6 @@
 """
 Performing NLP using scikit-learn. Supervised machine learning.
-
 by Patricia Decker, 10/28/2015, Hackbright Academy Independent Project
-
 review_dict = {'type': 'review',
                'business_id': rest_name,
                'user_id': 'greyhoundmama',
@@ -12,12 +10,11 @@ review_dict = {'type': 'review',
                'votes': vote_dict
                'target': default=None
                }
-
 The classifier will be classifying on review_dict['text'], the review.
 target
 """
 import numpy as np
-from sklearn import base as sk_base
+from sklearn.datasets import base as sk_base
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer

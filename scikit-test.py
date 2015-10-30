@@ -16,8 +16,9 @@ review_dict = {'type': 'review',
 The classifier will be classifying on review_dict['text'], the review.
 target
 """
-
+import numpy as np
 from sklearn.datasets import base as sk_base
+from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
@@ -37,9 +38,16 @@ categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 # load the list of files matching the categories
 # BEWARE OF LURKING .DS_Store files!! those are not 'utf-8'
 # and will throw a UnicodeDecodeError
-pdecks_train = sk_base.load_files(container_path,
+pdecks_reviews = sk_base.load_files(container_path,
                                   categories=categories,
                                   encoding='utf-8')
+# Split the dataset into a test set and a training set
+X = pdecks_reviews.data
+y = pdecks_reviews.target
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=0)
+
 ## for un-processed .txt. ##
 # # create list of filenames
 # filelist = rf.generate_filelist(container_pay)
@@ -60,8 +68,8 @@ pdecks_train = sk_base.load_files(container_path,
 # using ngram_range flage, enable bigrams in addition to single words
 count_vect = CountVectorizer(ngram_range=(1, 2))
 
-# extract features from pdecks_train data
-X_train_counts = count_vect.fit_transform(pdecks_train.data)
+# extract features from pdecks_reviews data
+X_train_counts = count_vect.fit_transform(X_train)
 
 ## PART OF SPEECH TAGGING ##
 
@@ -82,17 +90,17 @@ X_train_counts = count_vect.fit_transform(pdecks_train.data)
 # create an instance of TfidTransformer that performs both tf & idf
 tfidf_transformer = TfidfTransformer()
 
-# transform the pdecks_train features
+# transform the pdecks_reviews features
 X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
 
 
-## SPLITTING TRAINING SETS & TEST SETS ###############################
+
 
 
 ## DEVELOP CLASSIFIER / PIPELINE ##
 # Linear SVC, recommended by sklearn machine learning map
 # clf = Classifier().fit(features_matrix, targets_vector)
-clf = LinearSVC().fit(X_train_tfidf, pdecks_train.target)
+clf = LinearSVC().fit(X_train_tfidf, y_train)
 
 new_doc = ['I love gluten-free foods. This restaurant is the best.']
 
@@ -104,7 +112,7 @@ predicted = clf.predict(X_new_tfidf)
 
 # retrieve label name
 for doc, category in zip(new_doc, predicted):
-    print "%r => %s" % (doc, pdecks_train.target_names[category])
+    print "%r => %s" % (doc, pdecks_reviews.target_names[category])
 
 ## CROSS-VALIDATING CLASSIFIERS ##
 
@@ -117,4 +125,13 @@ text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
                      ])
 
 # train the model
-text_clf = text_clf.fit(pdecks_train.data, pdecks_train.target)
+text_clf = text_clf.fit(X_train, y_train)
+predicted = text_clf.predict(new_doc)
+
+for doc, category in zip(new_doc, predicted):
+    print "%r => %s" % (doc, pdecks_reviews.target_names[category])
+
+
+## EVALUATE PERFORMANCE ##
+predicted = text_clf.predict(X_test)
+np.mean(predicted == y_test)

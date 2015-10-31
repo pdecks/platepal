@@ -1,6 +1,8 @@
 """
 Performing NLP using scikit-learn. Supervised machine learning.
+
 by Patricia Decker, 10/28/2015, Hackbright Academy Independent Project
+
 review_dict = {'type': 'review',
                'business_id': rest_name,
                'user_id': 'greyhoundmama',
@@ -10,15 +12,18 @@ review_dict = {'type': 'review',
                'votes': vote_dict
                'target': default=None
                }
+
 The classifier will be classifying on review_dict['text'], the review.
 target
 """
+import random
 import numpy as np
 from sklearn.datasets import base as sk_base
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
+from sklearn.cross_validation import KFold
 from sklearn.pipeline import Pipeline
 
 # import reviewfilter as rf
@@ -27,8 +32,9 @@ from sklearn.pipeline import Pipeline
 #### LOAD DATA ########################################################
 
 # directory containing toy data set: reviews by pdecks as .txt files
-# must be preprocessed with 'preprocess-reviews.py'
-container_path = '/Users/pdecks/hackbright/project/Yelp/mvp/pdecks-reviews/'
+# must be preprocessed with 'preprocess-reviews.py' if the .txt files
+# contain more than just review information delimited on pipes
+container_path = 'pdecks-reviews/'
 
 categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 
@@ -38,31 +44,26 @@ categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 pdecks_reviews = sk_base.load_files(container_path,
                                   categories=categories,
                                   encoding='utf-8')
+
 # Split the dataset into a test set and a training set
-X = pdecks_reviews.data
+X = np.array(pdecks_reviews.data)
 y = pdecks_reviews.target
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.25, random_state=0)
+# TODO: use k folds on the sparse matrix, rather than on raw data,
+# if possible, b/c otherwise might inadvertently introduce bias
+# X_train, X_test, y_train, y_test = train_test_split(
+#     X, y, test_size=0.25, random_state=0)
 
-## for un-processed .txt. ##
-# # create list of filenames
-# filelist = rf.generate_filelist(container_pay)
+X_train, X_test = np.copy(X), np.copy(X)
+y_train, y_test = np.copy(y), np.copy(y)
 
-# # convert .txt review files to list of dictionaries (matches Yelp JSON)
-# my_reviews = rf.generate_reviews_dict(filelist)
-
-# for review in my_reviews:
-#     print review['business_id']
-
-## end un-processed .txt ##
 
 
 #### EXTRACTING FEATURES #####
 
 ## TOKENIZATION ##
 # create an instance of CountVectorize feature extractor
-# using ngram_range flage, enable bigrams in addition to single words
+# using ngram_range flag, enable bigrams in addition to single words
 count_vect = CountVectorizer(ngram_range=(1, 2))
 
 # extract features from pdecks_reviews data
@@ -91,10 +92,7 @@ tfidf_transformer = TfidfTransformer()
 X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
 
 
-
-
-
-## DEVELOP CLASSIFIER / PIPELINE ##
+## CLASSIFIER ##
 # Linear SVC, recommended by sklearn machine learning map
 # clf = Classifier().fit(features_matrix, targets_vector)
 clf = LinearSVC().fit(X_train_tfidf, y_train)
@@ -104,31 +102,115 @@ new_doc = ['I love gluten-free foods. This restaurant is the best.']
 X_new_counts = count_vect.transform(new_doc)  # transform only, as vectorizer is fit to training data
 X_new_tfidf = tfidf_transformer.transform(X_new_counts)
 
-# predict label (target) for new document
+
+# TEST: predict label (target) for new document
 predicted = clf.predict(X_new_tfidf)
 
-# retrieve label name
+print
+print "-- Test document --"
 for doc, category in zip(new_doc, predicted):
+  # retrieve label name
     print "%r => %s" % (doc, pdecks_reviews.target_names[category])
 
+
+## VERIFY CLASSIFIER ACCURACY ON TRAINING DATA ##
+
+count = 0
+inaccurate = 0
+
+predicted_array = np.array([])
+for x_var, y_actual in zip(X_train, y_train):
+  # print "###################"
+  # print "x_var: \n", x_var
+  # print
+  X_new_counts = count_vect.transform([x_var])  # transform only, as
+  X_new_tfidf = tfidf_transformer.transform(X_new_counts)
+  # print X_new_tfidf.shape   # (1, 5646)
+  predicted = clf.predict(X_new_tfidf)
+  predicted_array = np.append(predicted_array, predicted)
+  # print "predicted: %r, actual: %r" % (predicted, y_actual)
+  # print "###################"
+  if y_actual != predicted[0]:
+    inaccurate += 1
+  count += 1
+
+print
+print "-- Accuracy check by hand --"
+print "PERCENT INACCURATE:", (inaccurate/(count*1.0))*100
+print
+print "-- Numpy mean calculation --"
+print "PERCENT ACCURATE:", np.mean(predicted_array == y_test)*100
+
+
 ## CROSS-VALIDATING CLASSIFIERS ##
+# randomly partition data set into 10 folds ignoring the classification variable
+# b/c we want to see how the classifier performs in this real-world situation
+
+
+# start with k=2, eventually increase to k=10 with larger dataset
+avg_scores = {}
+for k in range(2,6):
+  avg_scores[k] = {}
+
+for k in range(2, 6):
+  n_fold = k
+  # run k_fold 50 times at each value of k (2, 3, 4, 5)
+  # take average score for each fold, keeping track of scores in dictionary
+  k_dict = {}
+  for i in range(1, n_fold+1):
+    k_dict[i] = []
+
+  for j in range(1, len(X)+1):
+    k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+
+    # k_fold_scores = [clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test]) for train, test in k_fold]
+
+    # print
+    # print "-- Results of k-fold training and testing --"
+    # print
+    # print "Number of folds: {}".format(n_fold)
+    # k_fold_scores = np.array([])
+
+
+    i = 1
+    for train, test in k_fold:
+        score = clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test])
+        k_dict[i].append(score)
+        # print "Fold: {} | Score:  {:.4f}".format(i, score)
+        # k_fold_scores = np.append(k_fold_scores, score)
+        i += 1
+  # import pdb; pdb.set_trace()
+  avg_scores[k] = k_dict
+
+print
+print '-- K-Fold Cross Validation --------'
+print '-- Mean Scores for {} Iterations --'.format(j)
+print
+for k in range(2,6):
+  print '-- k = {} --'.format(k)
+  for i in range(1, k+1):
+    print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
+print
+  
+# print "Fold: {} | Score:  {:.4f}".format(i, score)
 
 
 ## CREATING PIPELINES FOR CLASSIFIERS ##
 # Pipeline([(vectorizer), (transformer), (classifier)])
-text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
-                     ('tfidf', TfidfTransformer()),
-                     ('clf', LinearSVC()),
-                     ])
+# text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
+#                      ('tfidf', TfidfTransformer()),
+#                      ('clf', LinearSVC()),
+#                      ])
 
-# train the model
-text_clf = text_clf.fit(X_train, y_train)
-predicted = text_clf.predict(new_doc)
+# # train the model
+# text_clf = text_clf.fit(X_train, y_train)
+# predicted = text_clf.predict(new_doc)
 
-for doc, category in zip(new_doc, predicted):
-    print "%r => %s" % (doc, pdecks_reviews.target_names[category])
+# for doc, category in zip(new_doc, predicted):
+#     print "%r => %s" % (doc, pdecks_reviews.target_names[category])
 
 
-## EVALUATE PERFORMANCE ##
-predicted = text_clf.predict(X_test)
-np.mean(predicted == y_test)
+
+
+
+# k_fold = KFold(n=len(X), n_folds=5, shuffle=True, random_state=random.randint(1,101))

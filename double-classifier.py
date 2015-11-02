@@ -1,7 +1,9 @@
 """
-Performing NLP using scikit-learn. Supervised machine learning.
+Performing NLP using scikit-learn and NLTK. 
 
-by Patricia Decker, 10/28/2015, Hackbright Academy Independent Project
+by Patricia Decker, 11/01/2015, Hackbright Academy Independent Project
+
+Data Structure: Yelp JSON
 
 review_dict = {'type': 'review',
                'business_id': rest_name,
@@ -15,6 +17,35 @@ review_dict = {'type': 'review',
 
 The classifier will be classifying on review_dict['text'], the review.
 target
+
+Two-step classification process to perform sentiment analysis of 
+restaurant reviews to determine whether a restaurant is accommdating of
+food allergies.
+
+First, classify the documents (reviews) by category, namely whether it is
+relevant to a particular allergy or not. A document may have many categories.
+Can use process similar to 'scikit-learn.py' using a bag of words approach to
+categorize the documents, as the presence of the word is more important than
+the position of the word for this classification.
+
+Second, perform sentiment analysis of a particular review and determine a 
+probability that the reviewer's experience *specifically related to the 
+particular food allergy* was positive. Based on this probability, the
+analyzed review will be classified on a good-to-bad spectrum:
+
+1.0-0.8 = Excellent
+0.8-0.6 = Good
+0.6-0.4 = Neutral
+0.4-0.2 = Shady
+0.2-0.0 = Bad
+(depends on the accuracy of the prediction, if it can be this granular)
+
+... Individual reviews will be assigned a probability.
+
+... TODO: What is the probability that a restaurant is positive or negative
+    for a particular condition based on multiple relevant reviews?
+
+
 
 LinearSVC classifier that takes features vectors consisting of tokenized
 reviews that have been converted to numerical values (counts) and

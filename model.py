@@ -76,7 +76,7 @@ class YelpReview(db.Model):
 
     user = db.relationship('YelpUser',
                           backref=db.backref('reviews', order_by=review_id))
-    
+
     def __repr__(self):
         return "<YelpReview biz_id=%d user_id=%d>" % (self.biz_id, self.user_id)
 
@@ -112,6 +112,8 @@ class PlatePalUser(db.Model):
     User of PlatePal website.
     (Builds on Yelp to allow future OAuth integration.)
     """
+    # no need at moment for yelp user info
+
     __tablename__ = "users"
 
     user_id = db.Column(db.Integer, primary_key=True)
@@ -121,6 +123,7 @@ class PlatePalUser(db.Model):
     lname = db.Column(db.String(32), nullable=False)  # is this long enough?
     bday = db.Column(db.Date, nullable=False)
     # city = db.Column(db.String(30), nullable=False)
+    # get around this by doing a browser request for geolocation info
 
     sentiments = db.relationship('ReviewClass', secondary='reviews',
                                   backref='user')
@@ -130,15 +133,21 @@ class PlatePalUser(db.Model):
 
 
 class PlatePalReview(db.Model):
-    """User-generated score of a business for a specific category."""
+    """
+    Compiles Yelp Reviews, if they exist, or allows users to review a business
+    directly on PlatePal.
+    """
     __tablename__ = "reviews"
 
     review_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    yelp_review_id = db.Column(db.Integer, db.ForeignKey('yelpReviews.review_id'))
+    yelp_stars = db.Column(db.Integer, db.ForeignKey('yelpReviews.stars'))
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
-    score = db.Column(db.Integer, nullable=False)
-    score_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    stars = db.Column(db.Integer, nullable=False)
+    review_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    text = db.Column(db.Text, nullable=False)
 
 
     biz = db.relationship('PlatePalBiz',
@@ -146,7 +155,6 @@ class PlatePalReview(db.Model):
 
     user = db.relationship('PlatePalUser',
                           backref=db.backref('reviews', order_by=review_id))
-
 
     def __repr__(self):
         return "<PlatePalReview review_id=%s date=%s>" % (self.review_id, self.score_date)
@@ -197,7 +205,7 @@ class Category(db.Model):
     def __repr__(self):
         return "<Category cat_name=%s>" % self.cat_name
 
-
+## TODO: MOVE INFO TO REVIEWCLASS and comment this out
 class Classification(db.Model):
     """
     Category determined by LinearSVC classifier.
@@ -232,7 +240,7 @@ class ReviewClass(db.Model):
     # TODO: using unique pairs as primary key??
     revclass_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
-    class_id = db.Column(db.Integer, db.ForeignKey('classifications.class_id'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
     sen_score = db.Column(db.Float, nullable=False)  # machine generated score
     user_sen = db.Column(db.Float, nullable=True)  # for user feedback on score
 
@@ -242,6 +250,7 @@ class ReviewClass(db.Model):
 
 class BizSentiment(db.Model):
     """Calculation table for aggregate sentiment for a business-category pair."""
+    # in postgreSQL, this would have a watcher on it (KLF)
     __tablename__ = "bizsentiments"
 
     sen_id = db.Column(db.Integer, autoincrement=True, primary_key=True)

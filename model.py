@@ -20,6 +20,7 @@ db = SQLAlchemy()
 
 class YelpBiz(db.Model):
     """Business in Yelp Academic Dataset."""
+
     __tablename__ = "yelpBiz"
 
     #TODO: verify db.datatypes
@@ -44,6 +45,7 @@ class YelpBiz(db.Model):
 
 class YelpUser(db.Model):
     """User in Yelp Academic Dataset."""
+    
     __tablename__ = "yelpUsers"
 
     user_id = db.Column(db.Integer, primary_key=True)
@@ -77,10 +79,11 @@ class PlatePalBiz(db.Model):
     __tablename__ = "biz"
 
     biz_id = db.Column(db.Integer, primary_key=True) # TODO: yelp biz id?
+    yelp_biz_id = db.Column(db.Integer, db.ForeignKey('yelpBiz.biz_id')) # TODO: can this be nullable???
     name = db.Column(db.String(200), nullable=False)
     address = db.Column(db.String(200), nullable=False)
     city = db.Column(db.String(64), nullable=False)
-    state = db.Column(db.String(20), nullable=False)
+    state = db.Column(db.String(32), nullable=False)
     lat = db.Column(db.Float, nullable=False) #TODO: is there a lat/long type?
     lon = db.Column(db.Float, nullable=False)
     sen_score = db.Column(db.Float, nullable=True)
@@ -101,36 +104,70 @@ class PlatePalUser(db.Model):
     """
     __tablename__ = "users"
 
+    user_id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(64), nullable=False)
+    password = db.Column(db.String(32), nullable=False)
+    fname = db.Column(db.String(32), nullable=False)
+    lname = db.Column(db.String(32), nullable=False)  # is this long enough?
+    bday = db.Column(db.Date, nullable=False)
+    # city = db.Column(db.String(30), nullable=False)
+
     def __repr__(self):
-        return "<>"
+        return "<PlatePalUser user_id=%d (fname lname)=%s %s>" % (self.user_id, self.fname, self.lname)
+
 
 class PlatePalRating(db.Model):
     """User-generated score of a business for a specific category."""
     __tablename__ = "ratings"
 
+    rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    score = db.Column(db.Integer, nullable=False)
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+
     def __repr__(self):
-        return "<>"
+        return "<PlatePalRating rating_id=%s>" % self.rating_id
+
 
 class UserList(db.Model):
     """User-generated list by category of restaurants."""
     __tablename__ = "lists"
 
+    list_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    cat_name = db.Column(db.String(32), db.ForeignKey('categories.cat_name'))
+    list_name = db.Column(db.String(64), nullable=False)
+
     def __repr__(self):
-        return "<>"
+        return "<UserList list_id=%s user_id=%s>" % (self.list_id, self.user_id)
+
 
 class ListEntry(db.Model):
     """Restaurant entries in user-generated list, UserList."""
+    # TODO: is this table necessary? really storing unique pairs
+    # of list_id & biz_id ...
     __tablename__ = "entries"
 
+    entry_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    list_id = db.Column(db.Integer, db.ForeignKey('lists.list_id'))
+    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
+
     def __repr__(self):
-        return "<>"
+        return "<ListEntry list_id=%s biz_id=%s>" % (self.list_id, self.biz_id)
+
 
 class Category(db.Model):
     """Categories for classification and targeting sentiment analysis."""
     __tablename__ = "categories"
 
+    cat_code = db.Column(db.String(4), primary_key=True)
+    cat_name = db.Column(db.String(32), nullable=False)
+    cat_description = db.Column(db.Text, nullable=True)
+
     def __repr__(self):
-        return "<>"
+        return "<Category cat_name=%s>" % self.cat_name
+
 
 class Classification(db.Model):
     """
@@ -139,10 +176,15 @@ class Classification(db.Model):
     Classifier trained user subset of restaurant reviews in Yelp dataset."""
     __tablename__ = "classifications"
 
-    def __repr__(self):
-        return "<>"
+    class_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
 
-class ReviewClassification(db.Model):
+    def __repr__(self):
+        return "<Classification class_id=%s>" % self.class_id
+
+
+class ReviewClass(db.Model):
     """
     Association table between reviews and classifications.
 
@@ -151,16 +193,27 @@ class ReviewClassification(db.Model):
     """
     __tablename__ = "revclasses"
 
+    # TODO: using unique pairs as primary key??
+    revclass_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    review_id = db.Column(db.Integer, db.ForeignKey('yelpReviews.review_id'))
+    class_id = db.Column(db.Integer, db.ForeignKey('classifications.class_id'))
+    sent_score = db.Column(db.Float, nullable=False)
+
     def __repr__(self):
-        return "<>"
+        return "<ReviewClass review_id=%s class_id=%s>" % (self.review_id, self.class_id)
 
 
 class Sentiment(db.Model):
     """Calculation table for aggregate sentiment for a business-category pair."""
     __tablename__ = "sentiments"
 
+    sent_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    aggregate_score = db.Column(db.Float, nullable=False) # to be calculated for individual scores an updated periodically
+
     def __repr__(self):
-        return "<>"
+        return "<Sentiment sent_id=%s>" % self.sent_id
 
 
 ##############################################################################
@@ -176,10 +229,10 @@ def connect_to_db(app):
     db.init_app(app)
 
 
-if __name__ == "__main__":
-    # As a convenience, if we run this module interactively, it will leave
-    # you in a state of being able to work with the database directly.
+# if __name__ == "__main__":
+#     # As a convenience, if we run this module interactively, it will leave
+#     # you in a state of being able to work with the database directly.
 
-    from server import app
-    connect_to_db(app)
-    print "Connected to DB."
+#     from server import app
+#     connect_to_db(app)
+#     print "Connected to DB."

@@ -23,13 +23,13 @@ class YelpBiz(db.Model):
     __tablename__ = "yelpBiz"
 
     #TODO: verify db.datatypes
-    business_id = db.Column(db.Integer, primary_key=True)
+    biz_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     address = db.Column(db.String(200), nullable=False)
     city = db.Column(db.String(64), nullable=False)
     state = db.Column(db.String(20), nullable=False)
-    lat = db.Column(db.Integer, nullable=False) #TODO: is there a lat/long type?
-    lon = db.Column(db.Integer, nullable=False)
+    lat = db.Column(db.Float, nullable=False) #TODO: is there a lat/long type?
+    lon = db.Column(db.Float, nullable=False)
     stars = db.Column(db.Integer, nullable=True)
     review_count = db.Column(db.Integer, nullable=True)
     photo_url = db.Column(db.String(200), nullable=True)
@@ -39,7 +39,7 @@ class YelpBiz(db.Model):
     # TODO: schools (nearby universities)
 
     def __repr__(self):
-        return "<YelpBiz business_id=%d name=%s>" % (self.business_id, self.name)
+        return "<YelpBiz biz_id=%d name=%s>" % (self.biz_id, self.name)
 
 
 class YelpUser(db.Model):
@@ -60,21 +60,39 @@ class YelpReview(db.Model):
     """Review in Yelp Academic Dataset."""
     __tablename__ = "yelpReviews"
 
-    business_id = db.Column(db.Integer, db.ForeignKey('yelpBiz.business_id'))
+    # TODO: make business_id primary key??
+    review_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    biz_id = db.Column(db.Integer, db.ForeignKey('yelpBiz.biz_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('yelpUsers.user_id'))
     stars = db.Column(db.Integer, nullable=False)  # integer 1-5 #TODO: restrict or check
-    # text = db.Column(db.)
+    text = db.Column(db.Text, nullable=False)
+    date = db.Column(db.Date) # TODO: verify
 
     def __repr__(self):
-        return "<>"
+        return "<YelpReview biz_id=%d user_id=%d>" % (self.biz_id, self.user_id)
 
 
 class PlatePalBiz(db.Model):
     """Business on PlatePal website. (Builds on Yelp database.)"""
     __tablename__ = "biz"
 
+    biz_id = db.Column(db.Integer, primary_key=True) # TODO: yelp biz id?
+    name = db.Column(db.String(200), nullable=False)
+    address = db.Column(db.String(200), nullable=False)
+    city = db.Column(db.String(64), nullable=False)
+    state = db.Column(db.String(20), nullable=False)
+    lat = db.Column(db.Float, nullable=False) #TODO: is there a lat/long type?
+    lon = db.Column(db.Float, nullable=False)
+    sen_score = db.Column(db.Float, nullable=True)
+    # review_count = db.Column(db.Integer, nullable=True)
+    photo_url = db.Column(db.String(200), nullable=True)
+    is_open = db.Column(db.Boolean, nullable=False)
+    url = db.Column(db.String(200), nullable=False)
+    # TODO: neighborhoods
+
     def __repr__(self):
-        return "<>"
+        return "<PlatePalBiz biz_id=%d name=%s>" % (self.biz_id, self.name)
+
 
 class PlatePalUser(db.Model):
     """

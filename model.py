@@ -37,8 +37,8 @@ class YelpBiz(db.Model):
     photo_url = db.Column(db.String(200), nullable=True)
     is_open = db.Column(db.Boolean, nullable=False, default=True)
     yelp_url = db.Column(db.String(200), nullable=False)
-    # TODO: neighborhoods
-    # TODO: schools (nearby universities)
+    # V2TODO: neighborhoods
+    # V2TODO: schools (nearby universities)
 
     def __repr__(self):
         return "<YelpBiz biz_id=%d name=%s>" % (self.biz_id, self.name)
@@ -53,7 +53,7 @@ class YelpUser(db.Model):
     name = db.Column(db.String(64), nullable=False)
     review_count = db.Column(db.Integer, nullable=False, default=0)  # a user might have no reviews
     average_stars = db.Column(db.Float, nullable=False, default=0.0)  # this is calculable from other tables
-    # TODO: votes
+    # V2TODO: votes
 
     def __repr__(self):
         return "<YelpUser user_id=%d name=%s>" % (self.user_id, self.name)
@@ -93,12 +93,15 @@ class PlatePalBiz(db.Model):
     state = db.Column(db.String(32), nullable=False)
     lat = db.Column(db.Float, nullable=False) #TODO: is there a lat/long type?
     lon = db.Column(db.Float, nullable=False)
-    sen_score = db.Column(db.Float, nullable=True)
-    # review_count = db.Column(db.Integer, nullable=True)
     photo_url = db.Column(db.String(200), nullable=True)
     is_open = db.Column(db.Boolean, nullable=False)
-    url = db.Column(db.String(200), nullable=False)
-    # TODO: neighborhoods
+    pp_url = db.Column(db.String(200), nullable=False)  # PlatePal url of biz listing
+    # sen_score calculated in BizSentiments or calculable from ...
+    # review_count = db.Column(db.Integer, nullable=True)
+    # TODO: neighborhoods?
+
+    sentiments = db.relationship('ReviewClass', secondary='classifications',
+                                  backref='biz')
 
     def __repr__(self):
         return "<PlatePalBiz biz_id=%d name=%s>" % (self.biz_id, self.name)
@@ -119,15 +122,18 @@ class PlatePalUser(db.Model):
     bday = db.Column(db.Date, nullable=False)
     # city = db.Column(db.String(30), nullable=False)
 
+    sentiments = db.relationship('ReviewClass', secondary='reviews',
+                                  backref='user')
+
     def __repr__(self):
         return "<PlatePalUser user_id=%d (fname lname)=%s %s>" % (self.user_id, self.fname, self.lname)
 
 
-class PlatePalRating(db.Model):
+class PlatePalReview(db.Model):
     """User-generated score of a business for a specific category."""
-    __tablename__ = "ratings"
+    __tablename__ = "reviews"
 
-    rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    review_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
@@ -136,14 +142,14 @@ class PlatePalRating(db.Model):
 
 
     biz = db.relationship('PlatePalBiz',
-                          backref=db.backref('ratings', order_by=rating_id))
+                          backref=db.backref('reviews', order_by=review_id))
 
     user = db.relationship('PlatePalUser',
-                          backref=db.backref('ratings', order_by=rating_id))
+                          backref=db.backref('reviews', order_by=review_id))
 
 
     def __repr__(self):
-        return "<PlatePalRating rating_id=%s date=%s>" % (self.rating_id, self.score_date)
+        return "<PlatePalReview review_id=%s date=%s>" % (self.review_id, self.score_date)
 
 
 class UserList(db.Model):
@@ -207,10 +213,6 @@ class Classification(db.Model):
     biz = db.relationship('PlatePalBiz',
                           backref=db.backref('categories', order_by=cat_code))
 
-    # TODO: is this the best place to lookup sentiment scores?
-    sentiments = db.relationship('Sentiment', secondary='revclasses',
-                                 backref='classifications')
-
     def __repr__(self):
         return "<Classification class_id=%s>" % self.class_id
 
@@ -220,37 +222,38 @@ class ReviewClass(db.Model):
     Association table between reviews and classifications.
 
     Allows for determination of a sentiment score on an individual review,
-    as a review has many categories and a category has many reviews.
+    as a review has many categories and a category has many reviews. Space
+    to store user-generated sentiment score (feedback on machine-generated
+    score).
     """
+
     __tablename__ = "revclasses"
 
     # TODO: using unique pairs as primary key??
     revclass_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    # TODO: do I need review_id here?
-    # review_id = db.Column(db.Integer, db.ForeignKey('yelpReviews.review_id'))
-    # TODO: or should this be class_id??
-    cat_code = db.Column(db.Integer, db.ForeignKey('classifications.cat_code'))
-    sent_score = db.Column(db.Float, nullable=False)
+    review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
+    class_id = db.Column(db.Integer, db.ForeignKey('classifications.class_id'))
+    sen_score = db.Column(db.Float, nullable=False)  # machine generated score
+    user_sen = db.Column(db.Float, nullable=True)  # for user feedback on score
 
     def __repr__(self):
         return "<ReviewClass review_id=%s class_id=%s>" % (self.review_id, self.class_id)
 
 
-class Sentiment(db.Model):
+class BizSentiment(db.Model):
     """Calculation table for aggregate sentiment for a business-category pair."""
-    __tablename__ = "sentiments"
+    __tablename__ = "bizsentiments"
 
-    sent_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    sen_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
     aggregate_score = db.Column(db.Float, nullable=False) # to be calculated for individual scores an updated periodically
-
 
     biz = db.relationship('PlatePalBiz',
                           backref=db.backref('sentiments', order_by=cat_code))
 
     def __repr__(self):
-        return "<Sentiment sent_id=%s>" % self.sent_id
+        return "<BizSentiment sent_id=%s>" % self.sent_id
 
 
 ##############################################################################
@@ -260,7 +263,7 @@ def connect_to_db(app):
     """Connect the database to our Flask app."""
 
     # Configure to use our SQLite database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ratings.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///platepal.db'
     app.config['SQLALCHEMY_ECHO'] = True
     db.app = app
     db.init_app(app)

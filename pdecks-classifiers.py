@@ -19,7 +19,7 @@ where 1.0 is good and 0.0 is bad.
 
 import random
 import numpy as np
-import pickle
+
 from sklearn.datasets import base as sk_base
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
@@ -27,6 +27,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
 from sklearn.cross_validation import KFold
 from sklearn.pipeline import Pipeline
+from sklearn.externals import joblib
 
 # import reviewfilter as rf
 
@@ -38,6 +39,8 @@ from sklearn.pipeline import Pipeline
 # contain more than just review information delimited on pipes
 container_path = 'pdecks-reviews/'
 categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
+
+pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
 
 # categories = ['gluten-free',
 #               'paleo',
@@ -124,18 +127,36 @@ def create_train_classifier(train_docs):
     # clf = Classifier().fit(features_matrix, targets_vector)
     clf = LinearSVC().fit(X_train_tfidf, y_train)
 
-    return (count_vect, tfidf_transformer, clf)
+    ## CREATING PIPELINES FOR CLASSIFIERS #
+    # Pipeline([(vectorizer), (transformer), (classifier)])
+    pipeline_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
+                         ('tfidf', TfidfTransformer()),
+                         ('clf', LinearSVC()),
+                        ])
+    # train the pipeline
+    pipeline_clf = pipeline_clf.fit(X_train, y_train)
+
+    return (count_vect, tfidf_transformer, clf, pipeline_clf)
 
 
-## CREATING PIPELINES FOR CLASSIFIERS ##
-# Pipeline([(vectorizer), (transformer), (classifier)])
-# text_clf = Pipeline([('vect', CountVectorizer(ngram_range=(1, 2))),
-#                      ('tfidf', TfidfTransformer()),
-#                      ('clf', LinearSVC()),
-#                      ])
+## PERSIST THE MODEL ##
+def persist_classifier(pipeline_clf, pickle_path):
+    """Use joblib to pickle the pipeline model to disk."""
+    joblib.dump(pipeline_clf, pickle_path)
+    return
 
-# # train the model
-# text_clf = text_clf.fit(X_train, y_train)
+
+## REVIVE CLASSIFIER TO CATEGORIZE NEW REVIEWS ##
+def revives_model(pickle_path):
+    """Takes the name of the pickled object and returns the revived model.
+
+    ex: clf_revive = pickle.loads(pdecks_trained_classifier)
+    """
+    model_clone = joblib.load(pickled_name)
+    return model_clone
+
+
+# TODO: Make sure this is garbage ...
 # predicted = text_clf.predict(new_doc)
 
 # for doc, category in zip(new_doc, predicted):
@@ -143,25 +164,6 @@ def create_train_classifier(train_docs):
 
 # k_fold = KFold(n=len(X), n_folds=5, shuffle=True, random_state=random.randint(1,101))
 
-
-## PERSIST CLASSIFIER ##
-def pickles_model(model_name):
-    """Takes a model name and pickles it. Returns the pickled object.
-
-    pdecks_trained_classifier = pickle.dumps(clf)
-    """
-    pickled_model = pickle.dumps(model_name)
-
-    return pickled_model
-
-
-## REVIVE CLASSIFIER TO CATEGORIZE NEW REVIEWS ##
-def revives_model(pickled_name):
-    """Takes the name of the pickled object and returns the revived model.
-
-    ex: clf_revive = pickle.loads(pdecks_trained_classifier)
-    """
-    return pickle.loads(pickled_name)
 
 
 ## CLASSIFY NEW BUSINESS
@@ -197,6 +199,8 @@ def get_category_name(category_id):
     """Takes a category index and returns a category name."""
     return categories[category_id]
 
+
+
 #### SENTIMENT ANALYSIS CLASSIFIER ####
 
 ## TOKENIZATION ##
@@ -230,7 +234,10 @@ if __name__ == "__main__":
     y_test = np.copy(y_train)
 
     # CREATE and TRAIN the classifier
-    count_vect, tfidf_transformer, clf = create_train_classifier(documents)
+    count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(documents)
+
+    ## PERSIST THE MODEL ##
+    persist_classifier(pipeline_clf, pickle_path_SVC)
 
     # TEST the classifier
     new_doc = ['I love gluten-free foods. This restaurant is the best.']
@@ -240,11 +247,18 @@ if __name__ == "__main__":
                                              clf)
 
     new_doc_category = get_category_name(new_doc_category_id)
+    new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
+    new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
 
     print
     print "-- Test document --"
+    print
+    print "Using Vectorizer, Transformer, and Classifier:"
     # for doc, category in zip(new_doc, predicted):
     print "%r => %s" % (new_doc[0], new_doc_category)
+    print
+    print "Using Pipeline:"
+    print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
 
 
     ## VERIFY classifier accuracy on training data

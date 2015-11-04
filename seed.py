@@ -1,21 +1,21 @@
 """Utility file to seed Yelp database from Yelp Academic Dataset in data/yelp/"""
-
+import json
 from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
 from model import connect_to_db, db
 from server import app
+from pandas import DataFrame
 
-business_filepath = 'data/yelp/yelp_academic_dataset_business.json'
-review_filepath = 'data/yelp/yelp_academic_dataset_review.json'
-user_filepath = 'data/yelp/yelp_academic_dataset_user.json'
+# filepaths to Yelp JSON
+BUSINESS_FP = 'data/yelp/yelp_academic_dataset_business.json'
+REVIEW_FP = 'data/yelp/yelp_academic_dataset_review.json'
+USER_FP = 'data/yelp/yelp_academic_dataset_user.json'
 
-## SECOND APPROACH ##
-
-def gets_data_json(file_path):
+def gets_data_frame(file_path, target_cat_list=[u'Restaurants']):
     """
-    Returns a list of JSON objects from a JSON file.
+    Returns a pandas DataFrame containing JSON entries.
 
     @param file_path: the absolute path of the JSON file that contains the data
     """
@@ -23,7 +23,18 @@ def gets_data_json(file_path):
     # don't process the entire review file at once, use enumerate
     # http://stackoverflow.com/questions/2081836/reading-specific-lines-only-python/2081880#2081880
     if 'review' not in file_path:
-        records = [json.loads(line) for line in open(file_path)]
+        records = []
+        if 'business' in file_path:
+            for line in open(file_path):
+                record = json.loads(line)
+                # extract only entires that contain target categories
+                if set(target_cat_list) & set(record['categories']):
+                    records.append(record)
+        else:
+            for line in open(file_path):
+                record = json.loads(line)
+                records.append(record)
+        # records = [json.loads(line) for line in open(file_path)]
     else:
         records = []
         fp = open(file_path)
@@ -31,7 +42,12 @@ def gets_data_json(file_path):
             if i < 10000:
                 record = json.loads(line)
                 records.append(record)
-    return records
+
+    # insert all records stored in lists to pandas DataFrame
+    data_frame = DataFrame(records)
+
+    return data_frame
+
 
 def load_users():
     """Load users from yelp.user into Yelp database."""
@@ -63,47 +79,49 @@ def load_users():
 def load_biz():
     """Load businesses from yelp.biz into Yelp database."""
 
-
     print "Businesses"
 
     YelpBiz.query.delete()
 
-    for row in open("data/yelp/yelp.biz"):
-        row = row.rstrip()
-        movie_entry = row.split("|")
-        movie_id = movie_entry[0]
-        movie_title = movie_entry[1] #TODO: need a way to remove YEAR 
-        print movie_title
-        # remove year frome title formated as "Title Name (YYYY)"
-        # look up index of (, take title from [0:index-1]
-        paren_index = movie_title.find('(')
-        if paren_index != -1:
-            # slice off the year and proceeding single space
-            movie_title = movie_title[:(paren_index-1)]
-            
-        release_date = movie_entry[2]
-        
-        # else: # no year in title
-        #     release_date = None
-        
-        #parse string into datetime object
-        if release_date:
-            rel_date_obj = datetime.strptime(release_date, '%d-%b-%Y')
-        else:
-            rel_date_obj = None
+    # business data frame
+    bdf = gets_data_frame(BUSINESS_FP)
 
-        # account for || before IMBd URL
-        imdb_url = movie_entry[4]
+    for row in bdf.iterrows():
+        #HELP: Integrity Errors! (lat long suspected)
+        row_pd = row[1]
+        # import pdb; pdb.set_trace()  # for debugging types
+        biz_id = row_pd['business_id']  # unicode
+        # print "This is row_pd['name']: %s" % row_pd['name']
+        name = row_pd['name']  # unicode
+        # print "Made it through name assignment."
+        address = row_pd['full_address']  # unicode
+        city = row_pd['city']  # unicode
+        state = str(row_pd['state'])  # unicode
+        lat = row_pd['latitude'] # float
+        lng = row_pd['longitude'] # float
+        stars =  row_pd['stars']  # float
+        review_count = row_pd['review_count']  # int
+        # is_open = row_pd['open']  # bool
 
-        movie = Movie(movie_id=movie_id,
-                      movie_title=movie_title, 
-                      release_date=rel_date_obj,
-                      imdb_url=imdb_url)
+        # if 'photo_url' in row_pd:
+        #     photo_url = row_pd['photo_url']
+        # if 'photo_url' in row_pd:
+        #     yelp_url = row_pd['']
 
-        db.session.add(movie)
+        biz = YelpBiz(biz_id=biz_id,
+                      name=name,
+                      address=address,
+                      city=city,
+                      state=state,
+                      lat=lat,
+                      lng=lng,
+                      stars=stars,
+                      review_count=review_count,
+                      )
+
+        db.session.add(biz)
 
     db.session.commit()
-
 
 
 def load_reviews():
@@ -135,6 +153,7 @@ if __name__ == "__main__":
     db.create_all()
 
     # Import different types of data
-    load_users()
-    load_movies()
-    load_ratings()
+    load_biz()
+    # load_users()
+    # load_movies()
+    # load_ratings()

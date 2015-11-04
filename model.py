@@ -21,22 +21,22 @@ db = SQLAlchemy()
 
 class YelpBiz(db.Model):
     """Business in Yelp Academic Dataset."""
-    
+
     __tablename__ = "yelpBiz"
 
     #TODO: verify db.datatypes
-    biz_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    address = db.Column(db.String(200), nullable=False)
-    city = db.Column(db.String(64), nullable=False)
-    state = db.Column(db.String(16), nullable=False)
-    lat = db.Column(db.Float, nullable=False) #TODO: is there a lat/long type?
-    lng = db.Column(db.Float, nullable=False)
-    stars = db.Column(db.Integer, nullable=True) # biz can have no reviews
+    biz_id = db.Column(db.Unicode(32), primary_key=True)
+    name = db.Column(db.Unicode(200), nullable=False)
+    address = db.Column(db.Unicode(200), nullable=False)
+    city = db.Column(db.Unicode(64), nullable=False)
+    state = db.Column(db.String(2), nullable=False)
+    lat = db.Column(db.Float(Precision=64), nullable=False) #TODO: is there a lat/long type?
+    lng = db.Column(db.Float(Precision=64), nullable=False)
+    stars = db.Column(db.Float, nullable=True) # biz can have no reviews
     review_count = db.Column(db.Integer, nullable=False, default=0)
-    photo_url = db.Column(db.String(200), nullable=True)
-    is_open = db.Column(db.Boolean, nullable=False, default=True)
-    yelp_url = db.Column(db.String(200), nullable=False)
+    # is_open = db.Column(db.Integer, nullable=False, default=True)
+    # photo_url = db.Column(db.String(200), nullable=True)
+    # yelp_url = db.Column(db.String(200), nullable=False)
     # V2TODO: neighborhoods
     # V2TODO: schools (nearby universities)
 
@@ -122,7 +122,7 @@ class PlatePalUser(db.Model):
     # city = db.Column(db.String(30), nullable=False)
     # get around this by doing a browser request for geolocation info
 
-    sentiments = db.relationship('ReviewClass', secondary='reviews',
+    sentiments = db.relationship('ReviewCategory', secondary='reviews',
                                   backref='user')
 
     def __repr__(self):
@@ -227,7 +227,7 @@ class ReviewCategory(db.Model):
                           backref=db.backref('revcat', order_by=cat_code))
 
     def __repr__(self):
-        return "<ReviewClass revcat_id=%s>" % (self.revcat_id)
+        return "<ReviewCategory revcat_id=%s>" % (self.revcat_id)
 
 
 class BizSentiment(db.Model):

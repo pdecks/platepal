@@ -24,12 +24,12 @@ class YelpBiz(db.Model):
 
     __tablename__ = "yelpBiz"
 
-    #TODO: verify db.datatypes
+    # yelp_biz_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     biz_id = db.Column(db.Unicode(32), primary_key=True)
     name = db.Column(db.Unicode(200), nullable=False)
     address = db.Column(db.Unicode(200), nullable=False)
     city = db.Column(db.Unicode(64), nullable=False)
-    state = db.Column(db.String(2), nullable=False)
+    state = db.Column(db.String(3), nullable=False)
     lat = db.Column(db.Float(Precision=64), nullable=False) #TODO: is there a lat/long type?
     lng = db.Column(db.Float(Precision=64), nullable=False)
     stars = db.Column(db.Float, nullable=True) # biz can have no reviews
@@ -255,7 +255,7 @@ def connect_to_db(app):
 
     # Configure to use our SQLite database
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///platepal.db'
-    app.config['SQLALCHEMY_BINDS'] = {'yelp': 'sqlite:///yelp.db'}
+    # app.config['SQLALCHEMY_BINDS'] = {'yelp': 'sqlite:///yelp.db'}
     app.config['SQLALCHEMY_ECHO'] = True
     db.app = app
     db.init_app(app)

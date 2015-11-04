@@ -34,8 +34,8 @@ class YelpBiz(db.Model):
     lng = db.Column(db.Float(Precision=64), nullable=False)
     stars = db.Column(db.Float, nullable=True) # biz can have no reviews
     review_count = db.Column(db.Integer, nullable=False, default=0)
-    # is_open = db.Column(db.Integer, nullable=False, default=True)
-    # photo_url = db.Column(db.String(200), nullable=True)
+    is_open = db.Column(db.Integer, nullable=False, default=True)
+    photo_url = db.Column(db.String(200), nullable=True)
     # yelp_url = db.Column(db.String(200), nullable=False)
     # V2TODO: neighborhoods
     # V2TODO: schools (nearby universities)
@@ -48,8 +48,8 @@ class YelpUser(db.Model):
     """User in Yelp Academic Dataset."""
     __tablename__ = "yelpUsers"
 
-    user_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
+    user_id = db.Column(db.Unicode(32), primary_key=True)
+    name = db.Column(db.Unicode(64), nullable=False)
     review_count = db.Column(db.Integer, nullable=False, default=0)  # a user might have no reviews
     average_stars = db.Column(db.Float, nullable=False, default=0.0)  # this is calculable from other tables
     # V2TODO: votes
@@ -65,8 +65,8 @@ class YelpReview(db.Model):
 
     # TODO: make business_id primary key??
     review_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    biz_id = db.Column(db.Integer, db.ForeignKey('yelpBiz.biz_id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('yelpUsers.user_id'))
+    biz_id = db.Column(db.Unicode(32), db.ForeignKey('yelpBiz.biz_id'))
+    user_id = db.Column(db.Unicode(32), db.ForeignKey('yelpUsers.user_id'))
     stars = db.Column(db.Integer, nullable=False)  # integer 1-5 #TODO: restrict or check
     text = db.Column(db.Text, nullable=False)
     date = db.Column(db.Date) # TODO: verify

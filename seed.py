@@ -10,34 +10,18 @@ from pandas import DataFrame
 
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
-BUSINESS_FP = 'data/yelp/yelp_academic_dataset_business.json'
-REVIEW_FP = 'data/yelp/yelp_academic_dataset_review.json'
-USER_FP = 'data/yelp/yelp_academic_dataset_user.json'
 
 def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
     """
     Returns pandas DataFrames containing JSON entries for users, biz, and reviews.
 
-    @param file_path: the absolute path of the JSON file that contains the academic dataset
+
+    file_path: the absolute path of the JSON file that contains the academic dataset
+    
+    target_cat_list (default u'Restaurants'): takes a list of categories for sorting
+    business entries
     """
 
-    # don't process the entire review file at once, use enumerate
-    # http://stackoverflow.com/questions/2081836/reading-specific-lines-only-python/2081880#2081880
-    # if 'review' not in file_path:
-    #     records = []
-    #     if 'business' in file_path:
-    #         for line in open(file_path):
-    #             record = json.loads(line)
-    #             # extract only entires that contain target categories
-    #             
-    #                 records.append(record)
-    #     else:
-    #         for line in open(file_path):
-    #             record = json.loads(line)
-    #             import pdb; pdb.set_trace()
-    #             records.append(record)
-    #     # records = [json.loads(line) for line in open(file_path)]
-    # else:
     user_records = []
     biz_records = []
     review_records = []
@@ -48,7 +32,7 @@ def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
         record = line[1].rstrip('\n')
         # convert json
         record = json.loads(record)
-        # import pdb; pdb.set_trace()
+
         if record['type'] == 'user':
             user_records.append(record)
         elif record['type'] == 'business':
@@ -57,8 +41,7 @@ def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
         elif record['type'] == 'review':
             review_records.append(record)
 
-
-    # insert all records stored in lists to pandas DataFrame
+    # insert all records stored in lists into respective pandas DataFrames
     udf = DataFrame(user_records)
     bdf = DataFrame(biz_records)
     rdf = DataFrame(review_records)
@@ -66,39 +49,35 @@ def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
     return (udf, bdf, rdf)
 
 
+def load_yelp_users(udf):
+    """Load users from user data frame into Yelp user table."""
+
+    print "Yelp Users"
+
+    YelpUser.query.delete()
+
+    for row in udf.iterrows():
+        row_pd = row[1]
+        user_id = row_pd['user_id']  # unicode
+        name = row_pd['name']  # unicode
+        review_count = row_pd['review_count']  # int
+        average_stars = row_pd['average_stars']  # float
+
+        user = YelpUser(user_id=user_id,
+                      name=name,
+                      review_count=review_count,
+                      average_stars=average_stars
+                      )
+
+        db.session.add(user)
+
+    db.session.commit()
 
 
-# def load_users(udf):
-#     """Load users from yelp.user into Yelp database."""
+def load_yelp_biz(bdf):
+    """Load businesses from business data frame into Yelp biz table."""
 
-#     print "Users"
-
-#     # Delete all rows in table, NOT THE TABLE ITSELF, so if we need to run this a second time,
-#     # we won't be trying to add duplicate users
-#     YelpUser.query.delete()
-
-#     # Read u.user file and insert data
-#     for row in open("data/yelp/yelp.user"):
-#         row = row.rstrip()
-#         # not all of this data is stored in database
-#         user_id, age, gender, occupation, zipcode = row.split("|")
-
-#         # when do we add email and pw?
-#         user = User(user_id=user_id,
-#                     age=age,
-#                     zipcode=zipcode)
-
-#         # We need to add to the session or it won't ever be stored
-#         db.session.add(user)
-
-#     # Once we're done, we should commit our work
-#     db.session.commit()
-
-
-def load_biz(bdf):
-    """Load businesses from business data frame into Yelp database."""
-
-    print "Businesses"
+    print "Yelp Businesses"
 
     YelpBiz.query.delete()
 
@@ -116,12 +95,11 @@ def load_biz(bdf):
         lng = row_pd['longitude'] # float
         stars =  row_pd['stars']  # float
         review_count = row_pd['review_count']  # int
-        # is_open = row_pd['open']  # bool
-
-        # if 'photo_url' in row_pd:
-        #     photo_url = row_pd['photo_url']
-        # if 'photo_url' in row_pd:
-        #     yelp_url = row_pd['']
+        is_open = row_pd['open']  # bool
+        if 'photo_url' in row_pd:
+            photo_url = row_pd['photo_url']
+        else:
+            photo_url = None
 
         biz = YelpBiz(biz_id=biz_id,
                       name=name,
@@ -132,6 +110,8 @@ def load_biz(bdf):
                       lng=lng,
                       stars=stars,
                       review_count=review_count,
+                      is_open=is_open,
+                      photo_url=photo_url,
                       )
 
         db.session.add(biz)
@@ -139,26 +119,33 @@ def load_biz(bdf):
     db.session.commit()
 
 
-# def load_reviews():
-#     from datetime import datetime
-#     """Load reviews from yelp.review into Yelp database."""
+def load_yelp_reviews(rdf):
+    from datetime import datetime
+    """Load reviews from yelp.review into Yelp database."""
 
-#     print "Reviews"
+    print "Yelp Reviews"
 
-#     YelpReview.query.delete()
+    YelpReview.query.delete()
 
-#     for row in open("data/yelp/yelp.review"):
-#         row = row.rstrip()
-#         # rating_entry = row.split('\t')
-#         user_id, movie_id, score, epoch_time = row.split('\t')
+    for row in rdf.iterrows():
+        row_pd = row[1]
+        biz_id = row_pd['business_id']  # unicode
+        user_id = row_pd['user_id']  # unicode
+        stars = row_pd['stars']  # integer
+        text = row_pd['text']  # text
+        rev_date = row_pd['date']  # date
+        # format date as date object
+        rev_date = datetime.strptime(rev_date, '%Y-%m-%d')
 
-#         rating = Rating(user_id=user_id,
-#                         movie_id=movie_id,
-#                         score=score)
+        review = YelpReview(biz_id=biz_id,
+                            user_id=user_id,
+                            stars=stars,
+                            text=text,
+                            date=rev_date
+                            )
 
-#         db.session.add(rating)
-
-#     db.session.commit()
+        db.session.add(review)
+        db.session.commit()
 
 
 if __name__ == "__main__":
@@ -170,7 +157,6 @@ if __name__ == "__main__":
     # Import different types of data
     udf, bdf, rdf = gets_data_frames(YELP_JSON_FP)
 
-    load_biz(bdf)
-    # load_users()
-    # load_movies()
-    # load_ratings()
+    load_yelp_biz(bdf)
+    load_yelp_users(udf)
+    load_yelp_reviews(rdf)

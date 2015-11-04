@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
-from model import Category, Classification, ReviewClass, BizSentiment
+from model import Category, ReviewCategory, BizSentiment
 from model import connect_to_db, db
 
 

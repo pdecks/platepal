@@ -21,7 +21,7 @@ db = SQLAlchemy()
 
 class YelpBiz(db.Model):
     """Business in Yelp Academic Dataset."""
-
+    
     __tablename__ = "yelpBiz"
 
     #TODO: verify db.datatypes
@@ -46,7 +46,6 @@ class YelpBiz(db.Model):
 
 class YelpUser(db.Model):
     """User in Yelp Academic Dataset."""
-
     __tablename__ = "yelpUsers"
 
     user_id = db.Column(db.Integer, primary_key=True)
@@ -61,6 +60,7 @@ class YelpUser(db.Model):
 
 class YelpReview(db.Model):
     """Review in Yelp Academic Dataset."""
+
     __tablename__ = "yelpReviews"
 
     # TODO: make business_id primary key??
@@ -99,9 +99,6 @@ class PlatePalBiz(db.Model):
     # sen_score calculated in BizSentiments or calculable from ...
     # review_count = db.Column(db.Integer, nullable=True)
     # TODO: neighborhoods?
-
-    sentiments = db.relationship('ReviewClass', secondary='classifications',
-                                  backref='biz')
 
     def __repr__(self):
         return "<PlatePalBiz biz_id=%d name=%s>" % (self.biz_id, self.name)
@@ -205,29 +202,10 @@ class Category(db.Model):
     def __repr__(self):
         return "<Category cat_name=%s>" % self.cat_name
 
-## TODO: MOVE INFO TO REVIEWCLASS and comment this out
-class Classification(db.Model):
+
+class ReviewCategory(db.Model):
     """
-    Category determined by LinearSVC classifier.
-
-    Classifier trained user subset of restaurant reviews in Yelp dataset."""
-    __tablename__ = "classifications"
-
-    class_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
-    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
-
-    # TODO: verify that this does what I think it does ...
-    biz = db.relationship('PlatePalBiz',
-                          backref=db.backref('categories', order_by=cat_code))
-
-    def __repr__(self):
-        return "<Classification class_id=%s>" % self.class_id
-
-
-class ReviewClass(db.Model):
-    """
-    Association table between reviews and classifications.
+    Association table between reviews and categories.
 
     Allows for determination of a sentiment score on an individual review,
     as a review has many categories and a category has many reviews. Space
@@ -235,17 +213,21 @@ class ReviewClass(db.Model):
     score).
     """
 
-    __tablename__ = "revclasses"
+    __tablename__ = "revcat"
 
     # TODO: using unique pairs as primary key??
-    revclass_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    revcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
+    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
     sen_score = db.Column(db.Float, nullable=False)  # machine generated score
     user_sen = db.Column(db.Float, nullable=True)  # for user feedback on score
 
+    biz = db.relationship('PlatePalBiz',
+                          backref=db.backref('revcat', order_by=cat_code))
+
     def __repr__(self):
-        return "<ReviewClass review_id=%s class_id=%s>" % (self.review_id, self.class_id)
+        return "<ReviewClass revcat_id=%s>" % (self.revcat_id)
 
 
 class BizSentiment(db.Model):
@@ -273,15 +255,26 @@ def connect_to_db(app):
 
     # Configure to use our SQLite database
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///platepal.db'
+    app.config['SQLALCHEMY_BINDS'] = {'yelp': 'sqlite:///yelp.db'}
     app.config['SQLALCHEMY_ECHO'] = True
     db.app = app
     db.init_app(app)
 
+# replaced with SQLAlchemy Bind
+# def connect_to_yelp_db(app):
+#     """Connect the Yelp database to our Flask app."""
+
+#     # Configure to use our SQLite database
+#     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yelp.db'
+#     app.config['SQLALCHEMY_ECHO'] = True
+#     db.app = app
+#     db.init_app(app)
 
 if __name__ == "__main__":
     # As a convenience, if we run this module interactively, it will leave
     # you in a state of being able to work with the database directly.
 
     from server import app
+
     connect_to_db(app)
     print "Connected to DB."

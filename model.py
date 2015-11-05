@@ -155,7 +155,7 @@ class PlatePalReview(db.Model):
                           backref=db.backref('reviews', order_by=review_id))
 
     def __repr__(self):
-        return "<PlatePalReview review_id=%s date=%s>" % (self.review_id, self.score_date)
+        return "<PlatePalReview review_id=%s date=%s>" % (self.review_id, self.review_date)
 
 
 class UserList(db.Model):

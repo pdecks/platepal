@@ -127,25 +127,34 @@ def load_yelp_reviews(rdf):
 
     YelpReview.query.delete()
 
+    # update for reviews in businesses only ...
     for row in rdf.iterrows():
         row_pd = row[1]
         biz_id = row_pd['business_id']  # unicode
-        user_id = row_pd['user_id']  # unicode
-        stars = row_pd['stars']  # integer
-        text = row_pd['text']  # text
-        rev_date = row_pd['date']  # date
-        # format date as date object
-        rev_date = datetime.strptime(rev_date, '%Y-%m-%d')
+        # check if business is in YelpBiz Table
+        # if not, skip review entry
+        # import pdb; pdb.set_trace()
+        check_biz = YelpBiz.query.filter_by(biz_id=biz_id).first()
+        if not check_biz:
+            continue
+        # else, add review to database
+        else:
+            user_id = row_pd['user_id']  # unicode
+            stars = row_pd['stars']  # integer
+            text = row_pd['text']  # text
+            rev_date = row_pd['date']  # date
+            # format date as date object
+            rev_date = datetime.strptime(rev_date, '%Y-%m-%d')
 
-        review = YelpReview(biz_id=biz_id,
-                            user_id=user_id,
-                            stars=stars,
-                            text=text,
-                            date=rev_date
-                            )
+            review = YelpReview(biz_id=biz_id,
+                                user_id=user_id,
+                                stars=stars,
+                                text=text,
+                                date=rev_date
+                                )
 
-        db.session.add(review)
-        db.session.commit()
+            db.session.add(review)
+            db.session.commit()
 
 
 if __name__ == "__main__":
@@ -157,6 +166,6 @@ if __name__ == "__main__":
     # Import different types of data
     udf, bdf, rdf = gets_data_frames(YELP_JSON_FP)
 
-    load_yelp_biz(bdf)
-    load_yelp_users(udf)
-    load_yelp_reviews(rdf)
+    # load_yelp_biz(bdf)
+    # load_yelp_users(udf)
+    # load_yelp_reviews(rdf)

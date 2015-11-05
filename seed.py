@@ -1,4 +1,4 @@
-"""Utility file to seed Yelp database from Yelp Academic Dataset in data/yelp/"""
+"""Utility file to seed PlatePalBiz and PlatePalReview tables from equivalent Yelp tables."""
 import json
 from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
@@ -7,22 +7,22 @@ from model import Category, ReviewCategory, BizSentiment
 from model import connect_to_db, db
 from server import app
 from pandas import DataFrame
+from datetime import datetime
 
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
 
 def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
     """
-    Returns pandas DataFrames containing JSON entries for users, biz, and reviews.
+    Returns pandas DataFrames containing JSON entries for biz and reviews.
 
 
     file_path: the absolute path of the JSON file that contains the academic dataset
-    
+
     target_cat_list (default u'Restaurants'): takes a list of categories for sorting
     business entries
     """
 
-    user_records = []
     biz_records = []
     review_records = []
 
@@ -33,60 +33,30 @@ def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
         # convert json
         record = json.loads(record)
 
-        if record['type'] == 'user':
-            user_records.append(record)
-        elif record['type'] == 'business':
+        if record['type'] == 'business':
             if set(target_cat_list) & set(record['categories']):
                 biz_records.append(record)
         elif record['type'] == 'review':
             review_records.append(record)
 
     # insert all records stored in lists into respective pandas DataFrames
-    udf = DataFrame(user_records)
     bdf = DataFrame(biz_records)
     rdf = DataFrame(review_records)
 
-    return (udf, bdf, rdf)
+    return (bdf, rdf)
 
 
-def load_yelp_users(udf):
-    """Load users from user data frame into Yelp user table."""
 
-    print "Yelp Users"
+def load_pp_biz(bdf):
+    """Load businesses from Yelp table into PlatePal table"""
 
-    YelpUser.query.delete()
+    print "PlatePal Businesses"
 
-    for row in udf.iterrows():
-        row_pd = row[1]
-        user_id = row_pd['user_id']  # unicode
-        name = row_pd['name']  # unicode
-        review_count = row_pd['review_count']  # int
-        average_stars = row_pd['average_stars']  # float
-
-        user = YelpUser(user_id=user_id,
-                      name=name,
-                      review_count=review_count,
-                      average_stars=average_stars
-                      )
-
-        db.session.add(user)
-
-    db.session.commit()
-
-
-def load_yelp_biz(bdf):
-    """Load businesses from business data frame into Yelp biz table."""
-
-    print "Yelp Businesses"
-
-    YelpBiz.query.delete()
-
-    # # business data frame
-    # bdf = gets_data_frames(BUSINESS_FP)
+    PlatePalBiz.query.delete()
 
     for row in bdf.iterrows():
         row_pd = row[1]
-        biz_id = row_pd['business_id']  # unicode
+        yelp_biz_id = row_pd['business_id']  # unicode
         name = row_pd['name']  # unicode
         address = row_pd['full_address']  # unicode
         city = row_pd['city']  # unicode
@@ -101,60 +71,67 @@ def load_yelp_biz(bdf):
         else:
             photo_url = None
 
-        biz = YelpBiz(biz_id=biz_id,
-                      name=name,
-                      address=address,
-                      city=city,
-                      state=state,
-                      lat=lat,
-                      lng=lng,
-                      stars=stars,
-                      review_count=review_count,
-                      is_open=is_open,
-                      photo_url=photo_url,
-                      )
+        biz = PlatePalBiz(yelp_biz_id=yelp_biz_id,
+                          name=name,
+                          address=address,
+                          city=city,
+                          state=state,
+                          lat=lat,
+                          lng=lng,
+                          is_open=is_open,
+                          photo_url=photo_url,
+                          )
 
         db.session.add(biz)
 
     db.session.commit()
 
 
-def load_yelp_reviews(rdf):
-    from datetime import datetime
-    """Load reviews from yelp.review into Yelp database."""
+def load_pp_reviews(rdf):
+    """Load reviews from Yelp table into PlatePal table"""
 
-    print "Yelp Reviews"
+    print "PlatePal Reviews"
 
-    YelpReview.query.delete()
+    PlatePalReview.query.delete()
 
     # update for reviews in businesses only ...
     for row in rdf.iterrows():
         row_pd = row[1]
         biz_id = row_pd['business_id']  # unicode
+
         # check if business is in YelpBiz Table
         # if not, skip review entry
+
         # import pdb; pdb.set_trace()
-        check_biz = YelpBiz.query.filter_by(biz_id=biz_id).first()
+        check_biz = YelpBiz.query.filter(YelpBiz.biz_id==biz_id).first()
+        # check_pp_biz = PlatePalBiz.query.filter_by(yelp_biz_id=biz_id).first()
         if not check_biz:
             continue
         # else, add review to database
         else:
-            user_id = row_pd['user_id']  # unicode
-            stars = row_pd['stars']  # integer
+            yelp_user_id = row_pd['user_id']  # unicode
+            # yelp_review = YelpReview.query.filter((YelpReview.biz_id==biz_id) & (YelpReview.user_id==yelp_user_id)).one()
+            # yelp_review_id = yelp_review.review_id
+            yelp_stars = row_pd['stars']  # integer
             text = row_pd['text']  # text
             rev_date = row_pd['date']  # date
             # format date as date object
             rev_date = datetime.strptime(rev_date, '%Y-%m-%d')
 
-            review = YelpReview(biz_id=biz_id,
-                                user_id=user_id,
-                                stars=stars,
-                                text=text,
-                                date=rev_date
-                                )
+            # will have to insert review ID later
+            review = PlatePalReview(yelp_review_id=None,
+                                    yelp_stars=yelp_stars,
+                                    biz_id=biz_id,
+                                    user_id=None,
+                                    yelp_user_id=yelp_user_id,
+                                    cat_code=None,
+                                    stars=None,
+                                    review_date=rev_date,
+                                    text=text
+                                     )
 
-            db.session.add(review)
-            db.session.commit()
+        db.session.add(review)
+        db.session.commit()
 
 
 if __name__ == "__main__":
@@ -164,8 +141,8 @@ if __name__ == "__main__":
     db.create_all()
 
     # Import different types of data
-    udf, bdf, rdf = gets_data_frames(YELP_JSON_FP)
+    bdf, rdf = gets_data_frames(YELP_JSON_FP)
 
-    # load_yelp_biz(bdf)
-    # load_yelp_users(udf)
-    # load_yelp_reviews(rdf)
+    # Seed PlatePalBiz and PlatePalReview
+    # load_pp_biz(bdf)
+    # load_pp_reviews(rdf)

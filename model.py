@@ -69,7 +69,7 @@ class YelpReview(db.Model):
     user_id = db.Column(db.Unicode(32), db.ForeignKey('yelpUsers.user_id'))
     stars = db.Column(db.Integer, nullable=False)  # integer 1-5 #TODO: restrict or check
     text = db.Column(db.Text, nullable=False)
-    date = db.Column(db.Date) # TODO: verify
+    date = db.Column(db.Date)
 
     biz = db.relationship('YelpBiz',
                           backref=db.backref('reviews', order_by=review_id))
@@ -85,17 +85,17 @@ class PlatePalBiz(db.Model):
     """Business on PlatePal website. (Builds on Yelp database.)"""
     __tablename__ = "biz"
 
-    biz_id = db.Column(db.Integer, primary_key=True) # TODO: yelp biz id?
-    yelp_biz_id = db.Column(db.Integer, db.ForeignKey('yelpBiz.biz_id')) # TODO: can this be nullable???
-    name = db.Column(db.String(200), nullable=False)
-    address = db.Column(db.String(200), nullable=False)
-    city = db.Column(db.String(64), nullable=False)
-    state = db.Column(db.String(32), nullable=False)
-    lat = db.Column(db.Float, nullable=False) #TODO: is there a lat/long type?
-    lon = db.Column(db.Float, nullable=False)
+    biz_id = db.Column(db.Integer, autoincrement=True, primary_key=True) # TODO: yelp biz id?
+    yelp_biz_id = db.Column(db.Unicode(32), db.ForeignKey('yelpBiz.biz_id')) # TODO: can this be nullable???
+    name = db.Column(db.Unicode(200), nullable=False)
+    address = db.Column(db.Unicode(200), nullable=False)
+    city = db.Column(db.Unicode(64), nullable=False)
+    state = db.Column(db.String(3), nullable=False)
+    lat = db.Column(db.Float(Precision=64), nullable=False) #TODO: is there a lat/long type?
+    lng = db.Column(db.Float(Precision=64), nullable=False)
+    is_open = db.Column(db.Integer, nullable=False)
     photo_url = db.Column(db.String(200), nullable=True)
-    is_open = db.Column(db.Boolean, nullable=False)
-    pp_url = db.Column(db.String(200), nullable=False)  # PlatePal url of biz listing
+    # pp_url = db.Column(db.String(200), nullable=False)  # PlatePal url of biz listing
     # sen_score calculated in BizSentiments or calculable from ...
     # review_count = db.Column(db.Integer, nullable=True)
     # TODO: neighborhoods?
@@ -141,9 +141,10 @@ class PlatePalReview(db.Model):
     yelp_stars = db.Column(db.Integer, db.ForeignKey('yelpReviews.stars'))
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    yelp_user_id = db.Column(db.Unicode(32), db.ForeignKey('yelpUsers.user_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
-    stars = db.Column(db.Integer, nullable=False)
-    review_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    stars = db.Column(db.Integer, nullable=True)
+    review_date = db.Column(db.Date, default=datetime.datetime.utcnow)
     text = db.Column(db.Text, nullable=False)
 
 

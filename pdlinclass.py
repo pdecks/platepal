@@ -330,9 +330,9 @@ def RepresentsInt(s):
         return False
 
 
-## RUN THIS FILE DIRECTLY TO TRAIN AND PERSIST CLASSIFIER ##
-if __name__ == "__main__":
 
+if __name__ == "__main__":
+    ## TRAIN AND PERSIST CLASSIFIER ##
     to_train = raw_input("Train the classifier? Y or N >> ")
     if to_train.lower() == 'y':
         # LOAD the training documents
@@ -391,7 +391,7 @@ if __name__ == "__main__":
         else:
             print 'Classifier not pickled.'
             print
-
+    ## CHECK PERFORMANCE ON TOY DATA SET ##
     else:
         to_test = raw_input("Check the classifier on the toy data set? Y or N >>")
         if to_test.lower() == 'y':
@@ -410,18 +410,21 @@ if __name__ == "__main__":
             pipeline_clf = revives_model(pickle_path_SVC)
 
             inaccurate = 0
-            i = 0
-            for x_pd, y_actual in zip(X_pd, y_trans_pd):
-                import pdb; pdb.set_trace()
-                predicted = pipeline_clf.predict(x_pd)
-                print "predicted: %d, actual: %d" % (predicted[i], y_actual)
-                if y_actual != predicted[i]:
+            predicted_pd = []
+            for i in range(0, len(X_pd)):
+                predicted = pipeline_clf.predict([X_pd[i]])
+                # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
+                if y_trans_pd[i] != predicted:
                     inaccurate += 1
                 i += 1
+                predicted_pd.append(predicted)
             print "-- Accuracy check of toy dataset --"
-            print "PERCENT INACCURATE: ", (inaccurate/(len(y_actual)))*100
-
-
+            print "PERCENT INACCURATE: ", (inaccurate/(len(y_trans_pd)))*100
+            for i in range(0, len(y_trans_pd)):
+                print "Index i: %s" % i
+                print "Predicted: %s" % predicted_pd[i][0]
+                print "Actual: %s" % str(int(y_trans_pd[i]))
+                print '-'*20
 
     # ## VERIFY classifier accuracy on training data
     # count = 0

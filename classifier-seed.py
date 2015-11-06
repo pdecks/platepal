@@ -11,7 +11,7 @@ from server import app
 pickle_path = pdlinclass.pickle_path_SVC
 
 # revive the linearSVC classifier
-pipeline_clf = pdlinclass.revives_model(pickle_path)
+pipeline_clf = pdlinclass.revives_pipeline(pickle_path)
 
 
 def classify_pp_review(review_text):

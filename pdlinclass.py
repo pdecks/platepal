@@ -50,6 +50,9 @@ container_path = './data/training/'
 categories = ['gluten', 'unknown']
 
 pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
+pickle_path_v = 'classifiers/LSVCcomponents/vectorizer/linearSVCvectorizer.pkl'
+pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl'
+pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
 # project goal (might be V2.0):
 # categories = ['gluten-free',
@@ -248,7 +251,7 @@ def tunes_parameters(X, y, n_fold=2):
 
 
 ## PERSIST THE MODEL ##
-def persist_classifier(pipeline_clf, pickle_path):
+def persist_pipeline(pipeline_clf, pickle_path):
     """Use joblib to pickle the pipeline model to disk."""
     joblib.dump(pipeline_clf, pickle_path)
     print 'Classifier pickled to directory: %s' % pickle_path
@@ -258,13 +261,27 @@ def persist_classifier(pipeline_clf, pickle_path):
 
 
 ## REVIVE CLASSIFIER TO CATEGORIZE NEW REVIEWS ##
-def revives_model(pickle_name):
+def revives_pipeline(pickle_name):
     """Takes the name of the pickled object and returns the revived model.
 
     ex: clf_revive = pickle.loads(pdecks_trained_classifier)
     """
     model_clone = joblib.load(pickle_name)
     return model_clone
+
+
+## PERSIST A COMPONENT OF THE MODEL ##
+def persist_component(component, pickle_path):
+    """Use joblib to pickle the individual classifier components"""
+    joblib.dump(component, pickle_path)
+    print 'Component %s pickled to directory: %s' % (str(component), pickle_path)
+    print
+    return
+
+## REVIVE COMPONENT ##
+def revive_component(pickle_path):
+    component_clone = joblib.load(pickle_path)
+    return component_clone
 
 
 
@@ -385,15 +402,36 @@ if __name__ == "__main__":
 
 
         ## PERSIST THE MODEL ##
-        decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
+        decision = raw_input("Would you like to persist the pipeline classifier? (Y) or (N) >>")
         if decision.lower() == 'y':
-            persist_classifier(pipeline_clf, pickle_path_SVC)
+            persist_pipeline(pipeline_clf, pickle_path_SVC)
         else:
             print 'Classifier not pickled.'
             print
+
+        ## PERSIST THE COMPONENTS ##
+        decision = raw_input("Would you like to persist the vectorizer? (Y) or (N) >>")
+        if decision.lower() == 'y':
+            persist_component(count_vect, pickle_path_v)
+        else:
+            print 'Vectorizer not pickled.'
+      
+        decision = raw_input("Would you like to persist the transformer? (Y) or (N) >>")
+        if decision.lower() == 'y':
+            persist_component(tfidf_transformer, pickle_path_t)
+        else:
+            print 'Transformer not pickled.'
+
+        decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
+        if decision.lower() == 'y':
+            persist_component(clf, pickle_path_c)
+        else:
+            print 'Classifier not pickled.'
+
+
     ## CHECK PERFORMANCE ON TOY DATA SET ##
     else:
-        to_test = raw_input("Check the classifier on the toy data set? Y or N >>")
+        to_test = raw_input("Check the pipeline classifier on the toy data set? Y or N >>")
         if to_test.lower() == 'y':
             documents_pd = loads_pdecks_reviews()
             X_pd, y_pd = bunch_to_np(documents_pd)
@@ -407,7 +445,7 @@ if __name__ == "__main__":
                     # gluten
                     y_trans_pd = np.append(y_trans_pd, 0)
 
-            pipeline_clf = revives_model(pickle_path_SVC)
+            pipeline_clf = revives_pipeline(pickle_path_SVC)
 
             inaccurate = 0
             predicted_pd = []
@@ -425,6 +463,7 @@ if __name__ == "__main__":
                 print "Predicted: %s" % predicted_pd[i][0]
                 print "Actual: %s" % str(int(y_trans_pd[i]))
                 print '-'*20
+
 
     # ## VERIFY classifier accuracy on training data
     # count = 0

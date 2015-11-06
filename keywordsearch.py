@@ -1,6 +1,5 @@
 """
-Extract a set of reviews from the database to test
-the LinearSVC category classifier.
+Extract a set of reviews from the database using keywords
 
 by Patricia Decker 11/6/2015, part of Hackbright Project
 
@@ -57,7 +56,7 @@ def get_category_and_keywords():
     keyword = raw_input(" (press enter if done) >> ")
     search_terms = []
     while keyword:
-        search_terms.append(keyword.lower())
+        search_terms.append(keyword)
         keyword = raw_input(" (press enter if done) >> ")
 
     return cat_name, search_terms

@@ -73,6 +73,16 @@ def loads_yelp_reviews(container_path, categories):
                                    encoding='utf-8')
     return documents
 
+def loads_pdecks_reviews():
+    """Load toy data set and check classifier working."""
+
+    container_path = './pdecks-reviews/'
+    categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
+
+    documents = sk_base.load_files(container_path,
+                                   categories=categories,
+                                   encoding='utf-8')
+    return documents
 
 def bunch_to_np(documents):
     """
@@ -323,62 +333,94 @@ def RepresentsInt(s):
 ## RUN THIS FILE DIRECTLY TO TRAIN AND PERSIST CLASSIFIER ##
 if __name__ == "__main__":
 
-    # LOAD the training documents
-    # documents = loads_pdecks_reviews(container_path, categories)
-    documents = loads_yelp_reviews(container_path, categories)
-    X, y = bunch_to_np(documents)
+    to_train = raw_input("Train the classifier? Y or N >> ")
+    if to_train.lower() == 'y':
+        # LOAD the training documents
+        # documents = loads_pdecks_reviews(container_path, categories)
+        documents = loads_yelp_reviews(container_path, categories)
+        X, y = bunch_to_np(documents)
 
-    # Train the model and cross-validate
-    num_folds = raw_input("Enter a number of folds (2-10): ")
-    num_iter = raw_input("Enter a number of iterations (1-50): ")
-    print
-
-    while not RepresentsInt(num_folds) or not RepresentsInt(num_iter):
+        # Train the model and cross-validate
         num_folds = raw_input("Enter a number of folds (2-10): ")
         num_iter = raw_input("Enter a number of iterations (1-50): ")
         print
 
-    num_folds = int(num_folds)
-    num_iter = int(num_iter)
-    fold_avg_scores = score_kfolds(X, y, num_folds, num_iter)
+        while not RepresentsInt(num_folds) or not RepresentsInt(num_iter):
+            num_folds = raw_input("Enter a number of folds (2-10): ")
+            num_iter = raw_input("Enter a number of iterations (1-50): ")
+            print
 
-    scores = tunes_parameters(X, y, 10)
+        num_folds = int(num_folds)
+        num_iter = int(num_iter)
+        fold_avg_scores = score_kfolds(X, y, num_folds, num_iter)
 
-    # CREATE and TRAIN the classifier
-    X, y = bunch_to_np(documents)
-    count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(X, y)
+        scores = tunes_parameters(X, y, 10)
 
-
-
-    ##TEST the classifier
-    new_doc = ['I love gluten-free foods. This restaurant is the best.']
-    # new_doc_category_id = categorizes_review(new_doc,
-    #                                          count_vect,
-    #                                          tfidf_transformer,
-    #                                          clf)
-
-    # new_doc_category = get_category_name(new_doc_category_id)
-    new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
-    new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
-
-    print
-    print "-- Test document --"
-    print
-    # print "Using Vectorizer, Transformer, and Classifier:"
-    # for doc, category in zip(new_doc, predicted):
-    # print "%r => %s" % (new_doc[0], new_doc_category)
-    print
-    print "Using Pipeline:"
-    print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
+        # CREATE and TRAIN the classifier
+        X, y = bunch_to_np(documents)
+        count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(X, y)
 
 
-    ## PERSIST THE MODEL ##
-    decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
-    if decision == 'Y':
-        persist_classifier(pipeline_clf, pickle_path_SVC)
-    else:
-        print 'Classifier not pickled.'
+
+        ##TEST the classifier
+        new_doc = ['I love gluten-free foods. This restaurant is the best.']
+        # new_doc_category_id = categorizes_review(new_doc,
+        #                                          count_vect,
+        #                                          tfidf_transformer,
+        #                                          clf)
+
+        # new_doc_category = get_category_name(new_doc_category_id)
+        new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
+        new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
+
         print
+        print "-- Test document --"
+        print
+        # print "Using Vectorizer, Transformer, and Classifier:"
+        # for doc, category in zip(new_doc, predicted):
+        # print "%r => %s" % (new_doc[0], new_doc_category)
+        print
+        print "Using Pipeline:"
+        print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
+
+
+        ## PERSIST THE MODEL ##
+        decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
+        if decision.lower() == 'y':
+            persist_classifier(pipeline_clf, pickle_path_SVC)
+        else:
+            print 'Classifier not pickled.'
+            print
+
+    else:
+        to_test = raw_input("Check the classifier on the toy data set? Y or N >>")
+        if to_test.lower() == 'y':
+            documents_pd = loads_pdecks_reviews()
+            X_pd, y_pd = bunch_to_np(documents_pd)
+            # transform toy dataset labels to 0 = gluten, 1 = unknown
+            y_trans_pd = np.array([])
+            for target in y_pd:
+                if target == 0 or target == 4:
+                    # unknown
+                    y_trans_pd = np.append(y_trans_pd, 1)
+                else:
+                    # gluten
+                    y_trans_pd = np.append(y_trans_pd, 0)
+
+            pipeline_clf = revives_model(pickle_path_SVC)
+
+            inaccurate = 0
+            i = 0
+            for x_pd, y_actual in zip(X_pd, y_trans_pd):
+                import pdb; pdb.set_trace()
+                predicted = pipeline_clf.predict(x_pd)
+                print "predicted: %d, actual: %d" % (predicted[i], y_actual)
+                if y_actual != predicted[i]:
+                    inaccurate += 1
+                i += 1
+            print "-- Accuracy check of toy dataset --"
+            print "PERCENT INACCURATE: ", (inaccurate/(len(y_actual)))*100
+
 
 
     # ## VERIFY classifier accuracy on training data

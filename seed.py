@@ -97,13 +97,13 @@ def load_pp_reviews(rdf):
     # update for reviews in businesses only ...
     for row in rdf.iterrows():
         row_pd = row[1]
-        biz_id = row_pd['business_id']  # unicode
+        yelp_biz_id = row_pd['business_id']  # unicode
 
         # check if business is in YelpBiz Table
         # if not, skip review entry
 
         # import pdb; pdb.set_trace()
-        check_biz = YelpBiz.query.filter(YelpBiz.biz_id==biz_id).first()
+        check_biz = YelpBiz.query.filter(YelpBiz.biz_id==yelp_biz_id).first()
         # check_pp_biz = PlatePalBiz.query.filter_by(yelp_biz_id=biz_id).first()
         if not check_biz:
             continue
@@ -121,7 +121,7 @@ def load_pp_reviews(rdf):
             # will have to insert review ID later
             review = PlatePalReview(yelp_review_id=None,
                                     yelp_stars=yelp_stars,
-                                    biz_id=biz_id,
+                                    yelp_biz_id=yelp_biz_id,
                                     user_id=None,
                                     yelp_user_id=yelp_user_id,
                                     cat_code=None,
@@ -133,6 +133,56 @@ def load_pp_reviews(rdf):
         db.session.add(review)
         db.session.commit()
 
+def fix_biz_id(num_to_fix):
+    """
+    Moves biz_id entry to yelp_biz_id field for all reviews
+
+    num_to_fix is the number of entries to fix
+    """
+    from sqlalchemy.sql import func
+    import random
+
+    # select only reviews where the 22-character yelp_biz_id is in the biz_id field
+    reviews = PlatePalReview.query.filter(func.length(PlatePalReview.biz_id)==22).all()
+    reviews_n = random.sample(reviews, num_to_fix)
+
+    for review in reviews_n:
+        # import pdb; pdb.set_trace()
+        yelp_biz_id = review.biz_id
+        review_biz = PlatePalBiz.query.filter_by(yelp_biz_id=yelp_biz_id).first()
+        review.biz_id = review_biz.biz_id
+        db.session.commit()
+    return
+
+
+def load_biz_id(n):
+    """
+    Populates the biz_id field for reviews in PlatePalReview
+
+    n is the number of entries to seed.
+    """
+
+    print "... populating %d biz ids in reviews ..." % n
+    print
+
+    import random
+
+    reviews = PlatePalReview.query.filter(PlatePalReview.biz_id.is_(None))
+    reviews_n = random.sample(reviews, n)
+
+    # lookup biz_id for each review and add to entry
+    # for review in reviews_n:
+    #     review_biz = PlatePalBiz.query.filter_by(yelp_biz_id=review.yelp)
+
+
+## Helper function for checking if input string represents an int
+def RepresentsInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 
 if __name__ == "__main__":
     connect_to_db(app)
@@ -141,8 +191,20 @@ if __name__ == "__main__":
     db.create_all()
 
     # Import different types of data
-    bdf, rdf = gets_data_frames(YELP_JSON_FP)
+    # bdf, rdf = gets_data_frames(YELP_JSON_FP)
 
     # Seed PlatePalBiz and PlatePalReview
     # load_pp_biz(bdf)
     # load_pp_reviews(rdf)
+
+    # Seed PlatePalReview biz_id from PlatePalBiz
+    print "Would you like to fix PlatePalReview.biz_id?"
+    decision = raw_input("Y or N >> ")
+    if decision.lower() == 'y':
+        num_to_fix = raw_input("Enter an integer value of entries to update >> ")
+        while not RepresentsInt(num_to_fix):
+            num_to_fix = raw_input("Enter an integer value of entries to update >> ")
+        fix_biz_id(int(num_to_fix))
+
+    else:
+        pass

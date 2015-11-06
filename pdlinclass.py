@@ -248,12 +248,12 @@ def persist_classifier(pipeline_clf, pickle_path):
 
 
 ## REVIVE CLASSIFIER TO CATEGORIZE NEW REVIEWS ##
-def revives_model(pickle_path):
+def revives_model(pickle_name):
     """Takes the name of the pickled object and returns the revived model.
 
     ex: clf_revive = pickle.loads(pdecks_trained_classifier)
     """
-    model_clone = joblib.load(pickled_name)
+    model_clone = joblib.load(pickle_name)
     return model_clone
 
 

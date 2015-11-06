@@ -26,6 +26,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
 from sklearn.cross_validation import KFold
+from sklearn.cross_validation import cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.externals import joblib
 
@@ -37,11 +38,20 @@ from sklearn.externals import joblib
 # directory containing toy data set: reviews by pdecks as .txt files
 # must be preprocessed with 'preprocess-reviews.py' if the .txt files
 # contain more than just review information delimited on pipes
-container_path = 'pdecks-reviews/'
-categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
+
+# toy data set: 45 reviews by author
+# container_path = 'pdecks-reviews/'
+# categories = ['bad', 'good', 'limited', 'shady', 'excellent']
+
+# training data set from yelp academic database:
+# 969 reviews containing the word 'gluten'
+# 1000 reviews randomly sampled from 217,000 reviews NOT containing the word 'gluten'
+container_path = './data/training/'
+categories = ['gluten', 'unknown']
 
 pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
 
+# project goal (might be V2.0):
 # categories = ['gluten-free',
 #               'paleo',
 #               'pescatarian',
@@ -51,8 +61,8 @@ pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
 #               'kosher',
 #               'halal']
 
-
-def loads_pdecks_reviews(container_path, categories):
+# def loads_pdecks_reviews(container_path, categories):
+def loads_yelp_reviews(container_path, categories):
     # load the list of files matching the categories
     # BEWARE OF LURKING .DS_Store files!! those are not 'utf-8'
     # and will throw a UnicodeDecodeError
@@ -63,14 +73,21 @@ def loads_pdecks_reviews(container_path, categories):
     return documents
 
 
-def define_train_test_sets(documents):
-    """Takes complete dataset and splits it into training and testing set."""
+def bunch_to_np(documents):
+    """
+    Takes complete dataset and convert to np arrays.
+
+    Documents input as a scikit bunch.
+    """
     # TODO: update how data is split into a test set and a training set
     # Define the training dataset
-    train_docs = documents
-    test_docs = train_docs
+    # train_docs = documents
+    # test_docs = train_docs
 
-    return (train_docs, test_docs)
+    X = np.array(documents.data)
+    y = documents.target
+
+    return (X, y)
 
 
 def create_vectorizer(X_train):
@@ -98,20 +115,13 @@ def create_transformer(X_train_counts):
 
 
 ## CREATE AND TRAIN DOCUMENT CLASSIFIER ##
-def create_train_classifier(train_docs):
-    """Takes documents (sklearn bunch) and returns a trained classifier
-    and its vectorizer and transformer."""
-    X = np.array(train_docs.data)
-    y = train_docs.target
+def create_train_classifier(X, y):
+    """Takes documents (X) and targets (y), both np arrays, and returns a trained
+    classifier and its vectorizer and transformer."""
 
-
-    # TODO: use k folds on the sparse matrix, rather than on raw data,
-    # if possible, b/c otherwise might inadvertently introduce bias
-    # X_train, X_test, y_train, y_test = train_test_split(
-    #     X, y, test_size=0.25, random_state=0)
-    X_train, X_test = np.copy(X), np.copy(X)
-    y_train, y_test = np.copy(y), np.copy(y)
-
+    X_train = np.copy(X)
+    y_train = np.copy(y)
+  
     ## EXTRACTING FEATURES ##
     # TOKENIZATION
     count_vect = create_vectorizer(X_train)
@@ -136,13 +146,103 @@ def create_train_classifier(train_docs):
     # train the pipeline
     pipeline_clf = pipeline_clf.fit(X_train, y_train)
 
+
     return (count_vect, tfidf_transformer, clf, pipeline_clf)
+
+
+## SCORE THE CLASSIFIER OVER K-Folds ##
+
+def score_kfolds(X, y, num_folds=2, num_iter=1):
+    """Perform cross-validation on sparse matrix (tf-idf).
+
+    Returns a dictionary of the scores by fold."""
+
+    count_vect = create_vectorizer(X)
+    X_counts = count_vect.transform(X)
+
+    tfidf_transformer = create_transformer(X_counts)
+    X_tfidf = tfidf_transformer.transform(X_counts)
+
+    clf = LinearSVC()
+
+    print "Running score_kfolds with num_folds=%d, num_iter=%d" % (num_folds, num_iter)
+    print "..."
+    # randomly partition data set into 10 folds ignoring the classification variable
+    # b/c we want to see how the classifier performs in this real-world situation
+
+    # start with k=2, eventually increase to k=10 with larger dataset
+    avg_scores = {}
+    for k in range(2, num_folds + 1):
+      avg_scores[k] = {}
+
+    for k in range(2, num_folds + 1):
+      n_fold = k
+      print "Fold number %d ..." % k 
+      # run k_fold num_iter number of times at each value of k (2, 3, ..., k)
+      # take average score for each fold, keeping track of scores in dictionary
+      k_dict = {}
+      for i in range(1, n_fold + 1):
+        k_dict[i] = []
+
+      for j in range(1, num_iter +1):
+        k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+        # print "iteration: %d ..." % j
+        i = 1
+        for train, test in k_fold:
+            score = clf.fit(X_tfidf[train], y[train]).score(X_tfidf[test], y[test])
+            k_dict[i].append(score)
+            # print "Fold: {} | Score:  {:.4f}".format(i, score)
+            # k_fold_scores = np.append(k_fold_scores, score)
+            i += 1
+      # import pdb; pdb.set_trace()
+      avg_scores[k] = k_dict
+
+      print "Iterations for fold %d complete." % k
+
+    print
+    print '-- K-Fold Cross Validation --------'
+    print '-- Mean Scores for {} Iterations --'.format(j)
+    print
+    for k in range(2, num_folds + 1):
+      print '-- k = {} --'.format(k)
+      for i in range(1, k+1):
+        print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
+    print
+
+    return avg_scores
+
+
+def tunes_parameters(X, y, n_fold=2):
+    """Perform cross-validation on sparse matrix (tf-idf).
+
+    Returns a dictionary of the scores by fold."""
+
+    count_vect = create_vectorizer(X)
+    X_counts = count_vect.transform(X)
+
+    tfidf_transformer = create_transformer(X_counts)
+    X_tfidf = tfidf_transformer.transform(X_counts)
+
+    clf = LinearSVC()
+
+    k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+
+    # pass the entirity of the data, X_tfidf, to cross_val_score
+    # cv is the number of folds for cross-validation
+    # use classification accuracy as deciding metric
+    scores = cross_val_score(clf, X_tfidf, y, cv=10, scoring='accuracy')
+    print scores
+
+    return scores
 
 
 ## PERSIST THE MODEL ##
 def persist_classifier(pipeline_clf, pickle_path):
     """Use joblib to pickle the pipeline model to disk."""
     joblib.dump(pipeline_clf, pickle_path)
+    print 'Classifier pickled to directory: %s' % pickle_path
+    print
+
     return
 
 
@@ -156,17 +256,8 @@ def revives_model(pickle_path):
     return model_clone
 
 
-# TODO: Make sure this is garbage ...
-# predicted = text_clf.predict(new_doc)
 
-# for doc, category in zip(new_doc, predicted):
-#     print "%r => %s" % (doc, pdecks_reviews.target_names[category])
-
-# k_fold = KFold(n=len(X), n_folds=5, shuffle=True, random_state=random.randint(1,101))
-
-
-
-## CLASSIFY NEW BUSINESS
+## CLASSIFY NEW REVIEW
 def categorizes_review(review_text, count_vect, tfidf_transformer, clf):
     """Takes an array containing review text and returns the most relevant
     category for the review.
@@ -219,128 +310,156 @@ def get_category_name(category_id):
 
 ## CHUNKING ##
 
+## Helper function for checking if input string represents an int
+def RepresentsInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 
-
+## RUN THIS FILE DIRECTLY TO TRAIN AND PERSIST CLASSIFIER ##
 if __name__ == "__main__":
 
     # LOAD the training documents
-    documents = loads_pdecks_reviews(container_path, categories)
+    # documents = loads_pdecks_reviews(container_path, categories)
+    documents = loads_yelp_reviews(container_path, categories)
+    X, y = bunch_to_np(documents)
 
-    # DEFINE training and testing datasets
-    train_docs, test_docs = define_train_test_sets(documents)
-    X_train = np.array(train_docs.data)
-    y_train = train_docs.target
-    y_test = np.copy(y_train)
+    # Train the model and cross-validate
+    num_folds = raw_input("Enter a number of folds (2-10): ")
+    num_iter = raw_input("Enter a number of iterations (1-50): ")
+    print
+
+    while not RepresentsInt(num_folds) or not RepresentsInt(num_iter):
+        num_folds = raw_input("Enter a number of folds (2-10): ")
+        num_iter = raw_input("Enter a number of iterations (1-50): ")
+        print
+
+    num_folds = int(num_folds)
+    num_iter = int(num_iter)
+    fold_avg_scores = score_kfolds(X, y, num_folds, num_iter)
+
+    scores = tunes_parameters(X, y, 10)
 
     # CREATE and TRAIN the classifier
-    count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(documents)
+    X, y = bunch_to_np(documents)
+    count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(X, y)
 
-    ## PERSIST THE MODEL ##
-    persist_classifier(pipeline_clf, pickle_path_SVC)
 
-    # TEST the classifier
+
+    ##TEST the classifier
     new_doc = ['I love gluten-free foods. This restaurant is the best.']
-    new_doc_category_id = categorizes_review(new_doc,
-                                             count_vect,
-                                             tfidf_transformer,
-                                             clf)
+    # new_doc_category_id = categorizes_review(new_doc,
+    #                                          count_vect,
+    #                                          tfidf_transformer,
+    #                                          clf)
 
-    new_doc_category = get_category_name(new_doc_category_id)
+    # new_doc_category = get_category_name(new_doc_category_id)
     new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
     new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
 
     print
     print "-- Test document --"
     print
-    print "Using Vectorizer, Transformer, and Classifier:"
+    # print "Using Vectorizer, Transformer, and Classifier:"
     # for doc, category in zip(new_doc, predicted):
-    print "%r => %s" % (new_doc[0], new_doc_category)
+    # print "%r => %s" % (new_doc[0], new_doc_category)
     print
     print "Using Pipeline:"
     print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
 
 
-    ## VERIFY classifier accuracy on training data
-    count = 0
-    inaccurate = 0
-
-    predicted_array = np.array([])
-    for x_var, y_actual in zip(X_train, y_train):
-      # print "###################"
-      # print "x_var: \n", x_var
-      # print
-      X_new_counts = count_vect.transform([x_var])  # transform only, as
-      X_new_tfidf = tfidf_transformer.transform(X_new_counts)
-      # print X_new_tfidf.shape   # (1, 5646)
-      predicted = clf.predict(X_new_tfidf)
-      predicted_array = np.append(predicted_array, predicted)
-      # print "predicted: %r, actual: %r" % (predicted, y_actual)
-      # print "###################"
-      if y_actual != predicted[0]:
-        inaccurate += 1
-      count += 1
-
-    print
-    print "-- Accuracy check by hand --"
-    print "PERCENT INACCURATE:", (inaccurate/(count*1.0))*100
-    print
-    print "-- Numpy mean calculation --"
-    print "PERCENT ACCURATE:", np.mean(predicted_array == y_test)*100
+    ## PERSIST THE MODEL ##
+    decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
+    if decision == 'Y':
+        persist_classifier(pipeline_clf, pickle_path_SVC)
+    else:
+        print 'Classifier not pickled.'
+        print
 
 
-    ## CROSS-VALIDATING CLASSIFIERS ##
-    # randomly partition data set into 10 folds ignoring the classification variable
-    # b/c we want to see how the classifier performs in this real-world situation
+    # ## VERIFY classifier accuracy on training data
+    # count = 0
+    # inaccurate = 0
 
-    X = np.copy(X_train)
-    y = np.copy(y_train)
-    X_train_counts = count_vect.transform(X)
-    X_train_tfidf = tfidf_transformer.transform(X_train_counts)
+    # predicted_array = np.array([])
+    # for x_var, y_actual in zip(X_train, y_train):
+    #   # print "###################"
+    #   # print "x_var: \n", x_var
+    #   # print
+    #   X_new_counts = count_vect.transform([x_var])  # transform only, as
+    #   X_new_tfidf = tfidf_transformer.transform(X_new_counts)
+    #   # print X_new_tfidf.shape   # (1, 5646)
+    #   predicted = clf.predict(X_new_tfidf)
+    #   predicted_array = np.append(predicted_array, predicted)
+    #   # print "predicted: %r, actual: %r" % (predicted, y_actual)
+    #   # print "###################"
+    #   if y_actual != predicted[0]:
+    #     inaccurate += 1
+    #   count += 1
 
-    # start with k=2, eventually increase to k=10 with larger dataset
-    avg_scores = {}
-    for k in range(2,6):
-      avg_scores[k] = {}
+    # print
+    # print "-- Accuracy check by hand --"
+    # print "PERCENT INACCURATE:", (inaccurate/(count*1.0))*100
+    # print
+    # print "-- Numpy mean calculation --"
+    # print "PERCENT ACCURATE:", np.mean(predicted_array == y_test)*100
 
-    for k in range(2, 6):
-      n_fold = k
-      # run k_fold 50 times at each value of k (2, 3, 4, 5)
-      # take average score for each fold, keeping track of scores in dictionary
-      k_dict = {}
-      for i in range(1, n_fold+1):
-        k_dict[i] = []
+### MOVED INTO FUNCTION ABOVE score_kfolds ###
+    # ## CROSS-VALIDATING CLASSIFIERS ##
+    # # randomly partition data set into 10 folds ignoring the classification variable
+    # # b/c we want to see how the classifier performs in this real-world situation
 
-      for j in range(1, len(X)+1):
-        k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+    # X = np.copy(X_train)
+    # y = np.copy(y_train)
+    # X_train_counts = count_vect.transform(X)
+    # X_train_tfidf = tfidf_transformer.transform(X_train_counts)
 
-        # k_fold_scores = [clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test]) for train, test in k_fold]
+    # # start with k=2, eventually increase to k=10 with larger dataset
+    # avg_scores = {}
+    # for k in range(2,6):
+    #   avg_scores[k] = {}
 
-        # print
-        # print "-- Results of k-fold training and testing --"
-        # print
-        # print "Number of folds: {}".format(n_fold)
-        # k_fold_scores = np.array([])
+    # for k in range(2, 6):
+    #   n_fold = k
+    #   # run k_fold 50 times at each value of k (2, 3, 4, 5)
+    #   # take average score for each fold, keeping track of scores in dictionary
+    #   k_dict = {}
+    #   for i in range(1, n_fold+1):
+    #     k_dict[i] = []
+
+    #   for j in range(1, len(X)+1):
+    #     k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+
+    #     # k_fold_scores = [clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test]) for train, test in k_fold]
+
+    #     # print
+    #     # print "-- Results of k-fold training and testing --"
+    #     # print
+    #     # print "Number of folds: {}".format(n_fold)
+    #     # k_fold_scores = np.array([])
 
 
-        i = 1
-        for train, test in k_fold:
-            score = clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test])
-            k_dict[i].append(score)
-            # print "Fold: {} | Score:  {:.4f}".format(i, score)
-            # k_fold_scores = np.append(k_fold_scores, score)
-            i += 1
-      # import pdb; pdb.set_trace()
-      avg_scores[k] = k_dict
+    #     i = 1
+    #     for train, test in k_fold:
+    #         score = clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test])
+    #         k_dict[i].append(score)
+    #         # print "Fold: {} | Score:  {:.4f}".format(i, score)
+    #         # k_fold_scores = np.append(k_fold_scores, score)
+    #         i += 1
+    #   # import pdb; pdb.set_trace()
+    #   avg_scores[k] = k_dict
 
-    print
-    print '-- K-Fold Cross Validation --------'
-    print '-- Mean Scores for {} Iterations --'.format(j)
-    print
-    for k in range(2,6):
-      print '-- k = {} --'.format(k)
-      for i in range(1, k+1):
-        print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
-    print
+    # print
+    # print '-- K-Fold Cross Validation --------'
+    # print '-- Mean Scores for {} Iterations --'.format(j)
+    # print
+    # for k in range(2,6):
+    #   print '-- k = {} --'.format(k)
+    #   for i in range(1, k+1):
+    #     print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
+    # print
 
-    # print "Fold: {} | Score:  {:.4f}".format(i, score)
+    # # print "Fold: {} | Score:  {:.4f}".format(i, score)

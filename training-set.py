@@ -6,6 +6,8 @@ by Patricia Decker 11/5/2015, part of Hackbright Project
 """
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import not_
+
 import datetime
 
 from model import YelpBiz, YelpUser, YelpReview
@@ -17,6 +19,7 @@ from server import app
 
 import os
 import codecs
+import random
 
 # absolute dir the script is in
 script_dir = os.path.dirname(__file__)
@@ -26,17 +29,23 @@ connect_to_db(app)
 print "Connected to DB."
 
 # Define category name and path where .txt files will be saved
-cat_name = "gluten"
+cat_name = "unknown"
+not_name = 'gluten'
 cat_rel_path = "/data/training/" + cat_name + "/"
 cat_abs_path = os.path.join(script_dir, cat_rel_path)
 
 # query the DB for all reviews containing a word from the category
-search_str = '%' + cat_name + '%'
-gluten_search = PlatePalReview.query.filter(PlatePalReview.text.like(search_str)).all()
+if cat_name == "unknown":
+    not_str = '%' + not_name + '%'
+    cat_search = PlatePalReview.query.filter(not_(PlatePalReview.text.like(not_str))).all()
+    cat_search = random.sample(cat_search, 1000)  # pick 1000 random samples from 212,701 reviews
+else:
+    search_str = '%' + cat_name + '%'
+    cat_search = PlatePalReview.query.filter(PlatePalReview.text.like(search_str)).all()
 
 # export review text as .txt files into path mvp/data/training/gluten_reviews
 result_count = 0
-for result in gluten_search:
+for result in cat_search:
 
     review_text = result.text
 

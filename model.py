@@ -214,14 +214,14 @@ class ReviewCategory(db.Model):
     score).
     """
 
-    __tablename__ = "revcat"
+    __tablename__ = "revcats"
 
     # TODO: using unique pairs as primary key??
     revcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
-    sen_score = db.Column(db.Float, nullable=False)  # machine generated score
+    sen_score = db.Column(db.Float, nullable=True)  # machine generated score
     user_sen = db.Column(db.Float, nullable=True)  # for user feedback on score
 
     biz = db.relationship('PlatePalBiz',
@@ -245,7 +245,59 @@ class BizSentiment(db.Model):
                           backref=db.backref('sentiments', order_by=cat_code))
 
     def __repr__(self):
-        return "<BizSentiment sent_id=%s>" % self.sent_id
+        return "<BizSentiment sen_id=%s>" % self.sen_id
+
+
+## post-MVP ##
+class ReviewSentence(db.Model):
+    """
+    Association table between review-categories and sentence-categories.
+
+    A review has many categories --> review-categories
+    A review-category has many sentences --> review-sentences
+    A sentence has many categories --> sentence-categories
+    """
+    __tablename__ = "revsents"
+
+    revsent_id = db.Column(db.Integer, autoincrement=True, primary_key=True) 
+    sent_id = db.Column(db.Integer, db.ForeignKey('sentcats.sent_id'))
+    review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id')) # TODO: should this be revcat id?
+    # sent_text = db.Column(db.Text, nullable=False)
+    sen_score = db.Column(db.Float, nullable=True)
+
+    def __repr__(self):
+        return "<ReviewSentence sent_id=%s review_id=%s>" % (self.sent_id, self.review_id) # TODO: revcat?
+
+
+class SentenceCategory(db.Model):
+    """
+    Association table between sentences and categories.
+
+    A sentence has many categories <--> a category has many sentences
+    """
+    __tablename__ = "sentcats"
+
+    sentcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    sent_id = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+
+    def __repr__(self):
+        return "<SentenceCategory sent_id=%s cat_code=%s>" % (self.sent_id, self.cat_code)
+
+
+class Sentences(db.Model):
+    """
+    Storing individual sentences of reviews, assuming sentiment analysis
+    performed on a sentence-by-sentence level of granularity.
+    """
+    __tablename__ = "sentences"
+
+    sent_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
+    sent_text = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return "<Sentence sent_id=%s review_id=%s>" % (self.sent_id, self.review_id)
 
 
 ##############################################################################

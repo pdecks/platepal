@@ -65,6 +65,7 @@ pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 #               'halal']
 
 def loads_yelp_reviews(container_path, categories):
+# training set
 # for toy dataset ...
 # def loads_pdecks_reviews(container_path, categories):
     # load the list of files matching the categories

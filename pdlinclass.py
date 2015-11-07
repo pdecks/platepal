@@ -340,7 +340,7 @@ def get_category_name(category_id):
 ## CHUNKING ##
 
 ## Helper function for checking if input string represents an int
-def RepresentsInt(s):
+def represents_int(s):
     try:
         int(s)
         return True
@@ -363,7 +363,7 @@ if __name__ == "__main__":
         num_iter = raw_input("Enter a number of iterations (1-50): ")
         print
 
-        while not RepresentsInt(num_folds) or not RepresentsInt(num_iter):
+        while not represents_int(num_folds) or not represents_int(num_iter):
             num_folds = raw_input("Enter a number of folds (2-10): ")
             num_iter = raw_input("Enter a number of iterations (1-50): ")
             print

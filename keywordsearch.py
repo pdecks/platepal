@@ -45,27 +45,60 @@ script_dir = os.path.dirname(__file__)
 
 
 def get_category_and_keywords():
-    """Define category name and path where .txt files will be saved"""
+    """Define category name and list of case-sensitive keywords."""
     # ex. cat_name = "unknown" or "gluten"
 
-    user_input = raw_input('Select set to test: "unknown" or "gluten" >> ')
-    cat_name = user_input.lower()
+    print 'Select set to test or train:'
+    print '0. Unrestricted'
+    print '1. Gluten-free'
+    print '2. Allergies'
+    print '3. Paleo'
+    print '4. Kosher'
+    print '5. Vegan'
+
+    user_input = raw_input(">> ")
+    cat_names = ['unknown', 'gluten', 'allergy', 'paleo', 'kosher', 'vegan']
+
+    # check input and recurse if needed
+    if represents_int(user_input):
+        cat_name = cat_names[int(user_input)]
+    else:
+        print
+        print "Incorrect value entered. Please enter a number from 0-5."
+        get_category_and_keywords()
 
     # search_terms = ["gluten", "GF", "celiac", "gluten-free"]
-    print "Enter a keyword for the category: "
+    if user_input == 0:
+        print "UNRESTRICTED selected."
+        print
+        print "Enter a keyword to be excluded from search."
+
+    else:
+        print "%s selected." % cat_name.upper()
+        print
+        print "Enter a keyword for the category: "
+
+    print "Keywords are case sensitive."
     keyword = raw_input(" (press enter if done) >> ")
     search_terms = []
     while keyword:
         search_terms.append(keyword)
         keyword = raw_input(" (press enter if done) >> ")
 
-    return cat_name, search_terms
+    print
+    max_results = raw_input("Enter the maximum number of results to return >> ")
+
+    if not represents_int(max_results):
+        print "Please enter an integer."
+        max_results = raw_input("Enter the maximum number of results to return >> ")
+
+    max_results = int(max_results)
+
+    return cat_name, search_terms, max_results
 
 
-def get_category_reviews(cat_name, search_terms):
-    """queries the DB for all reviews containing a word from the category"""
-    cat_rel_path = "/data/testing/" + cat_name + "/"
-    cat_abs_path = os.path.join(script_dir, cat_rel_path)
+def get_category_reviews(cat_name, search_terms, max_results=1000):
+    """Queries the DB for all reviews containing a word from the category"""
 
     if cat_name == "unknown":
         not_str = 'WHERE'
@@ -81,16 +114,13 @@ def get_category_reviews(cat_name, search_terms):
             not_str = not_str + ' Reviews.text NOT LIKE ' + nstr + end_str
             j += 1
 
-        print not_str
+        QUERY =  """
+        SELECT Biz.biz_id, Biz.name, Reviews.review_id, Reviews.review_date, Reviews.text
+        FROM Reviews
+        JOIN Biz on Reviews.biz_id = Biz.biz_id
+        """ + not_str
 
-        QUERY = "SELECT * FROM Reviews " + not_str
-        print "Query: %s" % QUERY
-
-        cursor = db.session.execute(QUERY)
-        csearch = cursor.fetchall()
-        cat_search = [random.sample(csearch, 2350)]
-
-    elif cat_name == 'gluten':
+    else:
         search_str = 'WHERE'
         j = 1
         for cname in search_terms:
@@ -104,40 +134,55 @@ def get_category_reviews(cat_name, search_terms):
             search_str = search_str + ' Reviews.text LIKE ' + sstr + end_str
             j += 1
 
-        print search_str
-
         QUERY = """
-        SELECT Biz.name, Reviews.review_date, Reviews.text
+        SELECT Biz.biz_id, Biz.name, Reviews.review_id, Reviews.review_date, Reviews.text
         FROM Reviews
         JOIN Biz on Reviews.biz_id = Biz.biz_id
         """ + search_str
 
-        print "Query: \n%s" % QUERY
-        # import pdb; pdb.set_trace()
-        cursor = db.session.execute(QUERY)
-        csearch = cursor.fetchall()
-        num_samples = len(csearch)
-        # num_samples = int(math.floor(len(csearch)/4))
-        cat_search = [random.sample(csearch, num_samples)]
-        # cat_search = []
-        # for cname in search_terms:
-        #     search_str = '%' + cname + '%'
-        #     csearch = PlatePalReview.query.filter(PlatePalReview.text.like(search_str)).all()
-        #     cat_search.append(csearch)
-    else:
-        print 'No query performed.'
+    # print "Query: \n%s" % QUERY
 
-    return cat_search, cat_abs_path
+    cursor = db.session.execute(QUERY)
+    csearch = cursor.fetchall()
+    num_results = len(csearch)
+    if max_results < num_results:
+        num_results = max_results
+    cat_search = [random.sample(csearch, num_results)]
+
+    return cat_search
+
+
+def create_path(cat_name):
+    """Create path where .txt files will be saved"""
+    # if cat_name == 'unknown':
+    #     cat_rel_path = "/data/" + cat_name + "/"
+    # else:
+    cat_rel_path = "/data/keywords/" + cat_name + "/"
+    cat_abs_path = os.path.join(script_dir, cat_rel_path)
+
+    return cat_abs_path
+
 
 # TODO: add flag for commiting rev-cat cat_code (cat_search, cat_abs_path, db_flag)
-def create_category_files(cat_search, cat_abs_path):
+def create_category_files(cat_search, cat_abs_path, search_terms):
     """exports review text as .txt files path mvp/data/training/gluten_reviews"""
+
+    # create a .txt file of the keywords used to generate the query
+    search_term_str = "|".join(search_terms)
+    file_path = '.' + os.path.join(cat_abs_path, 'search_terms.txt')
+    with codecs.open(file_path, 'w', 'utf-8-sig') as f:
+        f.write(search_term_str)
+        f.close()
+
     result_count = 0
     for csearch in cat_search:
         for review in csearch:
-            biz_name = review[0]
-            review_date = review[1]
-            review_text = review[2]
+            # SELECT Biz.biz_id, Biz.name, Reviews.review_id, Reviews.review_date, Reviews.text
+            biz_id = str(review[0])
+            biz_name = review[1]
+            review_id = str(review[2])
+            review_date = review[3]
+            review_text = review[4]
 
             # create new text file for each review
             doc_count = '{0:04d}'.format((result_count))
@@ -153,10 +198,19 @@ def create_category_files(cat_search, cat_abs_path):
             # open and write to the file object
             # use codecs to encode as UTF-8 (handling accented characters)
             with codecs.open(file_path, 'w', 'utf-8-sig') as f:
-                f.write(biz_name + '|' + review_date + '|' + review_text)
+                f.write(review_id + '|' + biz_id + '|' + biz_name + '|' + review_date + '|' + review_text)
                 f.close()
 
             result_count += 1
+
+
+## Helper function for checking if input string represents an int
+def represents_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 
 if __name__ == "__main__":
@@ -168,16 +222,20 @@ if __name__ == "__main__":
     decision = raw_input("Y or N >> ")
     if decision.lower() == 'y':
         print 'QUERY BY KEYWORD'
-        cat_name, search_terms = get_category_and_keywords()
-        cat_search, cat_abs_path = get_category_reviews(cat_name, search_terms)
+        cat_name, search_terms, max_results = get_category_and_keywords()
+        cat_reviews = get_category_reviews(cat_name, search_terms, max_results)
+
+        print "Would you like to generate the category .txt files?"
+        decision = raw_input("Y or N >> ")
+        if decision.lower() == 'y':
+            cat_abs_path = create_path(cat_name)
+            print "Creating .txt files ... "
+            create_category_files(cat_reviews, cat_abs_path, search_terms)
+            print "File creation completed."
+            print
+
     else:
         print "That's cool. Maybe some other time."
         print
 
-    print "Would you like to generate the category .txt files?"
-    decision = raw_input("Y or N >> ")
-    if decision.lower() == 'y':
-        print "Creating .txt files ... "
-        create_category_files(cat_search, cat_abs_path)
-        print "File creation completed."
-        print
+    

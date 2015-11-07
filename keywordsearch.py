@@ -129,7 +129,7 @@ def get_category_reviews(cat_name, search_terms):
 
     return cat_search, cat_abs_path
 
-
+# TODO: add flag for commiting rev-cat cat_code (cat_search, cat_abs_path, db_flag)
 def create_category_files(cat_search, cat_abs_path):
     """exports review text as .txt files path mvp/data/training/gluten_reviews"""
     result_count = 0

@@ -1,5 +1,7 @@
 """Utility file to seed PlatePalBiz and PlatePalReview tables from equivalent Yelp tables."""
 import json
+
+from model import CAT_CODES
 from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
@@ -133,6 +135,7 @@ def load_pp_reviews(rdf):
         db.session.add(review)
         db.session.commit()
 
+
 def fix_biz_id(num_to_fix):
     """
     Moves biz_id entry to yelp_biz_id field for all reviews
@@ -174,6 +177,33 @@ def load_biz_id(n):
     # for review in reviews_n:
     #     review_biz = PlatePalBiz.query.filter_by(yelp_biz_id=review.yelp)
 
+
+def seed_revcat(cat_search, category):
+    """Used by keywordsearch.py to populate RevCat table with cat_reviews"""
+
+    # lookup cat_code in CAT_CODES dict imported from model
+    cat_code = CAT_CODES[category]
+    # iterate over entries in cat_reviews
+    for csearch in cat_search:
+        for review in csearch:
+            biz_id = review[0]
+            biz_name = review[1]
+            review_id = review[2]
+            review_date = review[3]
+            review_text = review[4]
+
+            # check whether review id / cat_code pair already in db
+            revcat = ReviewCategory.query.filter(ReviewCategory.review_id == review_id, ReviewCategory.cat_code == cat_code).first()
+
+            # if not exists, add
+            if revcat is None:
+                revcat = ReviewCategory(review_id=review_id,
+                                        biz_id=biz_id,
+                                        cat_code=cat_code
+                                        )
+                db.session.add(revcat)
+                db.session.commit()
+    return
 
 ## Helper function for checking if input string represents an int
 def RepresentsInt(s):

@@ -15,6 +15,13 @@ import datetime
 
 db = SQLAlchemy()
 
+CAT_CODES = {'unknown': 'unkn',
+             'gluten': 'gltn',
+             'allergy': 'algy',
+             'paleo': 'pleo',
+             'kosher': 'kshr',
+             'vegan': 'vgan'
+            }
 
 ##############################################################################
 # Model definitions
@@ -287,7 +294,7 @@ class SentenceCategory(db.Model):
         return "<SentenceCategory sent_id=%s cat_code=%s>" % (self.sent_id, self.cat_code)
 
 
-class Sentences(db.Model):
+class Sentence(db.Model):
     """
     Storing individual sentences of reviews, assuming sentiment analysis
     performed on a sentence-by-sentence level of granularity.

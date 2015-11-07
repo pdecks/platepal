@@ -1,26 +1,14 @@
 """
-Extract a set of reviews from the database using keywords
+1. Extract a set of reviews from the database using keywords.
+2. Populate entries in ReviewCategory table (revcats)
+    revcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
+    biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    sen_score = db.Column(db.Float, nullable=True)  # machine generated score
+    user_sen = db.Column(db.Float, nullable=True)  # for user feedback on score
 
-by Patricia Decker 11/6/2015, part of Hackbright Project
-
-As of 12:15 PM:
-48 entries in JOIN
-sqlite> select count(*) from reviews
-   ...> JOIN biz on reviews.biz_id = biz.biz_id
-   ...> WHERE reviews.text LIKE "%gluten%"
-   ...> OR reviews.text LIKE "%gluten-free%"
-   ...> OR reviews.text LIKE "%GF%"
-   ...> OR reviews.text LIKE "%celiac%";
-
-1836 entries in LEFT JOIN
-sqlite> select count(*) from reviews
-   ...> LEFT JOIN biz on reviews.biz_id = biz.biz_id
-   ...> WHERE reviews.text LIKE "%gluten%"
-   ...> OR reviews.text LIKE "%gluten-free%"
-   ...> OR reviews.text LIKE "%GF%"
-   ...> OR reviews.text LIKE "%celiac%";
-
-
+by Patricia Decker 11/2015, part of Hackbright Project
 """
 
 from flask_sqlalchemy import SQLAlchemy
@@ -32,7 +20,11 @@ from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
+from model import Sentence, SentenceCategory
 from model import connect_to_db, db
+
+from seed import seed_revcat
+
 from server import app
 
 import os
@@ -234,8 +226,16 @@ if __name__ == "__main__":
             print "File creation completed."
             print
 
+        # option to seed query results into ReviewCategory table
+        if cat_name != "unknown":
+            print "Would you like to populate the results into the ReviewCategory table?"
+            decision = raw_input("Y or N >> ")
+            if decision.lower() == 'y':
+                from server import app
+                connect_to_db(app)
+                print "Connected to DB."
+                seed_revcat(cat_reviews, cat_name)
+
     else:
         print "That's cool. Maybe some other time."
         print
-
-    

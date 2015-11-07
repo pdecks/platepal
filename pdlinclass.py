@@ -65,17 +65,14 @@ pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 #               'halal']
 
 def loads_yelp_reviews(container_path, categories):
-# training set
-# for toy dataset ...
-# def loads_pdecks_reviews(container_path, categories):
-    # load the list of files matching the categories
-    # BEWARE OF LURKING .DS_Store files!! those are not 'utf-8'
-    # and will throw a UnicodeDecodeError
-
+    """Load the training documents in data/training directory."""
+    # TODO: update to handle pipes for keyword search directory .txt files
+    # where format --> review_id | biz_id | biz_name | review_date | review_text
     documents = sk_base.load_files(container_path,
                                    categories=categories,
                                    encoding='utf-8')
     return documents
+
 
 def loads_pdecks_reviews():
     """Load toy data set and check classifier working."""
@@ -87,6 +84,7 @@ def loads_pdecks_reviews():
                                    categories=categories,
                                    encoding='utf-8')
     return documents
+
 
 def bunch_to_np(documents):
     """
@@ -283,7 +281,6 @@ def persist_component(component, pickle_path):
 def revive_component(pickle_path):
     component_clone = joblib.load(pickle_path)
     return component_clone
-
 
 
 ## CLASSIFY NEW REVIEW

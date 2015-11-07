@@ -249,24 +249,24 @@ class BizSentiment(db.Model):
 
 
 ## post-MVP ##
-class ReviewSentence(db.Model):
-    """
-    Association table between review-categories and sentence-categories.
+# class ReviewSentence(db.Model):
+#     """
+#     Association table between review-categories and sentence-categories.
 
-    A review has many categories --> review-categories
-    A review-category has many sentences --> review-sentences
-    A sentence has many categories --> sentence-categories
-    """
-    __tablename__ = "revsents"
+#     A review has many categories --> review-categories
+#     A review-category has many sentences --> review-sentences
+#     A sentence has many categories --> sentence-categories
+#     """
+#     __tablename__ = "revsents"
 
-    revsent_id = db.Column(db.Integer, autoincrement=True, primary_key=True) 
-    sent_id = db.Column(db.Integer, db.ForeignKey('sentcats.sent_id'))
-    review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id')) # TODO: should this be revcat id?
-    # sent_text = db.Column(db.Text, nullable=False)
-    sen_score = db.Column(db.Float, nullable=True)
+#     revsent_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+#     sent_id = db.Column(db.Integer, db.ForeignKey('sentcats.sent_id'))
+#     review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id')) # TODO: should this be revcat id?
+#     # sent_text = db.Column(db.Text, nullable=False)
+#     sen_score = db.Column(db.Float, nullable=True)
 
-    def __repr__(self):
-        return "<ReviewSentence sent_id=%s review_id=%s>" % (self.sent_id, self.review_id) # TODO: revcat?
+#     def __repr__(self):
+#         return "<ReviewSentence sent_id=%s review_id=%s>" % (self.sent_id, self.review_id) # TODO: revcat?
 
 
 class SentenceCategory(db.Model):
@@ -278,8 +278,10 @@ class SentenceCategory(db.Model):
     __tablename__ = "sentcats"
 
     sentcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    sent_id = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    sent_id = db.Column(db.Integer, db.ForeignKey('sentences.sent_id'))
+    revcat_id = db.Column(db.Integer, db.ForeignKey('revcats.revcat_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    sen_score = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return "<SentenceCategory sent_id=%s cat_code=%s>" % (self.sent_id, self.cat_code)

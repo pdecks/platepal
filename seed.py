@@ -1,5 +1,6 @@
 """Utility file to seed PlatePalBiz and PlatePalReview tables from equivalent Yelp tables."""
 import json
+import random
 
 from model import CAT_CODES
 from model import YelpBiz, YelpUser, YelpReview
@@ -7,9 +8,12 @@ from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
 from model import connect_to_db, db
+
 from server import app
 from pandas import DataFrame
 from datetime import datetime
+from sqlalchemy.sql import func
+from sqlalchemy import distinct
 
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
@@ -142,8 +146,6 @@ def fix_biz_id(num_to_fix, num_to_offset):
 
     num_to_fix is the number of entries to fix
     """
-    from sqlalchemy.sql import func
-    import random
 
     # select only reviews where the 22-character yelp_biz_id is in the biz_id field
     reviews = PlatePalReview.query.filter(func.length(PlatePalReview.biz_id)==22).limit(num_to_fix).offset(num_to_offset)
@@ -158,24 +160,25 @@ def fix_biz_id(num_to_fix, num_to_offset):
     return
 
 
-def load_biz_id(n):
-    """
-    Populates the biz_id field for reviews in PlatePalReview
+# TODO This looks like it can be deleted ...
+# def load_biz_id(n):
+#     """
+#     Populates the biz_id field for reviews in PlatePalReview
 
-    n is the number of entries to seed.
-    """
+#     n is the number of entries to seed.
+#     """
 
-    print "... populating %d biz ids in reviews ..." % n
-    print
+#     print "... populating %d biz ids in reviews ..." % n
+#     print
 
-    import random
+#     import random
 
-    reviews = PlatePalReview.query.filter(PlatePalReview.biz_id.is_(None))
-    reviews_n = random.sample(reviews, n)
+#     reviews = PlatePalReview.query.filter(PlatePalReview.biz_id.is_(None))
+#     reviews_n = random.sample(reviews, n)
 
-    # lookup biz_id for each review and add to entry
-    # for review in reviews_n:
-    #     review_biz = PlatePalBiz.query.filter_by(yelp_biz_id=review.yelp)
+#     # lookup biz_id for each review and add to entry
+#     # for review in reviews_n:
+#     #     review_biz = PlatePalBiz.query.filter_by(yelp_biz_id=review.yelp)
 
 
 def seed_revcat(cat_search, category):
@@ -205,6 +208,66 @@ def seed_revcat(cat_search, category):
                 db.session.commit()
     return
 
+
+# MVP 3a. build class/method for avg rating per cat
+# this should only be applied to the businesses that are in revcats, as the other
+# businesses are classified as "unknown" and therefore don't have a category
+# or their scores for the category would be unknown
+def calc_avg_rating_per_cat():
+    """Calculate average stars for business by category"""
+
+    # 1. find the businesses having more than one revcat (multiple reviews for a business)
+    # SELECT biz_id, COUNT(cat_code) as num_revcats FROM revcats GROUP BY biz_id HAVING COUNT(cat_code) > 1 ORDER BY COUNT(cat_code) DESC;
+
+    # 2. find the businesses with more than one cat_code (multiple categories within multiple reviews)
+    # SELECT biz_id, COUNT(DISTINCT cat_code) as num_cats FROM revcats GROUP BY biz_id HAVING COUNT(cat_code) > 1 ORDER BY COUNT(DISTINCT cat_code) DESC;
+    # --> SELECT biz_id as num_cats FROM revcats GROUP BY biz_id HAVING COUNT(cat_code) > 1 ORDER BY COUNT(DISTINCT cat_code) DESC;
+    # multiple_cat_biz = db.session.query(ReviewCategory.biz_id).group_by(ReviewCategory.biz_id).having(func.count(ReviewCategory.cat_code)>1).order_by(func.count(distinct(ReviewCategory.cat_code))).all()
+    # 3. for each of these biz_ids, select the cat codes
+
+    # query ReviewCategory for unique biz_ids
+        # revcat_biz = db.session.query(distinct(ReviewCategory.biz_id)).all()
+        # revcat_biz = db.session.query(distinct(ReviewCategory.biz_id), ReviewCategory.cat_code).order_by(ReviewCategory.cat_code).all()
+
+    revcats = db.session.query(ReviewCategory.review_id, ReviewCategory.biz_id, ReviewCategory.cat_code).order_by(ReviewCategory.biz_id).all()
+    unique_biz = set([revcat[1] for revcat in revcats])
+    #for each biz_id with more than one review
+    for biz in unique_biz:
+        biz_id = biz
+
+        # find distinct categories for biz in revcat
+        cats = set([revcat[2] for revcat in revcats if revcat[1] == biz_id])
+        # bizcats = db.session.query(distinct(ReviewCategory.cat_code)).filter(ReviewCategory.biz_id==biz_id).all()
+
+        # for a category
+        for cat in cats:
+            cat_code = cat
+            # find all reviews in the current category
+            revs = [revcat[0] for revcat in revcats if (revcat[1] == biz_id and revcat[2] == cat)]
+            # revs = db.session.query(ReviewCategory.review_id).filter(ReviewCategory.biz_id==biz_id, ReviewCategory.cat_code==cat_code).all()
+
+            # take average of stars for all of those reviews
+            sum_stars_by_cat = 0
+            # for each review in category, get num of stars from reviews table
+            num_revs = len(revs)
+            for rev in revs:
+                review_id = rev
+                stars = db.session.query(PlatePalReview.yelp_stars).filter(PlatePalReview.review_id==review_id).first()
+                # update sum
+                sum_stars_by_cat += stars[0]
+                average_stars_by_cat = (sum_stars_by_cat / num_revs) / 1.0
+
+            # update attribute
+            bizsen_cat = BizSentiment(biz_id=biz_id,
+                                  cat_code=cat_code,
+                                  avg_cat_review=average_stars_by_cat)
+
+            # update db
+            db.session.add(bizsen_cat)
+            db.session.commit()
+    return
+
+
 ## Helper function for checking if input string represents an int
 def RepresentsInt(s):
     try:
@@ -227,16 +290,22 @@ if __name__ == "__main__":
     # load_pp_biz(bdf)
     # load_pp_reviews(rdf)
 
+    # FOR FIXING PlatePalBiz BIZ IDs (fixed as of 11/8/2015)
     # Seed PlatePalReview biz_id from PlatePalBiz
-    print "Would you like to fix PlatePalReview.biz_id?"
+    # print "Would you like to fix PlatePalReview.biz_id?"
+    # decision = raw_input("Y or N >> ")
+    # if decision.lower() == 'y':
+    #     num_to_fix = raw_input("Enter an integer value of entries to update >> ")
+    #     num_to_offset = raw_input("Enter an integer value of entries to offset >> ")
+    #     while not RepresentsInt(num_to_fix) or not RepresentsInt(num_to_offset):
+    #         num_to_fix = raw_input("Enter an integer value of entries to update >> ")
+    #         num_to_offset = raw_input("Enter an integer value of entries to offset >> ")
+    #     fix_biz_id(int(num_to_fix), int(num_to_offset))
+
+    # else:
+    #     pass
+
+    print "Would you like to seed BizSentiment by category?"
     decision = raw_input("Y or N >> ")
     if decision.lower() == 'y':
-        num_to_fix = raw_input("Enter an integer value of entries to update >> ")
-        num_to_offset = raw_input("Enter an integer value of entries to offset >> ")
-        while not RepresentsInt(num_to_fix) or not RepresentsInt(num_to_offset):
-            num_to_fix = raw_input("Enter an integer value of entries to update >> ")
-            num_to_offset = raw_input("Enter an integer value of entries to offset >> ")
-        fix_biz_id(int(num_to_fix), int(num_to_offset))
-
-    else:
-        pass
+        calc_avg_rating_per_cat()

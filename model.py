@@ -243,16 +243,32 @@ class BizSentiment(db.Model):
     # in postgreSQL, this would have a watcher on it (KLF)
     __tablename__ = "bizsentiments"
 
-    sen_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    bizsen_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
-    aggregate_score = db.Column(db.Float, nullable=False) # to be calculated for individual scores an updated periodically
+    agg_sen_score = db.Column(db.Float, nullable=True)  # to be calculated for individual scores an updated periodically
+    avg_cat_review = db.Column(db.Float, nullable=True)
 
     biz = db.relationship('PlatePalBiz',
                           backref=db.backref('sentiments', order_by=cat_code))
 
     def __repr__(self):
-        return "<BizSentiment sen_id=%s>" % self.sen_id
+        return "<BizSentiment bizsen_id=%s>" % self.bizsen_id
+
+    # # MVP 3a. build class/method for avg rating per cat
+    # def calc_avg_rating_per_cat(self):
+    #     """Calculate average stars for business by category"""
+
+    #     # for biz_id
+    #         # for a category
+    #         # find all reviews in the current category
+    #         # cat_code = category
+
+    #         # take average of stars for all of those reviews
+    #         # for review in list, sum = sum + review(stars)
+    #         # average = sum/len(list)
+    #     # update attribute
+    #     # update database.
 
 
 ## post-MVP ##

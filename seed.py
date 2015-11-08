@@ -136,7 +136,7 @@ def load_pp_reviews(rdf):
         db.session.commit()
 
 
-def fix_biz_id(num_to_fix):
+def fix_biz_id(num_to_fix, num_to_offset):
     """
     Moves biz_id entry to yelp_biz_id field for all reviews
 
@@ -146,10 +146,10 @@ def fix_biz_id(num_to_fix):
     import random
 
     # select only reviews where the 22-character yelp_biz_id is in the biz_id field
-    reviews = PlatePalReview.query.filter(func.length(PlatePalReview.biz_id)==22).all()
-    reviews_n = random.sample(reviews, num_to_fix)
+    reviews = PlatePalReview.query.filter(func.length(PlatePalReview.biz_id)==22).limit(num_to_fix).offset(num_to_offset)
+    # reviews_n = random.sample(reviews, num_to_fix)
 
-    for review in reviews_n:
+    for review in reviews:
         # import pdb; pdb.set_trace()
         yelp_biz_id = review.biz_id
         review_biz = PlatePalBiz.query.filter_by(yelp_biz_id=yelp_biz_id).first()
@@ -232,9 +232,11 @@ if __name__ == "__main__":
     decision = raw_input("Y or N >> ")
     if decision.lower() == 'y':
         num_to_fix = raw_input("Enter an integer value of entries to update >> ")
-        while not RepresentsInt(num_to_fix):
+        num_to_offset = raw_input("Enter an integer value of entries to offset >> ")
+        while not RepresentsInt(num_to_fix) or not RepresentsInt(num_to_offset):
             num_to_fix = raw_input("Enter an integer value of entries to update >> ")
-        fix_biz_id(int(num_to_fix))
+            num_to_offset = raw_input("Enter an integer value of entries to offset >> ")
+        fix_biz_id(int(num_to_fix), int(num_to_offset))
 
     else:
         pass

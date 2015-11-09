@@ -1,33 +1,4 @@
-{% extends 'base.html' %}
-
-{% block title %}
-PlatePal Home
-{% endblock%}
-
-{% block location %}
-    <h3>City Name</h3> <!--TODO: Replace with Jinja -->
-    <!-- TODO: JINJA for loop here of cities in list of nearby cities -->
-    <h4>Nearby Name 1</h4> <!--TODO: Replace with Jinja -->
-    <h4>Nearby Name 2</h4> <!--TODO: Replace with Jinja -->
-    <h4>Nearby Name 3</h4> <!--TODO: Replace with Jinja -->
-    <!-- end JINJA for loop here -->
-{% endblock %}
-
-{% block content %}
-    <h3>Popular on PlatePal</h3>
-    <div id="results-map">
-        <div id="map-nav">
-            <h4> Gluten-Free</h4>
-            <h4> Vegan</h4>
-            <h4> Paleo</h4>
-            <h4> Kosher</h4>
-            <h4> Allergies</h4>
-            <h4> Feeling Lucky</h4>
-        </div>
-        <div id="map"></div>
-        <script src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true">
-        <script type="text/javascript">
-            function initMap(){
+ function initMap(){
                 // update to geolocate or set default SF
                 var myLatLng = {lat: 37.774929, lng: -122.419416};
                 
@@ -125,18 +96,3 @@ PlatePal Home
                 });
               }
             }
-        </script>
-    </div>
-    <div id="results-list">
-        <!-- corresponds to active tab on map-nav -->
-        <h3> Gluten-Free</h3> <!--todo: jinja -->
-        <!-- for loop here of items in list -->
-        <ol>
-            <li><img src=""> Restaurant Name </li>
-            <li><img src=""> Restaurant Name </li>
-            <li><img src=""> Restaurant Name </li>
-        </ol>
-    </div>
-
-
-{% endblock %}

@@ -27,6 +27,12 @@ def index():
     # "<html><body>Placeholder for the homepage.</body></html>"
 
 
+@app.route('/search')
+def search_bar_results():
+    """Page displaying results of search bar search."""
+    return render_template('search.html')
+
+
 @app.route('/biz/<int:biz_id>')
 def show_biz_details(biz_id):
     """Displays details for individual business."""
@@ -62,7 +68,6 @@ def show_biz_details(biz_id):
 
     # movies = Movie.query.order_by(Movie.movie_title).all()
     # return render_template("movie-details.html", movie=movie, ratings=ratings)
-
 
     return render_template("biz.html", biz=biz)
 
@@ -111,50 +116,50 @@ def show_login_form():
 
 @app.route('/login-process')
 def process_login():
-    #TODO update
-    username = request.args.get('username')
-    password = request.args.get('password')
-    # query for username in database
+    #TODO update, look into Flask login
+    # username = request.args.get('username')
+    # password = request.args.get('password')
+    # # query for username in database
 
-    #TODO update
-    # if user = None, add user to database
-    user = User.query.filter(User.email == username).first()
-    # print "This is user after line 74: %s" % user
-    if user == None:
-        age = ''
-        zipcode = ''
-        user = User(email=username, password=password, age=age, zipcode=zipcode)
-        # print "This is user after line 79: %s" % user
-        db.session.add(user)
-        db.session.commit()
+    # #TODO update
+    # # if user = None, add user to database
+    # user = User.query.filter(User.email == username).first()
+    # # print "This is user after line 74: %s" % user
+    # if user == None:
+    #     age = ''
+    #     zipcode = ''
+    #     user = User(email=username, password=password, age=age, zipcode=zipcode)
+    #     # print "This is user after line 79: %s" % user
+    #     db.session.add(user)
+    #     db.session.commit()
 
-        # User.query.filter(User.email == username)
-        user = User.query.filter(User.email == username).all()
-        # user = user[0]
-        # print "This is the user after line 85: %s" % user
-        # print "This is password: %s" % password
-        # print "This is user.password: %s" % user.password
+    #     # User.query.filter(User.email == username)
+    #     user = User.query.filter(User.email == username).all()
+    #     # user = user[0]
+    #     # print "This is the user after line 85: %s" % user
+    #     # print "This is password: %s" % password
+    #     # print "This is user.password: %s" % user.password
 
-        # # TODO: ways to get fancy: add modal window, registration page, etc.
+    #     # # TODO: ways to get fancy: add modal window, registration page, etc.
 
-    # user exists, check pw
-    # log in user if password matches user pw
-    if user.password == password:
-        # add user id to session
-        session['user_id'] = user.user_id
-        # create flash message 'logged in'
-        flash("Login successful.")
+    # # user exists, check pw
+    # # log in user if password matches user pw
+    # if user.password == password:
+    #     # add user id to session
+    #     session['user_id'] = user.user_id
+    #     # create flash message 'logged in'
+    #     flash("Login successful.")
 
-    else:
-        # display alert for incorrect login information
-        flash("Incorrect login information. Please try again.")
-        # good place to use AJAX in the future!
-        return redirect('/login-form')
+    # else:
+    #     # display alert for incorrect login information
+    #     flash("Incorrect login information. Please try again.")
+    #     # good place to use AJAX in the future!
+    #     return redirect('/login-form')
 
-    # redirect to homepage
-    # return redirect('/users/<user_id>')
-    return redirect('/profile/' + str(session[user_id]))
-
+    # # redirect to homepage
+    # # return redirect('/users/<user_id>')
+    # return redirect('/profile/' + str(session[user_id]))
+    pass
 
 @app.route('/profile/<int:user_id>')
 def show_user_page(user_id):

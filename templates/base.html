@@ -6,22 +6,39 @@
 
 <body>
     <navbar>
-        <a href='/'>Home</a>
-        {% if not "user_id" in session %}
-        <a href='/login-form'>Login</a>
+        <div id="brand">
+        <a href='/'>PlatePal</a>
+        </div>
         
-        {% else %}
-        {# if logged in, show profile page link #}
-        <a href="/profile/{{ session['user_id'] }}">Profile</a>
-        <a href='/logout'>Logout</a>
+        <div id="searchbar">
+            <form>
+                <input type="text" name="search-kind" placeholder="tacos, noodles, dinner">
+                <input type="text" name="search-loc" placeholder="San Francisco">
+                <input type="submit" value="Dish It">
+            </form>
+        </div>
+        <div id="loyalty">
+            {% if not "user_id" in session %}
+            <a href='/login-form'>Sign Up</a>
+            <a href='/login-form'>Login</a>
+            
+            {% else %}
+            {# if logged in, show profile page link #}
+            <a href="/profile/{{ session['user_id'] }}">Profile</a>
+            <a href='/logout'>Logout</a>
         
-        {% endif %}
+            {% endif %}
+        </div>
     </navbar>
-
+    <div id="location">
+        {% block location %}
+        City information goes here.
+        {% endblock %}
+    </div>
     <div id="content">
-    {% block content %}
+        {% block content %}
         Content goes here.
-    {% endblock %}
+        {% endblock %}
     </div>
 
     <footer>

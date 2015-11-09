@@ -1,4 +1,34 @@
 {% extends 'base.html' %}
+{% block location %}
+    <h3>"Search" near Location</h3> <!--TODO: Replace with Jinja -->
+    <!-- TODO: JINJA for loop here of related searches -->
+    <h4>Related Searches</h4> <!--TODO: Replace with Jinja -->
+    <!-- end JINJA for loop here -->
+{% endblock %}
+
 {% block content %}
-<h2>PlatePal Search Results</p2>
+    <div id="results-list">
+        <!-- corresponds to active tab on map-nav -->
+        <h3> Gluten-Free</h3> <!--todo: jinja -->
+        <!-- for loop here of items in list -->
+        <ol>
+            <li><img src=""> Restaurant Name </li>
+            <li><img src=""> Restaurant Name </li>
+            <li><img src=""> Restaurant Name </li>
+        </ol>
+    </div>
+    <div id="results-map">
+        <div id="map">
+            MAP GOES HERE
+        </div>
+        <div id="map-nav">
+            <h4> Gluten-Free</h4>
+            <h4> Vegan</h4>
+            <h4> Paleo</h4>
+            <h4> Kosher</h4>
+            <h4> Allergies</h4>
+            <h4> Feeling Lucky</h4>
+        </div>
+    </div>
+
 {% endblock %}

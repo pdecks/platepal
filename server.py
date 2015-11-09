@@ -9,6 +9,9 @@ from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
 from model import connect_to_db, db
 
+import os
+
+google_maps_key = os.environ['GOOGLE_MAPS_API_KEY']
 
 app = Flask(__name__)
 
@@ -23,7 +26,7 @@ app.jinja_env.undefined = StrictUndefined
 def index():
     """Homepage."""
 
-    return render_template('home.html')
+    return render_template('home.html', google_maps_key=google_maps_key)
     # "<html><body>Placeholder for the homepage.</body></html>"
 
 

@@ -13,6 +13,10 @@ from model import CAT_CODES
 
 import os
 
+CAT_CODES_ID = ['gltn', 'vgan', 'kshr', 'algy', 'pleo']
+CAT_NAMES_ID = ['Gluten-Free', 'Vegan', 'Kosher', 'Allergies', 'Paleo']
+CAT_DICT = {CAT_CODES_ID[n]: CAT_NAMES_ID[n] for n in range(len(CAT_CODES_ID))}
+CAT_LISTS = [[CAT_CODES_ID[n], CAT_NAMES_ID[n]] for n in range(len(CAT_CODES_ID))]
 google_maps_key = os.environ['GOOGLE_MAPS_API_KEY']
 
 app = Flask(__name__)
@@ -28,7 +32,7 @@ app.jinja_env.undefined = StrictUndefined
 def index():
     """Homepage."""
 
-    return render_template('home.html', google_maps_key=google_maps_key)
+    return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS)
 
 
 @app.route('/popular-biz.json')

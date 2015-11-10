@@ -126,10 +126,13 @@ function setMapOnAll(map){
   }
 }
 
-function flakySubmit(evt) {
+function filterResults(evt) {
   evt.preventDefault();
   // add call to show markers
   alert('In flakySubmit');
+  var catID = $(evt.relatedTarget).data("cat-id");
+  console.log("This is catID in filterResults")
+  console.log(catID);
 }
 
 
@@ -139,11 +142,11 @@ function categoryMarkersOn(evt) {
 
 }
 
-var gltnButton = document.getElementById("gltn-map-filter");
-var vganButton = document.getElementById("vgan-map-filter");
-var kshrButton = document.getElementById("kshr-map-filter");
-var algyButton = document.getElementById("algy-map-filter");
-var pleoButton = document.getElementById("pleo-map-filter");
+var gltnFilter = document.getElementById("gltn-map-filter");
+var vganFilter = document.getElementById("vgan-map-filter");
+var kshrFilter = document.getElementById("kshr-map-filter");
+var algyFilter = document.getElementById("algy-map-filter");
+var pleoFilter = document.getElementById("pleo-map-filter");
 
 gltnButton.addEventListener('submit', flakySubmit);
 vganButton.addEventListener('submit', flakySubmit);

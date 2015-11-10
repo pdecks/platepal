@@ -30,7 +30,16 @@ PlatePal Home
     <div id="results">
 
         <div id="mapnav">
-            <form class="filter" id="gltn-map-filter">
+        <ul>
+        {% for cat in cat_list %}
+            <li>
+            <a href="#filter-results" class="map-nav" data-cat-id={{cat[0]}} id="{{cat[0]}}-map-filter">{{cat[1]}}</a>
+            </li>
+
+        {% endfor %}
+        </ul>
+
+            <!-- <form class="filter" id="gltn-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Gluten-Free">
             </form>
             <form class="filter" id="vgan-map-filter">
@@ -45,7 +54,7 @@ PlatePal Home
             <form class="filter" id="pleo-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Paleo">
             </form>
-            <!-- <h4> Gluten-Free</h4>
+             --><!-- <h4> Gluten-Free</h4>
             <h4> Vegan</h4>
             <h4> Paleo</h4>
             <h4> Kosher</h4>

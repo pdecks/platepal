@@ -29,7 +29,7 @@ def index():
     """Homepage."""
 
     return render_template('home.html', google_maps_key=google_maps_key)
-    # "<html><body>Placeholder for the homepage.</body></html>"
+
 
 @app.route('/popular-biz.json')
 def popular_biz_data():
@@ -91,13 +91,15 @@ def search_bar_results():
     return render_template('search.html')
 
 
+@app.route('/biz')
+def show_biz_general():
+    return render_template('biz.html')
+
 @app.route('/biz/<int:biz_id>')
 def show_biz_details(biz_id):
     """Displays details for individual business."""
 
     biz = PlatePalBiz.query.get(biz_id)
-
-    user_id = session.get("user_id")
 
     # TODO: Get average Yelp stars of business
 

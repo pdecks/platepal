@@ -126,13 +126,47 @@ function setMapOnAll(map){
   }
 }
 
-function filterResults(evt) {
-  evt.preventDefault();
-  // add call to show markers
-  alert('In flakySubmit');
-  var catID = $(evt.relatedTarget).data("cat-id");
-  console.log("This is catID in filterResults")
-  console.log(catID);
+function filterResults(catID) {
+  // slice off the 4 letter cat code
+  cat = catID.slice(0,4);
+  // map = $("#map");
+  // turn on markers in current cat
+  console.log('this is map outside for');
+  console.log(map);
+  console.log('this is cat');
+  console.log(cat);
+  for (var j in markers[cat]){
+    // console.log('this is j on line 135');
+    // console.log(j);
+    console.log('this is markers[cat][j]');
+    console.log(markers[cat][j]);
+    markers[cat][j].setMap(map);
+    console.log('this is map inside for');
+    console.log(map);
+  }
+  // turn off markers in other cats
+  for (var i = 0; i < catCodes.length; i++){
+    // console.log('this is i');
+    // console.log(i);
+    var currentCat = catCodes[i];
+    console.log('this is currentCat');
+    console.log(currentCat);
+    if (currentCat !== cat){
+      console.log('in if');
+      console.log(currentCat);
+      
+      for (var k in markers[currentCat]){
+        console.log('this is k');
+        console.log(k);
+        console.log('markers[currentCat][k]');
+        console.log(markers[currentCat][k]);
+        markers[currentCat][k].setMap(null);
+
+      } // end inner for
+    } // end if
+     
+  } // end for
+  
 }
 
 
@@ -142,17 +176,24 @@ function categoryMarkersOn(evt) {
 
 }
 
-var gltnFilter = document.getElementById("gltn-map-filter");
-var vganFilter = document.getElementById("vgan-map-filter");
-var kshrFilter = document.getElementById("kshr-map-filter");
-var algyFilter = document.getElementById("algy-map-filter");
-var pleoFilter = document.getElementById("pleo-map-filter");
+// var gltnFilter = document.getElementById("gltn-map-filter");
+// var vganFilter = document.getElementById("vgan-map-filter");
+// var kshrFilter = document.getElementById("kshr-map-filter");
+// var algyFilter = document.getElementById("algy-map-filter");
+// var pleoFilter = document.getElementById("pleo-map-filter");
 
-gltnButton.addEventListener('submit', flakySubmit);
-vganButton.addEventListener('submit', flakySubmit);
-kshrButton.addEventListener('submit', flakySubmit);
-algyButton.addEventListener('submit', flakySubmit);
-pleoButton.addEventListener('submit', flakySubmit);
+$("a.map-nav").on('click', function(evt){
+  // console.log('you clicked me.');
+  var catID = $(this).attr('id');
+  
+  // console.log("This is catID in anon function");
+  // console.log(catID);
+  filterResults(catID);
+});
+// vganButton.addEventListener('submit', flakySubmit);
+// kshrButton.addEventListener('submit', flakySubmit);
+// algyButton.addEventListener('submit', flakySubmit);
+// pleoButton.addEventListener('submit', flakySubmit);
 // first solved on button click, then updated to form submit
 
 

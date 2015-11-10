@@ -82,12 +82,17 @@ form.filter{
 
 }
 
-a.map-nav {
+div.map-nav {
     padding-top: 10px;
-    padding-bot: 10px;
-    text-align: right;
-    display: inline;
+    padding-bottom: 10px;
+    text-align: center;
+    display: block;
     width: 100%;
+    border-top: 1px solid black;
+    border-right: 2px solid black;
+    border-left: 2px solid black;
+    border-bottom: 1px solid black;
+
 }
 input#map-nav{
     text-align: center;

@@ -5,40 +5,44 @@ PlatePal Home
 {% endblock%}
 
 {% block location %}
-<div>
-    <h3>City Name</h3> <!--TODO: Replace with Jinja -->
+<div class="citynav-outer">
+    <div class="citynav left">
+        <a href="#">City Name</a> <!-- TODO: Replace with Jinja  -->
+    </div>
+    <div class="citynav right">
     <!-- TODO: JINJA for loop here of cities in list of nearby cities -->
-    <h4>Nearby Name 1</h4> <!--TODO: Replace with Jinja -->
-    <h4>Nearby Name 2</h4> <!--TODO: Replace with Jinja -->
-    <h4>Nearby Name 3</h4> <!--TODO: Replace with Jinja -->
+        <a href="#">Nearby Name 1</a> <!--TODO: Replace with Jinja -->
+        <a href="#">Nearby Name 2</a> <!--TODO: Replace with Jinja -->
+        <a href="#">Nearby Name 3</a> <!--TODO: Replace with Jinja -->
+    </div> 
+
     <!-- end JINJA for loop here -->
-</div>
+</div> <!-- citynav-outer -->
 {% endblock %}
 
 {% block content %}
-<div>
-    <h3>Popular on PlatePal</h3>
-    <div id="map"></div>
-    <!-- the totally not secret google_maps_key -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap"></script>
+<div> 
+    <div id="map-title">
+        <h3>Popular on PlatePal</h3>
+    </div>
     
     
-    <div id="results-map">
+    <div id="results">
 
         <div id="mapnav">
-            <form id="gltn-map-filter">
+            <form class="filter" id="gltn-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Gluten-Free">
             </form>
-            <form id="vgan-map-filter">
+            <form class="filter" id="vgan-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Vegan">
             </form>
-            <form id="kshr-map-filter">
+            <form class="filter" id="kshr-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Kosher">
             </form>
-            <form id="algy-map-filter">
+            <form class="filter" id="algy-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Allergies">
             </form>
-            <form id="pleo-map-filter">
+            <form class="filter" id="pleo-map-filter">
                 <input class="map-nav" type="submit" name="mapcat" value="Paleo">
             </form>
             <!-- <h4> Gluten-Free</h4>
@@ -47,29 +51,40 @@ PlatePal Home
             <h4> Kosher</h4>
             <h4> Allergies</h4>
             <h4> Feeling Lucky</h4> -->
-        </div>
-    </div>
-    <div id="results">
+        </div> <!-- mapnav -->
 
-        <!-- corresponds to active tab on map-nav -->
-        <h3>Gluten-Free</h3> <!--todo: jinja -->
-        <ol id="results-list-gltn"></ol>
-        
-        <h3>Vegan</h3> <!--todo: jinja -->
-        <ol id="results-list-vgan"></ol>
-        
-        <h3>Allergies</h3> <!--todo: jinja -->
-        <ol id="results-list-algy"></ol>
-        
-        <h3>Kosher</h3> <!--todo: jinja -->
-        <ol id="results-list-kshr"></ol>
-        
-        <h3>Paleo</h3> <!--todo: jinja -->
-        <ol id="results-list-pleo"></ol>
-        </div>
+        <div id="map"></div>
+        <!-- the totally not secret google_maps_key -->
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap"></script>
 
-    </div>
+        <div id="results-list">
+            <!-- corresponds to active tab on map-nav -->
+            <div class="results" id="results-gltn">
+                <h3>Gluten-Free</h3> <!--todo: jinja -->
+                <ol id="results-list-gltn"></ol>
+            </div>
+            <div class="results" id="results-vgan">
+                <h3>Vegan</h3> <!--todo: jinja -->
+                <ol id="results-list-vgan"></ol>
+            </div>
+            <div class="results" id="results-algy">
+                <h3>Allergies</h3> <!--todo: jinja -->
+                <ol id="results-list-algy"></ol>
+            </div>
+            <div class="results" id="results-kshr">
+                <h3>Kosher</h3> <!--todo: jinja -->
+                <ol id="results-list-kshr"></ol>
+            </div>
+            <div class="results" id="results-pleo">
+                <h3>Paleo</h3> <!--todo: jinja -->
+                <ol id="results-list-pleo"></ol>
+            </div>
+            </div>
+        </div> <!-- #results-list -->
+
+    </div> <!-- #results -->
     <script type="text/javascript" src="/static/js/gmaps.js"></script>
-</div>
+
+</div> <!-- content block -->
 
 {% endblock %}

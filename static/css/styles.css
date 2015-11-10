@@ -1,0 +1,111 @@
+div.nav-outer, div.citynav-outer {
+    height: 40px;
+    width: 100%;
+    background-color: gray;
+    padding: 10px;
+    padding-left: 5%;
+
+}
+
+div.nav-outer {
+    border-bottom: 2px solid black;
+}
+div.citynav-outer{
+    background-color: #EAEAEA;
+    /*padding-left: 5%;*/
+}
+div.nav, div.citynav {
+    display: inline-block;
+    /*height: 50px;*/
+    padding: 5px 0px;
+}
+
+div#brand {
+    width: 20%;
+    text-align: left;
+}
+
+div#searchbar {
+    width: 40%;
+    /*margin-left: 1%;*/
+    /*margin-right: 10%;*/
+}
+
+div#loyalty{
+    width: 30%;
+    text-align: right;
+    
+}
+
+div.left{
+    width: 20%;
+}
+div.right{
+    width: 60%;
+    margin-left: 10%;
+    text-align: right;
+
+}
+div.citynav {
+   padding-bottom: 20px;
+   vertical-align: top;
+}
+
+div#map-title {
+    padding: 10px;
+    padding-left: 5%;
+}
+div#results-list{
+    display: inline-block;
+    background-color: #EAEAEA;
+    padding: 0px;
+    vertical-align: top;
+    width: 30%;
+}
+
+div#mapnav {
+    width: 10%;
+    display: inline-block;
+    vertical-align: top;
+    padding-left: 5%;
+}
+
+form.filter{
+    background-color: #EAEAEA;
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-top: 1px solid black;
+    border-right: 2px solid black;
+    border-left: 2px solid black;
+    border-bottom: 1px solid black;
+
+}
+
+input#map-nav{
+    text-align: center;
+}
+
+div#map {
+    width:50%;
+    display: inline-block;
+    vertical-align: top;
+}
+div.results{
+    padding-left: 10px;
+    vertical-align: top;
+}
+
+footer{
+    margin-top: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+    background-color: #E3E3E3;
+    border-top: 2px solid black;
+}
+/*
+div.citynav {
+    display: inline-block;
+    background-color: gray;
+}*/

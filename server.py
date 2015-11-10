@@ -41,15 +41,17 @@ def popular_biz_data():
              ...
             }
     """
-
+    print "in popular-biz.json"
     data_list_of_dicts = {}
     # query database for top 5 businesses for each category
-    for cat in cat_codes:
+    for cat_name in CAT_CODES:
+        print "this is cat_name", cat_name
+        cat_code = CAT_CODES[cat_name]
         # select biz_id, avg_cat_review, num_revs from bizsentiments where cat_code='gltn' order by avg_cat_review desc, num_revs desc;
-        biz_in_cat = BizSentiment.query.filter(BizSentiment.cat_code==cat)
+        biz_in_cat = BizSentiment.query.filter(BizSentiment.cat_code==cat_code)
         top_rated = biz_in_cat.order_by(BizSentiment.avg_cat_review.desc())
         top_five = top_rated.order_by(BizSentiment.num_revs.desc()).limit(5).all()
-
+        print "this is top_five", top_five
         # create a list of dictionaries for the category
         top_five_list = []
         biz_rank = 1
@@ -71,7 +73,9 @@ def popular_biz_data():
 
         # update category dictionary and append to list of dicts
         # cat_dict = {cat: top_five_list}
-        data_list_of_dicts[cat] = top_five_list
+        print "this is top_five_list", top_five_list
+        data_list_of_dicts[cat_code] = top_five_list
+        print data_list_of_dicts
 
     return jsonify(data_list_of_dicts)
 

@@ -86,30 +86,50 @@ function setMarkers(map) {
 //          ...
 //         }
 // $.get("/popular-biz.json", setMarke)
+//  TODO try for loop
 $(document).ready(function(){
   $.getJSON("/popular-biz.json", function(top5json) {
-      $.each(top5json, function(key, data) {
-          var cat = key;
-          var catList = data;
-          var bizId;
-          // extract top 5 businesses
-          for (var biz in catList) {
-            // for link
-            bizId = biz[biz_id];
-            
-            var latLng = new google.maps.LatLng(biz.lat, biz.lng);
-            // Creating a marker and putting it on the map
-            var marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-                title: biz.name,
-                zIndex: biz.z_index,
-            });
-            marker.setMap(map);
-          } // end for loop
-      });
-  });
-});
+      console.log(top5json);
+      // iterate over each item in the dictionary with $.each()
+      $.each(top5json, function(cat, catList) {
+     
+        console.log(cat);
+        console.log(catList);
+
+        var bizId;
+        // add business to list to display alongside map
+        var ul = $("#results-list");
+        var marker;
+        // extract top 5 businesses --> has as a for loop before
+        $.each(catList, function(idx, biz) {
+          bizId = biz.biz_id;
+          
+          var latLng = new google.maps.LatLng(biz.lat, biz.lng);
+          console.log(latLng);
+          console.log(biz.lat);
+          console.log(biz.lng);
+
+          // Creating a marker and putting it on the map
+          marker = new google.maps.Marker({
+              
+              position: latLng,
+              title: biz.name,
+              map: map,
+
+          });
+
+          // marker.setMap(map);
+          console.log("This is after var marker");
+          console.log(marker.position);
+          console.log(map);
+          ul.append("<li>" + biz.name + " " + biz.avg_cat_review + "</li>");
+        }); // end $.each(catList)
+    
+      }); // end $.each(top5json)
+
+  }); // end $.getJSON
+
+}); // end $(document)
 
 
   // info for custom markers...

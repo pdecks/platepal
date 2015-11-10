@@ -22,6 +22,7 @@ PlatePal Home
     <!-- the totally not secret google_maps_key -->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap"></script>
     <script type="text/javascript" src="/static/js/gmaps.js"></script>
+    
     <div id="results-map">
         <div id="map-nav">
             <h4> Gluten-Free</h4>
@@ -32,15 +33,17 @@ PlatePal Home
             <h4> Feeling Lucky</h4>
         </div>
     </div>
-    <div id="results-list">
+    <div id="results">
         <!-- corresponds to active tab on map-nav -->
         <h3> Gluten-Free</h3> <!--todo: jinja -->
         <!-- for loop here of items in list -->
-        <ol>
+        <ol id="results-list">
+
+<!--             <li><img src=""> Restaurant Name </li>
             <li><img src=""> Restaurant Name </li>
-            <li><img src=""> Restaurant Name </li>
-            <li><img src=""> Restaurant Name </li>
+            <li><img src=""> Restaurant Name </li> -->
         </ol>
+        </div>
     </div>
 </div>
 

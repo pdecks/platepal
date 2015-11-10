@@ -4,7 +4,7 @@
     <title>{% block title%}Placeholder Title{% endblock %}</title>
     <style>
         #map {
-            height: 200;
+            height: 500px;
         }
     </style>
 </head>
@@ -35,16 +35,14 @@
             {% endif %}
         </div>
     </navbar>
-    <div id="location">
+   
         {% block location %}
         City information goes here.
         {% endblock %}
-    </div>
-    <div id="content">
+
         {% block content %}
         Content goes here.
         {% endblock %}
-    </div>
 
     <footer>
         PlatePal 2015.

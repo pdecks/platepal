@@ -260,7 +260,8 @@ def calc_avg_rating_per_cat():
             # update attribute
             bizsen_cat = BizSentiment(biz_id=biz_id,
                                   cat_code=cat_code,
-                                  avg_cat_review=average_stars_by_cat)
+                                  avg_cat_review=average_stars_by_cat,
+                                  num_revs=num_revs)
 
             # update db
             db.session.add(bizsen_cat)

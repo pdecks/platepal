@@ -248,6 +248,7 @@ class BizSentiment(db.Model):
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
     agg_sen_score = db.Column(db.Float, nullable=True)  # to be calculated for individual scores an updated periodically
     avg_cat_review = db.Column(db.Float, nullable=True)
+    num_revs = db.Column(db.Integer, nullable=True)
 
     biz = db.relationship('PlatePalBiz',
                           backref=db.backref('sentiments', order_by=cat_code))

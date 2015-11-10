@@ -24,25 +24,36 @@ PlatePal Home
     <script type="text/javascript" src="/static/js/gmaps.js"></script>
     
     <div id="results-map">
-        <div id="map-nav">
-            <h4> Gluten-Free</h4>
+        <div id="mapnav">
+            <input class="map-nav" type="checkbox" name="mapcat" value="gltn" onclick="test()" checked/>Gluten-Free<br/>
+            <input class="map-nav" type="checkbox" name="mapcat" value="vgan" onclick="test()" checked/>Vegan<br/>
+            <input class="map-nav" type="checkbox" name="mapcat" value="algy" onclick="test()" checked/>Allergies<br/>
+            <input class="map-nav" type="checkbox" name="mapcat" value="kshr" onclick="test()" checked/>Kosher<br/>
+            <input class="map-nav" type="checkbox" name="mapcat" value="pleo" onclick="test()" checked/>Paleo<br/>
+            <!-- <h4> Gluten-Free</h4>
             <h4> Vegan</h4>
             <h4> Paleo</h4>
             <h4> Kosher</h4>
             <h4> Allergies</h4>
-            <h4> Feeling Lucky</h4>
+            <h4> Feeling Lucky</h4> -->
         </div>
     </div>
     <div id="results">
         <!-- corresponds to active tab on map-nav -->
-        <h3> Gluten-Free</h3> <!--todo: jinja -->
-        <!-- for loop here of items in list -->
-        <ol id="results-list">
-
-<!--             <li><img src=""> Restaurant Name </li>
-            <li><img src=""> Restaurant Name </li>
-            <li><img src=""> Restaurant Name </li> -->
-        </ol>
+        <h3>Gluten-Free</h3> <!--todo: jinja -->
+        <ol id="results-list-gltn"></ol>
+        
+        <h3>Vegan</h3> <!--todo: jinja -->
+        <ol id="results-list-vgan"></ol>
+        
+        <h3>Allergies</h3> <!--todo: jinja -->
+        <ol id="results-list-algy"></ol>
+        
+        <h3>Kosher</h3> <!--todo: jinja -->
+        <ol id="results-list-kshr"></ol>
+        
+        <h3>Paleo</h3> <!--todo: jinja -->
+        <ol id="results-list-pleo"></ol>
         </div>
     </div>
 </div>

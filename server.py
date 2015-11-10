@@ -42,11 +42,16 @@ def popular_biz_data():
             }
     """
     print "in popular-biz.json"
+
+    # remove 'unknown' category from list of categories
+    categories = dict(CAT_CODES)
+    del categories['unknown']
+
     data_list_of_dicts = {}
     # query database for top 5 businesses for each category
-    for cat_name in CAT_CODES:
+    for cat_name in categories:
         print "this is cat_name", cat_name
-        cat_code = CAT_CODES[cat_name]
+        cat_code = categories[cat_name]
         # select biz_id, avg_cat_review, num_revs from bizsentiments where cat_code='gltn' order by avg_cat_review desc, num_revs desc;
         biz_in_cat = BizSentiment.query.filter(BizSentiment.cat_code==cat_code)
         top_rated = biz_in_cat.order_by(BizSentiment.avg_cat_review.desc())

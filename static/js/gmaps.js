@@ -5,7 +5,8 @@ var catCodes = ['gltn', 'vgan', 'kshr', 'algy', 'pleo'];
 
 function initMap(){
   // update to geolocate or set default SF
-  var myLatLng = {lat: 37.754407, lng: -122.447684};
+  // var myLatLng = {lat: 37.754407, lng: -122.447684}; // SF
+  var myLatLng = {lat: 39.7392, lng: -104.9903}; // Denver, CO
   
   // define map
   var map = new google.maps.Map(document.getElementById('map'),{
@@ -28,7 +29,7 @@ function initMap(){
 
       infoWindow.setPosition(pos);
       infoWindow.setContent('Location found.');
-      map.setCenter(pos);
+      // map.setCenter(pos);
     }, function() {
       handleLocationError(true, infoWindow, map.getCenter());
     });
@@ -128,7 +129,7 @@ function setMapOnAll(map){
 function flakySubmit(evt) {
   evt.preventDefault();
   // add call to show markers
-  alert('In gluten-free');
+  alert('In flakySubmit');
 }
 
 
@@ -138,9 +139,17 @@ function categoryMarkersOn(evt) {
 
 }
 
-var showGFMarkers = document.getElementById("gluten-free-map-filter");
+var gltnButton = document.getElementById("gltn-map-filter");
+var vganButton = document.getElementById("vgan-map-filter");
+var kshrButton = document.getElementById("kshr-map-filter");
+var algyButton = document.getElementById("algy-map-filter");
+var pleoButton = document.getElementById("pleo-map-filter");
 
-showGFMarkers.addEventListener('submit', flakySubmit);
+gltnButton.addEventListener('submit', flakySubmit);
+vganButton.addEventListener('submit', flakySubmit);
+kshrButton.addEventListener('submit', flakySubmit);
+algyButton.addEventListener('submit', flakySubmit);
+pleoButton.addEventListener('submit', flakySubmit);
 // first solved on button click, then updated to form submit
 
 

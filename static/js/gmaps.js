@@ -1,74 +1,7 @@
-// var map;
-// var markers = new Array([]);
+// define arrays for the markers by category
+var markers = new Array();
 
-// var coords_1 = [
-//     new google.maps.LatLng(60.32522, 19.07002),
-//     new google.maps.LatLng(60.45522, 19.12002),
-//     new google.maps.LatLng(60.86522, 19.35002),
-//     new google.maps.LatLng(60.77522, 19.88002),
-//     new google.maps.LatLng(60.36344, 19.36346),
-//     new google.maps.LatLng(60.56562, 19.33002)];
-
-// var coords_2 = [
-//     new google.maps.LatLng(59.32522, 18.07002),
-//     new google.maps.LatLng(59.45522, 18.12002),
-//     new google.maps.LatLng(59.86522, 18.35002),
-//     new google.maps.LatLng(59.77522, 18.88002),
-//     new google.maps.LatLng(59.36344, 18.36346),
-//     new google.maps.LatLng(59.56562, 18.33002)];
-
-
-// function initialize() {
-//     console.log("in initialize");
-
-//     var myLatLng = {lat: 37.754407, lng: -122.447684};
-  
-//     // define map
-//     var map = new google.maps.Map(document.getElementById('map'),{
-//         center: myLatLng,
-//         zoom: 4,
-//     });
-
-//     $('button').on('click', function() {
-
-//         if ($(this).data('action') === 'add') {
-
-//             addMarkers($(this).data('filtertype'));
-
-//         } else {
-
-//             removeMarkers($(this).data('filtertype'));
-//         }
-//     });
-// }
-
-// function addMarkers(filterType) {
-
-//     var temp = filterType === 'coords_1' ? coords_1 : coords_2;
-
-//     markers[filterType] = new Array([]);
-
-//     for (var i = 0; i < temp.length; i++) {
-
-//         var marker = new google.maps.Marker({
-//             map: map,
-//             position: temp[i]
-//         });
-
-//         markers[filterType].push(marker);
-//     }
-// }
-
-// function removeMarkers(filterType) {
-
-//     for (var i = 0; i < markers[filterType].length; i++) {
-
-//         markers[filterType][i].setMap(null);
-//     }
-// }
-
-// initialize();
-
+var catCodes = ['gltn', 'vgan', 'kshr', 'algy', 'pleo'];
 
 function initMap(){
   // update to geolocate or set default SF
@@ -106,6 +39,7 @@ function initMap(){
 
 } // end initMap
 
+
 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
   infoWindow.setPosition(pos);
   infoWindow.setContent(browserHasGeolocation ?
@@ -113,8 +47,10 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
                         'Error: Your browser doesn\'t support geolocation.');
 }
 
-
-$(document).ready(initMap());
+// JSON = {'gltn': [{'biz_id': biz_id, 'avg_cat_review': avg_cat_review, 'lat': lat, 'lng': lng}, {}, {}],
+//         'vgan': [{}, {}, {}],
+//          ...
+//         }
 
 function setMarkers(map) {
 // Adds markers to the map.
@@ -124,6 +60,9 @@ function setMarkers(map) {
       console.log(top5json);
       // iterate over each item in the dictionary with $.each()
       for (var cat in top5json) {
+        markers[cat] = new Array();
+
+        var ol = $("#results-list-"+cat);
 
         for (var i=0; i<top5json[cat].length; i++){
           var biz = top5json[cat][i];
@@ -135,46 +74,83 @@ function setMarkers(map) {
             title: biz.name,
             
           });
-          marker.setMap(map);
+          // marker.setMap(map);
+          if (cat !== 'gltn'){
+            marker.setMap(null);
+          }
+          else {
+            marker.setMap(map);
+          }
+          markers[cat].push(marker);
 
-              
+          ol.append("<li>" + biz.name + " " + biz.avg_cat_review + "</li>");
         } // end inner for loop over businesses in list by category
                 
       } // end outer for loop over categories
 
+      // clear all markers TODO: fix function, not working
+      // clearMarkers();
+      
+      // category = 'gltn';
+      // add only markers for GF (default) todo: fix, not working
+      // showMarkersByCategory(category, Map);
+
+      
   }); // end $.getJSON
 
 } // end setMarkers
 
-// JSON = {'gltn': [{'biz_id': biz_id, 'avg_cat_review': avg_cat_review, 'lat': lat, 'lng': lng}, {}, {}],
-//         'vgan': [{}, {}, {}],
-//          ...
-//         }
+// create listeners by category button
 
-$(document).ready(function(){
-  $.get("/popular-biz.json", function(top5json) {
-      // iterate over each item in the dictionary with $.each()
-      for (var cat in top5json) {
-        // grab ordered list to populate
-        var ol = $("#results-list-"+cat);
+function showMarkersByCategory(cat, map){
+  console.log('in showMarkersByCategory');
+  for (var i = 0; i < markers[cat].length; i++){
+    console.log(markers[cat]);
+    markers[cat][i].setMap(map);
+  }
+}
 
-        // iterate over each business in the category
-        for (var i=0; i<top5json[cat].length; i++){
-          var biz = top5json[cat][i];
+function clearMarkers() {
+  setMapOnAll(null);
+}
 
-          // add the business info to the appropriate category list
-          ol.append("<li>" + biz.name + " " + biz.avg_cat_review + "</li>");
-     
-        } // end inner for loop over businesses in list by category
-            
-      } // end outer for loop over categories
+function setMapOnAll(map){
+  for (var i = 0; i < markers.length; i++){
+    cat = catCodes[i];
+    for (var j = 0; j < markers[cat].length; j++){
+      console.log('this is markers[cat][j]: ');
+      console.log(markers[cat][j]);
+      markers[cat][j].setMap(map);
+    }
+  }
+}
 
-  }); // end $.getJSON
+function flakySubmit(evt) {
+  evt.preventDefault();
+  // add call to show markers
+  alert('In gluten-free');
+}
 
-}); // end $(document)
+
+// create arrays by category
+// when the category button is 'submitted', add those markers 
+function categoryMarkersOn(evt) {
+
+}
+
+var showGFMarkers = document.getElementById("gluten-free-map-filter");
+
+showGFMarkers.addEventListener('submit', flakySubmit);
+// first solved on button click, then updated to form submit
 
 
+ // id="gluten-free-map-filter">
 
+$(document).ready(initMap());
+
+// TODO:
+// hide the other categories' markers (GF is default)
+// number markers
 
 
 // $.EACH VERSION

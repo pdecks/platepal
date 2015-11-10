@@ -7,3 +7,4 @@ sklearn_tut_workspace/
 misc/
 data/
 *.db
+static/js/gmaps-filter.js

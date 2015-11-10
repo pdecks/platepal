@@ -21,11 +21,14 @@ PlatePal Home
     <div id="map"></div>
     <!-- the totally not secret google_maps_key -->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap"></script>
-    <script type="text/javascript" src="/static/js/gmaps.js"></script>
+    
     
     <div id="results-map">
+
         <div id="mapnav">
-            <input class="map-nav" type="checkbox" name="mapcat" value="gltn" onclick="test()" checked/>Gluten-Free<br/>
+            <form id="gluten-free-map-filter">
+                <input class="map-nav" type="submit" name="mapcat" value="Gluten-Free">
+            </form>
             <input class="map-nav" type="checkbox" name="mapcat" value="vgan" onclick="test()" checked/>Vegan<br/>
             <input class="map-nav" type="checkbox" name="mapcat" value="algy" onclick="test()" checked/>Allergies<br/>
             <input class="map-nav" type="checkbox" name="mapcat" value="kshr" onclick="test()" checked/>Kosher<br/>
@@ -39,6 +42,7 @@ PlatePal Home
         </div>
     </div>
     <div id="results">
+
         <!-- corresponds to active tab on map-nav -->
         <h3>Gluten-Free</h3> <!--todo: jinja -->
         <ol id="results-list-gltn"></ol>
@@ -55,7 +59,9 @@ PlatePal Home
         <h3>Paleo</h3> <!--todo: jinja -->
         <ol id="results-list-pleo"></ol>
         </div>
+
     </div>
+    <script type="text/javascript" src="/static/js/gmaps.js"></script>
 </div>
 
 {% endblock %}

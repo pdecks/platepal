@@ -124,14 +124,25 @@ function filterResults(catID) {
   cat = catID.slice(0,4);
 
   // turn on markers in current cat
+  // show list for current cat
   for (var j in markers[cat]){
     markers[cat][j].setVisible(true);
   }
+  var name = "div#results-"+cat;
+  $(name).removeClass("hidden");
+  // styleAttr = $("div.results-"+cat).attr("style");
+  // console.log('this is stleAttr for ' + cat);
+  console.log('"'+'div#results-'+cat+'"');
+  // console.log(styleAttr);
+
   // turn off markers in other cats
+  // hide lists for other cats
   for (var i = 0; i < catCodes.length; i++){
     var currentCat = catCodes[i];
 
     if (currentCat !== cat){
+      name = "div#results-"+currentCat;
+      $(name).addClass("hidden");
       for (var k in markers[currentCat]){
         markers[currentCat][k].setVisible(false);
       } // end inner for
@@ -145,8 +156,9 @@ function filterResults(catID) {
 $("a.map-nav").on('click', function(evt){
   // get the link's id
   var catID = $(this).attr('id');
-  // filter the results based on the category
+  // filter the map results based on the category
   filterResults(catID);
+
 });
 
 $(document).ready(initMap());

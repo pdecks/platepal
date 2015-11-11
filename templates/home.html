@@ -41,8 +41,7 @@ PlatePal Home
         <!-- the totally not secret google_maps_key -->
         <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap">
         </script>
-        <script src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerwithlabel/src/markerwithlabel.js">
-        </script>
+
 
         <div id="results-list">
             <!-- corresponds to active tab on map-nav -->
@@ -50,19 +49,19 @@ PlatePal Home
                 <h3>Gluten-Free</h3> <!--todo: jinja -->
                 <ol id="results-list-gltn"></ol>
             </div>
-            <div class="results" id="results-vgan">
+            <div class="results hidden" id="results-vgan">
                 <h3>Vegan</h3> <!--todo: jinja -->
                 <ol id="results-list-vgan"></ol>
             </div>
-            <div class="results" id="results-algy">
+            <div class="results hidden" id="results-algy">
                 <h3>Allergies</h3> <!--todo: jinja -->
                 <ol id="results-list-algy"></ol>
             </div>
-            <div class="results" id="results-kshr">
+            <div class="results hidden" id="results-kshr">
                 <h3>Kosher</h3> <!--todo: jinja -->
                 <ol id="results-list-kshr"></ol>
             </div>
-            <div class="results" id="results-pleo">
+            <div class="results hidden" id="results-pleo">
                 <h3>Paleo</h3> <!--todo: jinja -->
                 <ol id="results-list-pleo"></ol>
             </div>

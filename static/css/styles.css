@@ -116,6 +116,11 @@ footer{
     background-color: #E3E3E3;
     border-top: 2px solid black;
 }
+
+.hidden{
+    display: none;
+}
+
 /*
 div.citynav {
     display: inline-block;

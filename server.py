@@ -35,8 +35,8 @@ def index():
     return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, limit_results=5, offset_results=5)
 
 
-@app.route('/popular-biz.json/<int:n>/<int:oset>')
-def popular_biz_data(n,oset):
+@app.route('/popular-biz.json')
+def popular_biz_data():
     """
     Return data about popular businesses
 
@@ -54,12 +54,12 @@ def popular_biz_data(n,oset):
     data_list_of_dicts = {}
     # query database for top 5 businesses for each category
     for cat_name in categories:
-        print "this is cat_name", cat_name
+        # print "this is cat_name", cat_name
         cat_code = categories[cat_name]
         # select biz_id, avg_cat_review, num_revs from bizsentiments where cat_code='gltn' order by avg_cat_review desc, num_revs desc;
         biz_in_cat = BizSentiment.query.filter(BizSentiment.cat_code==cat_code)
         top_rated = biz_in_cat.order_by(BizSentiment.avg_cat_review.desc())
-        top_five = top_rated.order_by(BizSentiment.num_revs.desc()).limit(n).offset(oset).all()
+        top_five = top_rated.order_by(BizSentiment.num_revs.desc()).limit(5).offset(0).all()
         # print "this is top_five", top_five
         # create a list of dictionaries for the category
         top_five_list = []
@@ -86,6 +86,41 @@ def popular_biz_data(n,oset):
         data_list_of_dicts[cat_code] = top_five_list
         print data_list_of_dicts
 
+    return jsonify(data_list_of_dicts)
+
+
+@app.route('/biz/<cat>/<int:n>/<int:oset>/next.json')
+def get_next_n_results(cat, n, oset):
+    """Returns JSON for a particular category containing next n results"""
+    # remove 'unknown' category from list of categories
+    cat_code = cat  # category
+    # lim_results = n  # limit
+    # oset_results = oset  # offset
+    data_list_of_dicts = {}
+    # select biz_id, avg_cat_review, num_revs from bizsentiments where cat_code='gltn' order by avg_cat_review desc, num_revs desc;
+    biz_in_cat = BizSentiment.query.filter(BizSentiment.cat_code==cat_code)
+    top_rated = biz_in_cat.order_by(BizSentiment.avg_cat_review.desc())
+    next_n = top_rated.order_by(BizSentiment.num_revs.desc()).limit(n).offset(oset).all()
+    # create a list of dictionaries for the category
+    next_n_list = []
+    biz_rank = 1
+    for biz in next_n:
+        # use backref to get name and lat/long info
+        name = biz.biz.name
+        lat = biz.biz.lat
+        lng = biz.biz.lng
+
+        # make dictionary
+        biz_dict = {'biz_id': biz.biz_id,
+                    'name': name,
+                    'avg_cat_review': biz.avg_cat_review,
+                    'lat': lat,
+                    'lng': lng,
+                    'z_index': biz_rank}
+        next_n_list.append(biz_dict)
+        biz_rank += 1
+
+    data_list_of_dicts[cat_code] = next_n_list
     return jsonify(data_list_of_dicts)
 
 

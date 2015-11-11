@@ -1,14 +1,15 @@
 // define arrays for the markers by category
 var markers = new Array();
 
-var catCodes = ['gltn', 'vgan', 'kshr', 'algy', 'pleo'];
+var catCodes = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn'];
 
 // for keeping track of results loaded on page
 var catCounts = {'gltn': 0,
                  'vgan': 0,
                  'kshr': 0,
                  'algy': 0,
-                 'pleo': 0};
+                 'pleo': 0,
+                 'unkn': 0};
 
 function initMap(){
   // update to geolocate or set default SF
@@ -64,7 +65,7 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 
 function setMarkers(map) {
 // Adds markers to the map.
-  page = "/state.json";
+  page = "/CA/Palo Alto/city.json";
 
   $.get(page, function(top5json) {
       console.log('in $.get');
@@ -84,7 +85,7 @@ function setMarkers(map) {
           var marker = new google.maps.Marker({
             position: latLng,
             title: biz.name,
-            // icon: "http://maps.google.com/mapfiles/marker" + letter + ".png"
+            icon: "http://maps.google.com/mapfiles/marker" + letter + ".png"
           });
           
           marker.setMap(map);
@@ -92,10 +93,16 @@ function setMarkers(map) {
           if (cat !== 'gltn'){
             marker.setVisible(false);
           }
-          else {
-            marker.setVisible(true);
+          // // show only the first 5 businesses
+          // else {
+          // if (i < 5){
+          // marker.setVisible(true);
+          // }
+          // else{
+          // marker.setVisible(false);
+          // }
 
-          }
+          // }
 
           // create an event handler to listen for marker clicks
           // opens an infoWindow on the marker when clicked

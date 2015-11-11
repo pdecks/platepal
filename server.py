@@ -9,12 +9,13 @@ from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
 from model import connect_to_db, db
 
+from sqlalchemy import distinct
 from model import CAT_CODES
 
 import os
 
-CAT_CODES_ID = ['gltn', 'vgan', 'kshr', 'algy', 'pleo']
-CAT_NAMES_ID = ['Gluten-Free', 'Vegan', 'Kosher', 'Allergies', 'Paleo']
+CAT_CODES_ID = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn']
+CAT_NAMES_ID = ['Gluten-Free', 'Vegan', 'Kosher', 'Allergies', 'Paleo', 'Feeling Lucky']
 CAT_DICT = {CAT_CODES_ID[n]: CAT_NAMES_ID[n] for n in range(len(CAT_CODES_ID))}
 CAT_LISTS = [[CAT_CODES_ID[n], CAT_NAMES_ID[n]] for n in range(len(CAT_CODES_ID))]
 google_maps_key = os.environ['GOOGLE_MAPS_API_KEY']
@@ -38,18 +39,18 @@ def index():
 @app.route('/palo-alto')
 def palo_alto_page():
     """Palo Alto Homepage."""
-
+    print "This is cat_list in palo-alto", CAT_LISTS
     return render_template('palo-alto.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS)
 
 
-@app.route('/state.json')
-def display_all_reviews_in_state():
+@app.route('/<state>/state.json')
+def display_all_reviews_in_state(state):
 
     # select Biz.biz_id, Biz.name, Biz.city from reviews
     # join Biz on biz.biz_id = reviews.biz_id
     # where reviews.cat_code = 'gltn' and biz.city='Palo Alto' limit 100;
-    state_biz = db.session.query(PlatePalBiz).join(PlatePalReview).filter(PlatePalBiz.state=='CA')
-    state_biz_GF = state_biz.filter(PlatePalReview.cat_code=='gltn').all()
+    state_biz = db.session.query(PlatePalBiz).outerjoin(ReviewCategory).filter(PlatePalBiz.state==state)
+    state_biz_GF = state_biz.filter(ReviewCategory.cat_code=='gltn').all()
     data_list_of_dicts = {}
     gltn_list = []
     for biz in state_biz_GF:
@@ -60,6 +61,49 @@ def display_all_reviews_in_state():
                     }
         gltn_list.append(biz_dict)
         data_list_of_dicts['gltn'] = gltn_list
+
+    return jsonify(data_list_of_dicts)
+
+# select distinct biz.biz_id, biz.name from biz join revcats on biz.biz_id = revcats.biz_id where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
+@app.route('/<state>/<city>/city.json')
+def display_all_reviews_in_city(state, city):
+    print "This is city in display_all_reviews_in_city", city
+
+    categories = dict(CAT_CODES)
+    # del categories['unknown']
+
+    data_list_of_dicts = {}
+    # query database for top 5 businesses for each category
+    for cat_name in categories:
+        print "this is cat_name", cat_name
+        cat_code = categories[cat_name]
+
+        # select distinct Biz.biz_id, Biz.name, Biz.city from Biz
+        # join Revcats on biz.biz_id = revcats.biz_id
+        # where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
+        state_biz = db.session.query(PlatePalBiz).join(ReviewCategory).filter(PlatePalBiz.state==state)
+        city_biz = state_biz.filter(PlatePalBiz.city==city)
+
+        if cat_code != 'unkn':
+            city_biz_cat = city_biz.filter(ReviewCategory.cat_code==cat_code).all()
+        else:
+            city_biz_cat = city_biz.all()
+
+        cat_list = []
+        for biz in city_biz_cat:
+            biz_dict = {'biz_id': biz.biz_id,
+                        'name': biz.name,
+                        'address': biz.address,
+                        'city': biz.city,
+                        'state': biz.state,
+                        'lat': biz.lat,
+                        'lng': biz.lng,
+                        'is_open': biz.is_open,
+                        'photo_url': biz.photo_url
+                        }
+            cat_list.append(biz_dict)
+
+        data_list_of_dicts[cat_code] = cat_list
 
     return jsonify(data_list_of_dicts)
 

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}
+PlatePal: {{state}} Results
+{% endblock%}
+
+{% block location %}
+<div class="statenav-outer">
+    <div class="statenav left">
+        <a href="/{{state}}/state.html">{{state_name}}</a> <!-- TODO: Replace with Jinja  -->
+    </div>
+    <div class="statenav right">
+    <!-- TODO: JINJA for loop here of cities in list of nearby cities -->
+        {% for city in state_cities %}
+            <a href="/{{state}}/{{city[0]}}/city.html">{{city[0]}}</a> 
+        {% endfor %}
+    </div> 
+
+    <!-- end JINJA for loop here -->
+</div> <!-- citynav-outer -->
+{% endblock %}
+
+{% block content %}
+<div> 
+    <div id="map-title">
+        <!-- <h3>Palo Alto</h3> -->
+    </div>
+    
+    
+    <div id="results">
+
+        <div id="mapnav">
+        {% for cat in cat_list %}
+            <div class="map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
+            <a href="#filter-results" class="map-nav" data-cat-id={{cat[0]}} id="{{cat[0]}}-map-filter">{{cat[1]}}</a>
+            </div>
+        {% endfor %}
+        </div> <!-- mapnav -->
+
+        <div id="map"></div>
+        <!-- the totally not secret google_maps_key -->
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap">
+        </script>
+
+
+        <div id="results-list">
+            <!-- corresponds to active tab on map-nav -->
+            <div class="results" id="results-gltn">
+                <h3>Gluten-Free</h3> <!--todo: jinja -->
+                <ol id="results-list-gltn"></ol>
+                <!-- pass limit(n) and offset(oset) -->
+                <!-- use jQuery to update offset in link -->
+                <!-- <a href="/biz/gltn/5/5/next.json" class="update-results" id="gltn-next-5">
+                Next 5 Results</a> -->
+            </div>
+            <div class="results hidden" id="results-vgan">
+                <h3>Vegan</h3> <!--todo: jinja -->
+                <ol id="results-list-vgan"></ol>
+
+            </div>
+            <div class="results hidden" id="results-algy">
+                <h3>Allergies</h3> <!--todo: jinja -->
+                <ol id="results-list-algy"></ol>
+            </div>
+            <div class="results hidden" id="results-kshr">
+                <h3>Kosher</h3> <!--todo: jinja -->
+                <ol id="results-list-kshr"></ol>
+            </div>
+            <div class="results hidden" id="results-pleo">
+                <h3>Paleo</h3> <!--todo: jinja -->
+                <ol id="results-list-pleo"></ol>
+            </div>
+            <div class="results hidden" id="results-unkn">
+                <h3>Feeling Lucky</h3> <!--todo: jinja -->
+                <ol id="results-list-unkn"></ol>
+            </div>
+        </div> <!-- #results-list -->
+
+    </div> <!-- #results -->
+    <script type="text/javascript" src="/static/js/state-gmaps.js"></script>
+
+</div> <!-- content block -->
+
+{% endblock %}

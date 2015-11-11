@@ -20,6 +20,69 @@ CAT_DICT = {CAT_CODES_ID[n]: CAT_NAMES_ID[n] for n in range(len(CAT_CODES_ID))}
 CAT_LISTS = [[CAT_CODES_ID[n], CAT_NAMES_ID[n]] for n in range(len(CAT_CODES_ID))]
 google_maps_key = os.environ['GOOGLE_MAPS_API_KEY']
 
+STATE_CODES = {
+    "AL": "Alabama",
+    "AK": "Alaska",
+    "AS": "American Samoa",
+    "AZ": "Arizona",
+    "AR": "Arkansas",
+    "CA": "California",
+    "CO": "Colorado",
+    "CT": "Connecticut",
+    "DE": "Delaware",
+    "DC": "District Of Columbia",
+    "FM": "Federated States Of Micronesia",
+    "FL": "Florida",
+    "GA": "Georgia",
+    "GU": "Guam",
+    "HI": "Hawaii",
+    "ID": "Idaho",
+    "IL": "Illinois",
+    "IN": "Indiana",
+    "IA": "Iowa",
+    "KS": "Kansas",
+    "KY": "Kentucky",
+    "LA": "Louisiana",
+    "ME": "Maine",
+    "MH": "Marshall Islands",
+    "MD": "Maryland",
+    "MA": "Massachusetts",
+    "MI": "Michigan",
+    "MN": "Minnesota",
+    "MS": "Mississippi",
+    "MO": "Missouri",
+    "MT": "Montana",
+    "NE": "Nebraska",
+    "NV": "Nevada",
+    "NH": "New Hampshire",
+    "NJ": "New Jersey",
+    "NM": "New Mexico",
+    "NY": "New York",
+    "NC": "North Carolina",
+    "ND": "North Dakota",
+    "MP": "Northern Mariana Islands",
+    "OH": "Ohio",
+    "OK": "Oklahoma",
+    "OR": "Oregon",
+    "PW": "Palau",
+    "PA": "Pennsylvania",
+    "PR": "Puerto Rico",
+    "RI": "Rhode Island",
+    "SC": "South Carolina",
+    "SD": "South Dakota",
+    "TN": "Tennessee",
+    "TX": "Texas",
+    "UT": "Utah",
+    "VT": "Vermont",
+    "VI": "Virgin Islands",
+    "VA": "Virginia",
+    "WA": "Washington",
+    "WV": "West Virginia",
+    "WI": "Wisconsin",
+    "WY": "Wyoming"
+}
+
+
 app = Flask(__name__)
 
 # Required to use Flask sessions and the debug toolbar
@@ -36,16 +99,31 @@ def index():
     return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, limit_results=5, offset_results=5)
 
 
-@app.route('/palo-alto')
-def palo_alto_page():
-    """Palo Alto Homepage."""
-    print "This is cat_list in palo-alto", CAT_LISTS
-    return render_template('palo-alto.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS)
+@app.route('/<state>/<city>/city.html')
+def city_in_state_page(state, city):
+    """City Homepage"""
+
+    # query db for nearby cities
+    return render_template('palo-alto.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, nearby_cities=nearby_cities)
+
+
+@app.route('/<state>/state.html')
+def display_all_biz_in_state(state):
+    """State landing page."""
+
+    # query for cities in state
+    #  select distinct(Biz.city) from Biz
+    # ...> Join Reviews on Biz.biz_id = Reviews.biz_id
+    # ...> where Biz.state = state;
+    state_all_cities = db.session.query(PlatePalBiz.city).join(PlatePalReview).filter(PlatePalBiz.state==state)
+    state_cities = state_all_cities.group_by(PlatePalBiz.city).all()
+    print "this is state_cities", state_cities
+    return render_template('state.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], state_cities=state_cities)
 
 
 @app.route('/<state>/state.json')
-def display_all_reviews_in_state(state):
-
+def get_all_biz_in_state(state):
+    """ """
     # select Biz.biz_id, Biz.name, Biz.city from reviews
     # join Biz on biz.biz_id = reviews.biz_id
     # where reviews.cat_code = 'gltn' and biz.city='Palo Alto' limit 100;
@@ -63,6 +141,7 @@ def display_all_reviews_in_state(state):
         data_list_of_dicts['gltn'] = gltn_list
 
     return jsonify(data_list_of_dicts)
+
 
 # select distinct biz.biz_id, biz.name from biz join revcats on biz.biz_id = revcats.biz_id where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
 @app.route('/<state>/<city>/city.json')

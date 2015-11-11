@@ -64,18 +64,21 @@ function setMarkers(map) {
         markers[cat] = new Array();
 
         var resList = $("#results-list-"+cat);
+        var infoWindow = new google.maps.InfoWindow();
 
         for (var i=0; i<top5json[cat].length; i++){
           var biz = top5json[cat][i];
-
+          var letter = String.fromCharCode("A".charCodeAt(0) + i);
           var latLng = new google.maps.LatLng(biz.lat, biz.lng);
 
           var marker = new google.maps.Marker({
             position: latLng,
             title: biz.name,
-            
+            icon: "http://maps.google.com/mapfiles/marker" + letter + ".png"
           });
+          
           marker.setMap(map);
+
           if (cat !== 'gltn'){
             marker.setVisible(false);
           }
@@ -83,6 +86,25 @@ function setMarkers(map) {
             marker.setVisible(true);
 
           }
+
+          // create an event handler to listen for marker clicks
+          // opens an infoWindow on the marker when clicked
+          (function (marker, biz) {
+            google.maps.event.addListener(marker, "click", function (e){
+              //wrap the content inside an html div to set height and width of InfoWindow
+              infoWindow.setContent('<div id="content" style="width:200px;min-height:40px">'+
+                '<div id="siteNotice">'+
+                '</div>'+
+                '<h3 id="firstHeading" class="firstHeading">'+ biz.name + '</h3>'+
+                '<div id="bodyContent">'+
+                'Average Review by Category: ' + biz.avg_cat_review + '</br>' +
+                '</div>'+
+                '</div>');
+              // infoWindow.setPosition()
+              infoWindow.open(map, marker);
+            });
+          }) (marker, biz); // TODO: understand this
+
           markers[cat].push(marker);
 
           resList.append("<li>" + biz.name + " " + biz.avg_cat_review + "</li>");
@@ -116,6 +138,7 @@ function filterResults(catID) {
     } // end if
   } // end for 
 } // end filterResults
+
 
 
 // create click listener on all links in map navigation bar

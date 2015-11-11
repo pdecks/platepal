@@ -39,7 +39,10 @@ PlatePal Home
 
         <div id="map"></div>
         <!-- the totally not secret google_maps_key -->
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap">
+        </script>
+        <script src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerwithlabel/src/markerwithlabel.js">
+        </script>
 
         <div id="results-list">
             <!-- corresponds to active tab on map-nav -->

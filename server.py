@@ -35,6 +35,35 @@ def index():
     return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, limit_results=5, offset_results=5)
 
 
+@app.route('/palo-alto')
+def palo_alto_page():
+    """Palo Alto Homepage."""
+
+    return render_template('palo-alto.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS)
+
+
+@app.route('/state.json')
+def display_all_reviews_in_state():
+
+    # select Biz.biz_id, Biz.name, Biz.city from reviews
+    # join Biz on biz.biz_id = reviews.biz_id
+    # where reviews.cat_code = 'gltn' and biz.city='Palo Alto' limit 100;
+    state_biz = db.session.query(PlatePalBiz).join(PlatePalReview).filter(PlatePalBiz.state=='CA')
+    state_biz_GF = state_biz.filter(PlatePalReview.cat_code=='gltn').all()
+    data_list_of_dicts = {}
+    gltn_list = []
+    for biz in state_biz_GF:
+        biz_dict = {'biz_id': biz.biz_id,
+                    'name': biz.name,
+                    'lat': biz.lat,
+                    'lng': biz.lng,
+                    }
+        gltn_list.append(biz_dict)
+        data_list_of_dicts['gltn'] = gltn_list
+
+    return jsonify(data_list_of_dicts)
+
+
 @app.route('/popular-biz.json')
 def popular_biz_data():
     """

@@ -149,7 +149,7 @@ class PlatePalReview(db.Model):
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     yelp_user_id = db.Column(db.Unicode(32), db.ForeignKey('yelpUsers.user_id'))
-    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))  # this is actually a string...
     stars = db.Column(db.Integer, nullable=True)
     review_date = db.Column(db.Date, default=datetime.datetime.utcnow)
     text = db.Column(db.Text, nullable=False)
@@ -227,7 +227,7 @@ class ReviewCategory(db.Model):
     revcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     review_id = db.Column(db.Integer, db.ForeignKey('reviews.review_id'))
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
-    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code')) # this is actually a string...
     sen_score = db.Column(db.Float, nullable=True)  # machine generated score
     user_sen = db.Column(db.Float, nullable=True)  # for user feedback on score
 
@@ -245,7 +245,7 @@ class BizSentiment(db.Model):
 
     bizsen_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     biz_id = db.Column(db.Integer, db.ForeignKey('biz.biz_id'))
-    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
+    cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))  # this is actually a string...
     agg_sen_score = db.Column(db.Float, nullable=True)  # to be calculated for individual scores an updated periodically
     avg_cat_review = db.Column(db.Float, nullable=True)
     num_revs = db.Column(db.Integer, nullable=True)

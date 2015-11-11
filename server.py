@@ -32,11 +32,11 @@ app.jinja_env.undefined = StrictUndefined
 def index():
     """Homepage."""
 
-    return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS)
+    return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, limit_results=5, offset_results=5)
 
 
-@app.route('/popular-biz.json')
-def popular_biz_data():
+@app.route('/popular-biz.json/<int:n>/<int:oset>')
+def popular_biz_data(n,oset):
     """
     Return data about popular businesses
 
@@ -59,8 +59,8 @@ def popular_biz_data():
         # select biz_id, avg_cat_review, num_revs from bizsentiments where cat_code='gltn' order by avg_cat_review desc, num_revs desc;
         biz_in_cat = BizSentiment.query.filter(BizSentiment.cat_code==cat_code)
         top_rated = biz_in_cat.order_by(BizSentiment.avg_cat_review.desc())
-        top_five = top_rated.order_by(BizSentiment.num_revs.desc()).limit(5).all()
-        print "this is top_five", top_five
+        top_five = top_rated.order_by(BizSentiment.num_revs.desc()).limit(n).offset(oset).all()
+        # print "this is top_five", top_five
         # create a list of dictionaries for the category
         top_five_list = []
         biz_rank = 1
@@ -82,7 +82,7 @@ def popular_biz_data():
 
         # update category dictionary and append to list of dicts
         # cat_dict = {cat: top_five_list}
-        print "this is top_five_list", top_five_list
+        # print "this is top_five_list", top_five_list
         data_list_of_dicts[cat_code] = top_five_list
         print data_list_of_dicts
 

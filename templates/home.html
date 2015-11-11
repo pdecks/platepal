@@ -48,6 +48,8 @@ PlatePal Home
             <div class="results" id="results-gltn">
                 <h3>Gluten-Free</h3> <!--todo: jinja -->
                 <ol id="results-list-gltn"></ol>
+                <!-- pass limit(n) and offset(oset) -->
+                <a href="/popular-biz.json/{{limit_results}}/{{offset_results}}" class="update-results">Get next {{limit_results}} businesses</a>
             </div>
             <div class="results hidden" id="results-vgan">
                 <h3>Vegan</h3> <!--todo: jinja -->

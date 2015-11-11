@@ -14,8 +14,9 @@ function initMap(){
       zoom: 4,
   });
   
+  page = "/popular-biz.json/5/0";
   // define markers
-  setMarkers(map);
+  setMarkers(map, page);
 
   var infoWindow = new google.maps.InfoWindow({map: map});
 
@@ -53,10 +54,10 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 //          ...
 //         }
 
-function setMarkers(map) {
+function setMarkers(map, page) {
 // Adds markers to the map.
-
-  $.get("/popular-biz.json", function(top5json) {
+  // page = "/popular-biz.json/5/0"
+  $.get(page, function(top5json) {
       console.log('in $.get');
       console.log(top5json);
       // iterate over each item in the dictionary with $.each()
@@ -161,5 +162,15 @@ $("a.map-nav").on('click', function(evt){
 
 });
 
+// // create click listener on all update results links results list
+// $("a.update-results").on('click', function(evt){
+//   // make AJAX call to update results
+//   var catID = $(this).attr('id');
+//   // filter the map results based on the category
+//   filterResults(catID);
+
+// });
+
+page = "/popular-biz.json/5/0";
 $(document).ready(initMap());
 

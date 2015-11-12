@@ -11,6 +11,22 @@ div.nav-outer, div.citynav-outer {
 
 }
 
+
+div.info-window{
+    display: inline-block;
+    vertical-align: top;
+}
+
+div.info-window-content{
+
+    width:150px;
+    min-height:150px;
+}
+img.info-window {
+    height: 50px;
+    width: 50px;
+}
+
 div.searchnav-outer {
     padding-left: 5%;
 }
@@ -92,6 +108,9 @@ div.citynav, div.biznav {
    vertical-align: top;
 }
 
+div.info-window.right{
+    padding-left: 10%;
+}
 
 div.biznav.left {
     width: 30%;

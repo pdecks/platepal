@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+<!-- return render_template('search.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, search_terms=search_terms) -->
 
 {% block title %}
 PlatePal: Search
@@ -11,6 +12,8 @@ PlatePal: Search
         <div id="search-info">
             <h2>Search for search terms here</h2>
             <h4>near location here</h4>
+            <p class="hidden" id="search-city">{{city}}</p>
+            <p class="hidden" id="search-state">{{state}}</p>
         </div>
     </div>
     <div class="searchnav right">

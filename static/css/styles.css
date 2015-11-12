@@ -1,8 +1,12 @@
+#map {
+    height: 500px;
+    width: 80%;
+}
+
 div.nav-outer, div.citynav-outer {
     height: 40px;
     width: 100%;
-    background-color: gray;
-    padding: 10px;
+    padding-top: 10px;
     padding-left: 5%;
 
 }
@@ -35,7 +39,9 @@ img#biz-photo {
 }
 div.nav-outer {
     border-bottom: 2px solid black;
+    background-color: gray;
 }
+
 div.citynav-outer {
     background-color: #EAEAEA;
     /*padding-left: 5%;*/
@@ -81,6 +87,17 @@ div.right{
 div.citynav, div.biznav {
    padding-bottom: 20px;
    vertical-align: top;
+}
+
+
+div.biznav.left {
+    width: 30%;
+}
+
+div.biznav.right{
+    width: 50%;
+    /*margin-left: 10%;*/
+    text-align: right;
 }
 
 div#map-title {

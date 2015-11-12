@@ -108,18 +108,14 @@ function setMarkers(map) {
             google.maps.event.addListener(marker, "click", function (e){
               //wrap the content inside an html div to set height and width of InfoWindow
               infoWindow.setContent('<div id="info-window-content">'+
-                '<div id="siteNotice">'+
-                '</div>'+
                 '<div id="bodyContent">'+
                 '<div class="info-window left">'+
                 '<img class="info-window" src="'+ biz.photo_url+'">' +
                 '</div>'+
                 '<div class="info-window right>' +
-                '<h3 id="firstHeading" class="firstHeading"><a href="/biz/'+biz.biz_id+'">'+ biz.name + '</a></h3>'+
-                '</div><div>'+
-                '<h4>Average Review by Category: ' + biz.avg_cat_review + '</h5></br>' +
-                '</div>'+
-                '</div>');
+                '<h3 class="info-window"><a class="info-window" href="/biz/'+biz.biz_id+'">'+ biz.name + '</a></h3></div>'+
+                '<div>Average '+ catNames[cat] + ' Score:<br> ' + biz.avg_cat_review + '</br></div>'+
+                '</div></div>');
               // infoWindow.setPosition()
               infoWindow.open(map, marker);
             });

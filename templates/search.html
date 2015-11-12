@@ -10,8 +10,8 @@ PlatePal: Search
 
     <div class="searchnav left">
         <div id="search-info">
-            <h2>Search for search terms here</h2>
-            <h4>near location here</h4>
+            <h2>Search for: {% for term in search_terms%}"<span class="search-terms">{{term}}</span>" {% endfor %}</h2>
+            <h4>near {{city}}, {{state}}</h4>
             <p class="hidden" id="search-city">{{city}}</p>
             <p class="hidden" id="search-state">{{state}}</p>
         </div>

@@ -64,6 +64,18 @@ function initMap(){
 //          ...
 //         }
 
+function getSearchTerms() {
+  var term;
+  var searchString = "";
+  var searchTerms = [];
+  $(".search-terms").each(function(){
+    term = $(this).text();
+    searchString += term + "%20";
+    searchTerms.push(term);
+  });
+
+  return [searchString, searchTerms];
+}
 
 function setMarkers(map) {
   console.log("setMarkers called");
@@ -74,10 +86,15 @@ function setMarkers(map) {
   // state = locationArray[1];
 
   // '/<state>/<city>/city.json'
-  // page = "/" + state + "/" + city + "/city.json";
-  page='/search/cupcake/Palo%20Alto/search.json'
+  searchInfo = getSearchTerms();
+  searchString = searchInfo[0];  // string separated by %20
+  searchTerms = searchInfo[1];  // array of search terms
 
-  $.getJSON(page, function(top5json) {
+  console.log(searchTerms);
+  
+  var searchPage='/search/'+searchString+"/"+locationArray.join(", ") + '/search.json';
+
+  $.getJSON(searchPage, function(top5json) {
       console.log('in $.get top5json');
       console.log(top5json);
       

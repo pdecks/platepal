@@ -14,6 +14,7 @@ from sqlalchemy import distinct
 from model import CAT_CODES
 from statecodes import STATE_CODES
 
+import re
 import os
 import usaddress
 
@@ -227,15 +228,24 @@ def get_next_n_results(cat, n, oset):
 @app.route('/search', methods=['GET'])
 def search_bar_results():
     """Page displaying results of search bar search."""
+
     # get search form inputs
+    # address
     search_loc = request.args.get("search-loc")
     if not search_loc:
         search_loc = 'Palo Alto, CA'
-    search_terms = request.args.get("search-terms")
 
-    # TODO query db for location parsing
-    state = 'CA'
-    city = 'Palo Alto'
+    parsed_loc = re.findall("([\w\s]+),\s(\w+)", search_loc)
+    city = parsed_loc[0][0]
+    state = parsed_loc[0][1]
+
+    # TODO: FIND NEARBY CITY...
+    # check if city in db...
+
+    # search terms
+    search_terms = request.args.get("search-terms")
+    search_terms = search_terms.split()
+
 
     return render_template('search.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, search_terms=search_terms)
 
@@ -246,19 +256,22 @@ def query_search(search_terms, search_loc):
     return json of biz results by search
     """
     categories = dict(CAT_CODES)
-    # del categories['unknown']
+    print "this is search_terms in search.json", search_terms
+    print "this is search_loc in search.json", search_loc
+    parsed_loc = re.findall("([\w\s]+),\s(\w+)", search_loc)
+    city = parsed_loc[0][1]
+    state = parsed_loc[0][1]
 
-    address = usaddress.parse(search_loc)
-    print "this is address", address
+    search_terms = search_terms.split()
+    clauses = and_( * [PlatePalReview.text.like('%'+ term + '%') for term in search_terms])
 
-    state = 'CA'
-    city = 'Palo Alto'
-    search_terms = ['cupcakes']
+    categories = dict(CAT_CODES)
 
+    # query database
     data_list_of_dicts = {}
     # query database for top 5 businesses for each category
     for cat_name in categories:
-        print "this is cat_name", cat_name
+    
         cat_code = categories[cat_name]
 
         # select distinct Biz.biz_id, Biz.name, Biz.city from Biz
@@ -266,7 +279,8 @@ def query_search(search_terms, search_loc):
         # join Reviews on revcats.review_id = reviews.review_id
         # where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
         state_biz = db.session.query(PlatePalBiz).join(ReviewCategory).join(PlatePalReview).filter(PlatePalBiz.state==state)
-        city_biz = state_biz.filter(PlatePalBiz.city==city).filter(PlatePalReview.text.like('%'+search_term+'%'))
+        city_biz = state_biz.filter(PlatePalBiz.city==city).filter(clauses)
+        # city_biz = state_biz.filter(PlatePalBiz.city==city).filter(PlatePalReview.text.like('%'+search_term+'%'))
 
         if cat_code != 'unkn':
             city_biz_cat = city_biz.filter(ReviewCategory.cat_code==cat_code).all()
@@ -292,7 +306,6 @@ def query_search(search_terms, search_loc):
 
     return jsonify(data_list_of_dicts)
 
-    return jsonify({'lat': city_entry.lat, 'lng': city_entry.lng})
 
 
 @app.route('/biz')

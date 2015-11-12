@@ -7,81 +7,21 @@ from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
+from model import City, CityDistance
 from model import connect_to_db, db
 
 from sqlalchemy import distinct
 from model import CAT_CODES
-
+from statecodes import STATE_CODES
 import os
+
+from geopy.geocoders import Nominatim
 
 CAT_CODES_ID = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn']
 CAT_NAMES_ID = ['Gluten-Free', 'Vegan', 'Kosher', 'Allergies', 'Paleo', 'Feeling Lucky']
 CAT_DICT = {CAT_CODES_ID[n]: CAT_NAMES_ID[n] for n in range(len(CAT_CODES_ID))}
 CAT_LISTS = [[CAT_CODES_ID[n], CAT_NAMES_ID[n]] for n in range(len(CAT_CODES_ID))]
 google_maps_key = os.environ['GOOGLE_MAPS_API_KEY']
-
-STATE_CODES = {
-    "AL": "Alabama",
-    "AK": "Alaska",
-    "AS": "American Samoa",
-    "AZ": "Arizona",
-    "AR": "Arkansas",
-    "CA": "California",
-    "CO": "Colorado",
-    "CT": "Connecticut",
-    "DE": "Delaware",
-    "DC": "District Of Columbia",
-    "FM": "Federated States Of Micronesia",
-    "FL": "Florida",
-    "GA": "Georgia",
-    "GU": "Guam",
-    "HI": "Hawaii",
-    "ID": "Idaho",
-    "IL": "Illinois",
-    "IN": "Indiana",
-    "IA": "Iowa",
-    "KS": "Kansas",
-    "KY": "Kentucky",
-    "LA": "Louisiana",
-    "ME": "Maine",
-    "MH": "Marshall Islands",
-    "MD": "Maryland",
-    "MA": "Massachusetts",
-    "MI": "Michigan",
-    "MN": "Minnesota",
-    "MS": "Mississippi",
-    "MO": "Missouri",
-    "MT": "Montana",
-    "NE": "Nebraska",
-    "NV": "Nevada",
-    "NH": "New Hampshire",
-    "NJ": "New Jersey",
-    "NM": "New Mexico",
-    "NY": "New York",
-    "NC": "North Carolina",
-    "ND": "North Dakota",
-    "MP": "Northern Mariana Islands",
-    "OH": "Ohio",
-    "OK": "Oklahoma",
-    "OR": "Oregon",
-    "PW": "Palau",
-    "PA": "Pennsylvania",
-    "PR": "Puerto Rico",
-    "RI": "Rhode Island",
-    "SC": "South Carolina",
-    "SD": "South Dakota",
-    "TN": "Tennessee",
-    "TX": "Texas",
-    "UT": "Utah",
-    "VT": "Vermont",
-    "VI": "Virgin Islands",
-    "VA": "Virginia",
-    "WA": "Washington",
-    "WV": "West Virginia",
-    "WI": "Wisconsin",
-    "WY": "Wyoming"
-}
-
 
 app = Flask(__name__)
 
@@ -103,8 +43,11 @@ def index():
 def city_in_state_page(state, city):
     """City Homepage"""
 
-    # query db for nearby cities
-    return render_template('palo-alto.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, nearby_cities=nearby_cities)
+    # get nearby cities list
+    nearby_miles = 50 # find cities within 50 miles of current city
+    nearby_cities = find_nearby_cities(city, state, nearby_miles)
+
+    return render_template('city.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, nearby_cities=nearby_cities)
 
 
 @app.route('/<state>/state.html')
@@ -146,7 +89,6 @@ def get_all_biz_in_state(state):
 # select distinct biz.biz_id, biz.name from biz join revcats on biz.biz_id = revcats.biz_id where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
 @app.route('/<state>/<city>/city.json')
 def display_all_reviews_in_city(state, city):
-    print "This is city in display_all_reviews_in_city", city
 
     categories = dict(CAT_CODES)
     # del categories['unknown']
@@ -448,6 +390,38 @@ def process_logout():
 # @app.route('/users/<int:user-id>')
 # def show_user():
 #     return
+
+@app.route('/<state>/<city>/geocode.json')
+def geocode_city_state(city, state):
+    """
+    return json of lat/long for a city, state
+
+    used to center map for /state/city/city.html
+    """
+    geolocator = Nominatim()
+    location = geolocator.geocode(city + " " + state)
+
+    return jsonify({'lat': location.latitude, 'lng': location.longitude})
+
+
+def find_nearby_cities(city, state, x_miles):
+    """Given a city (city, state), return a list of cities within x miles."""
+    # query db for city id
+    city_obj = City.query.filter(City.city==city, City.state==state).first()
+    city_id = city_obj.city_id
+
+    # query db for list of nearby cities within x miles
+    nearby_cities = db.session.query(CityDistance.city2_id).filter(CityDistance.city1_id==city_id).filter(CityDistance.miles < x_miles).all()
+
+    nearby_cities_list = []
+    # lookup city names for nearby cities
+    for nearby_city in nearby_cities:
+        nearby_name = db.session.query(City.city).filter(City.city_id==nearby_city[0]).first()
+        nearby_cities_list.append(nearby_name)
+
+    return nearby_cities_list
+
+
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point

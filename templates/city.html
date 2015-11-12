@@ -7,13 +7,11 @@ PlatePal: {{city}} Results
 {% block location %}
 <div class="citynav-outer">
     <div class="citynav left">
-        <a href="/{{state}}/Palo-Alto/city.html">Palo Alto</a> <!-- TODO: Replace with Jinja  -->
+        <a href="/{{state}}/{{city}}/city.html">{{city}}</a> <!-- TODO: Replace with Jinja  -->
     </div>
     <div class="citynav right">
-    <!-- TODO: JINJA for loop here of cities in list of nearby cities -->
-        {% for city in cities_list %}
-        <a href="{{state}}/Berkeley/city.html">Berkeley</a> <!--TODO: Replace with Jinja -->
-        <a href="{{state}}/San-Luis-Obispo/city.html">San Luis Obispo</a> <!--TODO: Replace with Jinja -->
+        {% for city in nearby_cities %}
+        <a href="/{{state}}/{{city[0]}}/city.html">{{city[0]}}</a> 
         {% endfor %}
     </div> 
 
@@ -78,7 +76,7 @@ PlatePal: {{city}} Results
         </div> <!-- #results-list -->
 
     </div> <!-- #results -->
-    <script type="text/javascript" src="/static/js/pa-gmaps.js"></script>
+    <script type="text/javascript" src="/static/js/city-gmaps.js"></script>
 
 </div> <!-- content block -->
 

@@ -326,6 +326,49 @@ class Sentence(db.Model):
         return "<Sentence sent_id=%s review_id=%s>" % (self.sent_id, self.review_id)
 
 
+class City(db.Model):
+    """
+    Store city information (used for geolocation of businesses)
+    """
+    __tablename__ = "cities"
+
+    city_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    city = db.Column(db.Unicode(64), nullable=False)
+    state = db.Column(db.String(3), nullable=False)
+    lat = db.Column(db.Float(Precision=64), nullable=False)
+    lng = db.Column(db.Float(Precision=64), nullable=False)
+
+    def __repr__(self):
+        return "<City name=%s state=%s>" % (self.city, self.state)
+
+
+# class NearbyCity(db.Model):
+#     """ store list of nearby cities"""
+
+#     __tablename__ = "nearbycities"
+
+#     near_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+#     city_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
+#     nearcity_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
+
+#     def __repr__(self):
+#         return "<NearbyCity target-city=%s nearby-city=%s>" % (self.city_id, self.nearcity_id)
+
+class CityDistance(db.Model):
+    """ store distances between cities"""
+
+    __tablename__ = "citydistances"
+
+    distance_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    city1_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
+    city2_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
+    miles = db.Column(db.Float(Precision=64), nullable=False) # distance in miles
+
+    def __repr__(self):
+        return "<CityDistance target-city=%s nearby-city=%s>" % (self.city1_id, self.city2_id)
+
+
+
 ##############################################################################
 # Helper functions
 

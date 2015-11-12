@@ -7,6 +7,7 @@ from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
+from model import City, CityDistance
 from model import connect_to_db, db
 
 from server import app
@@ -14,6 +15,9 @@ from pandas import DataFrame
 from datetime import datetime
 from sqlalchemy.sql import func
 from sqlalchemy import distinct
+
+from geopy.geocoders import Nominatim
+from geopy.distance import vincenty
 
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
@@ -268,6 +272,50 @@ def calc_avg_rating_per_cat():
             db.session.commit()
     return
 
+def seed_cities():
+    """Add all cities in Biz table to Cities table"""
+    # should be 95 cities
+    # select city, state from biz group by state, city
+    # group by state, city
+    all_cities = db.session.query(PlatePalBiz.city, PlatePalBiz.state).filter(PlatePalBiz.city!=u"blacksburg", PlatePalBiz.city!=u'Carrboro Saxapahaw Chapel Hill Durham', PlatePalBiz.city!=u'Greenbelt ')
+    cities = all_cities.group_by(PlatePalBiz.state).group_by(PlatePalBiz.city).all()
+
+    # calculate lat/lng for each city
+    geolocator = Nominatim()
+    for city in cities:
+        location = geolocator.geocode(city[0] + " " + city[1])
+        print city
+        print "Lat: {}, Lng: {}".format(location.latitude, location.longitude)
+        new_city = City(city=city[0],
+                        state=city[1],
+                        lat=location.latitude,
+                        lng=location.longitude)
+        db.session.add(new_city)
+    db.session.commit()
+
+
+def seed_city_distance():
+    """populate city distances table"""
+    # should be 95 cities
+    # select city, state from biz group by state, city
+    # group by state, city
+    cities = db.session.query(City)
+
+    # find nearby cities (<50 miles)
+    for city in cities:
+        city1 = (city.lat, city.lng)
+        for other_city in cities:
+            if other_city != city:
+                city2 = (other_city.lat, other_city.lng)
+                # evaluate distance
+                miles = vincenty(city1, city2).miles
+
+                new_city_distance = CityDistance(city1_id=city.city_id,
+                                                 city2_id=other_city.city_id,
+                                                 miles=miles)
+                db.session.add(new_city_distance)
+    db.session.commit()
+
 
 ## Helper function for checking if input string represents an int
 def RepresentsInt(s):
@@ -306,7 +354,17 @@ if __name__ == "__main__":
     # else:
     #     pass
 
-    print "Would you like to seed BizSentiment by category?"
+    # print "Would you like to seed BizSentiment by category?"
+    # decision = raw_input("Y or N >> ")
+    # if decision.lower() == 'y':
+    #     calc_avg_rating_per_cat()
+
+    # print "Would you like to seed Cities?"
+    # decision = raw_input("Y or N >> ")
+    # if decision.lower() == 'y':
+    #     seed_cities()
+
+    print "Would you like to seed NearbyCities?"
     decision = raw_input("Y or N >> ")
     if decision.lower() == 'y':
-        calc_avg_rating_per_cat()
+        seed_city_distance()

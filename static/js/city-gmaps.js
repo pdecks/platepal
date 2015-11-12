@@ -2,6 +2,13 @@
 var markers = new Array();
 
 var catCodes = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn'];
+var catNames = {'gltn': 'Gluten-Free',
+                'vgan': 'Vegan',
+                'kshr': 'Kosher',
+                'algy': 'Allergies',
+                'pleo': 'Paleo',
+                'unkn': 'Feeling Lucky'
+                };
 
 // for keeping track of results loaded on page
 var catCounts = {'gltn': 0,
@@ -36,7 +43,7 @@ function initMap(){
     var map = new google.maps.Map(document.getElementById('map'),{
       center: geocodeJSON,
       // center: myLatLng,
-      zoom: 14,
+      zoom: 11,
 
     });
     // define markers
@@ -114,7 +121,14 @@ function setMarkers(map) {
 
           markers[cat].push(marker);
 
-          resList.append("<li>" + biz.name + " " + biz.avg_cat_review + "</li>");
+          // var avg_review;
+          // if (biz.avg_cat_review !== 'undefined'){
+          //   avg_cat_review = 'N/A';
+          // }
+          // else {
+          //   avg_review = biz.avg_cat_review;
+          // }
+          resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br>PlatePal Score: " + biz.avg_cat_review + "</br></li>");
           console.log('appended to resList');
         } // end inner for loop over businesses in list by category
                 

@@ -10,9 +10,11 @@ PlatePal: {{city}} Results
         <a href="/{{state}}/{{city}}/city.html">{{city}}</a> <!-- TODO: Replace with Jinja  -->
     </div>
     <div class="citynav right">
+        {% if nearby_cities is not none %}
         {% for city in nearby_cities %}
         <a href="/{{state}}/{{city[0]}}/city.html">{{city[0]}}</a> 
         {% endfor %}
+        {% endif %}
     </div> 
 
     <!-- end JINJA for loop here -->

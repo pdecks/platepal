@@ -15,7 +15,7 @@ from model import CAT_CODES
 from statecodes import STATE_CODES
 import os
 
-from geopy.geocoders import Nominatim
+# from geopy.geocoders import Nominatim
 
 CAT_CODES_ID = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn']
 CAT_NAMES_ID = ['Gluten-Free', 'Vegan', 'Kosher', 'Allergies', 'Paleo', 'Feeling Lucky']
@@ -35,8 +35,11 @@ app.jinja_env.undefined = StrictUndefined
 @app.route('/')
 def index():
     """Homepage."""
-
-    return render_template('home.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, limit_results=5, offset_results=5)
+    city = 'Palo Alto'
+    state = 'CA'
+    x_miles = 10
+    nearby_cities = find_nearby_cities(city, state, x_miles)
+    return redirect('/CA/Palo%20Alto/city.html')
 
 
 @app.route('/<state>/<city>/city.html')
@@ -229,7 +232,7 @@ def search_bar_results():
 def show_biz_general():
     return render_template('biz.html')
 
-@app.route('/biz/<int:biz_id>')
+@app.route('/biz/<biz_id>')
 def show_biz_details(biz_id):
     """Displays details for individual business."""
 
@@ -266,7 +269,7 @@ def show_biz_details(biz_id):
     return render_template("biz.html", biz=biz)
 
 
-@app.route('/biz/<int:biz_id>/add-review', methods=['POST'])
+@app.route('/biz/<biz_id>/add-review', methods=['POST'])
 def update_business_review():
     # this route is only accessed by a logged-in user
 
@@ -399,26 +402,32 @@ def geocode_city_state(city, state):
 
     used to center map for /state/city/city.html
     """
-    geolocator = Nominatim()
-    location = geolocator.geocode(city + " " + state)
+    # geolocator = Nominatim()
+    # location = geolocator.geocode(city + ", " + state)
+    # query db for similar city
 
-    return jsonify({'lat': location.latitude, 'lng': location.longitude})
+    city_entry = City.query.filter(City.state==state, City.city.like('%'+city+'%')).first()
+
+    return jsonify({'lat': city_entry.lat, 'lng': city_entry.lng})
 
 
 def find_nearby_cities(city, state, x_miles):
     """Given a city (city, state), return a list of cities within x miles."""
     # query db for city id
     city_obj = City.query.filter(City.city==city, City.state==state).first()
-    city_id = city_obj.city_id
+    if city_obj:
+        city_id = city_obj.city_id
 
-    # query db for list of nearby cities within x miles
-    nearby_cities = db.session.query(CityDistance.city2_id).filter(CityDistance.city1_id==city_id).filter(CityDistance.miles < x_miles).all()
+        # query db for list of nearby cities within x miles
+        nearby_cities = db.session.query(CityDistance.city2_id).filter(CityDistance.city1_id==city_id).filter(CityDistance.miles < x_miles).all()
 
-    nearby_cities_list = []
-    # lookup city names for nearby cities
-    for nearby_city in nearby_cities:
-        nearby_name = db.session.query(City.city).filter(City.city_id==nearby_city[0]).first()
-        nearby_cities_list.append(nearby_name)
+        nearby_cities_list = []
+        # lookup city names for nearby cities
+        for nearby_city in nearby_cities:
+            nearby_name = db.session.query(City.city).filter(City.city_id==nearby_city[0]).first()
+            nearby_cities_list.append(nearby_name)
+    else:
+        nearby_cities_list = []
 
     return nearby_cities_list
 
@@ -427,7 +436,7 @@ def find_nearby_cities(city, state, x_miles):
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
     # that we invoke the DebugToolbarExtension
-    app.debug = False
+    app.debug = True
 
     connect_to_db(app)
 

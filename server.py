@@ -241,7 +241,7 @@ def show_biz_details(biz_id):
     # TODO: Get average Yelp stars of business
 
     stars = [r.yelp_stars for r in biz.reviews if r.yelp_stars is not None]
-    print "This is stars", stars
+    # print "This is stars", stars
     if stars:
         avg_star = float(sum(stars)) / len(stars)
         num_rev = len(stars)
@@ -253,7 +253,7 @@ def show_biz_details(biz_id):
     sen_scores = {}
     for cat in CAT_CODES_ID:
         cat_sen = [rc.agg_sen_score for rc in biz.sentiments if rc.cat_code == cat and rc.agg_sen_score is not None]
-        print "This is cat_sen", cat_sen
+        # print "This is cat_sen", cat_sen
         if cat_sen:
             avg_cat_sen = float(sum(cat_sen)) / len(cat_sen)
         else:

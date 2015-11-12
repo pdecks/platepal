@@ -7,14 +7,40 @@ div.nav-outer, div.citynav-outer {
 
 }
 
+div.biznav-outer {
+    height: 125px;
+    width: 100%;
+    background-color: #EAEAEA;
+    padding: 10px;
+    padding-left: 5%;
+    padding-bottom: 10px;
+    border-bottom: 2px solid gray;
+
+}
+
+div#biz-reviews {
+    padding-left: 5%;
+}
+div#biz-info, div#biz-img {
+    display: inline-block;
+    vertical-align: top;
+}
+
+img#biz-photo {
+    margin-left: 10%;
+    /*margin-top: */
+    border: 2px solid gray;
+    display: inline-block;
+ 
+}
 div.nav-outer {
     border-bottom: 2px solid black;
 }
-div.citynav-outer{
+div.citynav-outer {
     background-color: #EAEAEA;
     /*padding-left: 5%;*/
 }
-div.nav, div.citynav {
+div.nav, div.citynav, div.biznav {
     display: inline-block;
     /*height: 50px;*/
     padding: 5px 0px;
@@ -46,7 +72,13 @@ div.right{
     text-align: right;
 
 }
-div.citynav {
+/*div.biznav.right{
+    width: 40%;
+    margin-left: 10%;
+    text-align: right;
+
+}*/
+div.citynav, div.biznav {
    padding-bottom: 20px;
    vertical-align: top;
 }

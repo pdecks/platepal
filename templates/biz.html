@@ -1,4 +1,42 @@
 {% extends 'base.html' %}
+<!-- return render_template("biz.html", biz=biz, avg_star=avg_star, sen_scores=sen_scores, num_rev=num_rev) -->
+{% block title %}
+PlatePal: {{biz.name}}
+{% endblock %}
+
+
+{% block location %}
+<div class="biznav-outer">
+
+    <div class="biznav left">
+        <div id="biz-info">
+            <h2>{{biz.name}}</h2>
+            <h4>{{avg_star}}, {{num_rev}} review{% if num_rev > 1 %}s{% endif %}</h4>
+        </div>
+        <div id="biz-img">
+            <img src={{biz.photo_url}} id="biz-photo">
+        </div>
+    </div>
+    <div class="biznav right">
+        <h4>Add a PlatePal Score</h4>
+    </div> 
+
+    <!-- end JINJA for loop here -->
+</div> <!-- citynav-outer -->
+<div id="biz-reviews">
+    <article>
+        <p>Lorum Ipsum</p>
+    </article>
+    <article>
+        <p>Lorum Ipsum</p>
+    </article>
+    <article>
+        <p>Lorum Ipsum</p>
+    </article>
+    
+</div>
+{% endblock %}
+
 {% block content %}
-<h2>PlatePal Business Listing</p2>
+
 {% endblock %}

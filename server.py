@@ -122,6 +122,7 @@ def display_all_reviews_in_city(state, city):
                         'is_open': biz.is_open,
                         'photo_url': biz.photo_url
                         }
+            # if biz_dict not in cat_list:
             cat_list.append(biz_dict)
 
         data_list_of_dicts[cat_code] = cat_list
@@ -426,7 +427,7 @@ def find_nearby_cities(city, state, x_miles):
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
     # that we invoke the DebugToolbarExtension
-    app.debug = True
+    app.debug = False
 
     connect_to_db(app)
 

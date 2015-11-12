@@ -20,84 +20,32 @@ function getCityState(){
   return [cityHTML, state];
 }
 
-// function codeAddress(address) {
-  
-//   geocoder.geocode( { 'address': address}, function(results, status) {
-//     if (status == google.maps.GeocoderStatus.OK) {
-//       map.setCenter(results[0].geometry.location);
-//       var marker = new google.maps.Marker({
-//           map: map,
-//           position: results[0].geometry.location
-//       });
-//     } else {
-//       alert("Geocode was not successful for the following reason: " + status);
-//     }
-//   });
-// }
-function initMap(){
-  // update to geolocate or set default SF
-  // var myLatLng = {lat: 37.754407, lng: -122.447684}; // SF
-  // var myLatLng = {lat: 39.7392, lng: -104.9903}; // Denver, CO
 
+function initMap(){
+  console.log("initMap called");
   // get city, state
   var location = getCityState();
   var city = location[0];
-  console.log(city);
   var state = location[1];
   var address = city + ', ' + state;
 
-  page = "/" + state + "/" + city + "/geocode.json";
-  $.get(page, function(geocodeJSON){
-    console.log(geocodeJSON);
-    
+  pageGeo = "/" + state + "/" + city + "/geocode.json";
+  $.getJSON(pageGeo, function(geocodeJSON){
+  // var myLatLng = {lat: 37.435, lng: -122.17};
+    // define map
     var map = new google.maps.Map(document.getElementById('map'),{
       center: geocodeJSON,
+      // center: myLatLng,
       zoom: 14,
-  });
-  });
 
-  // var myLatLng = {lat: 37.435, lng: -122.17};
+    });
+    // define markers
+    setMarkers(map);
+
+  }); // end $.get(geocodeJSON)
   
-  // define map
-
-  
-  // geocode the address
-  codeAddress(address);
-
-  // page = "/popular-biz.json";
-  // define markers
-  setMarkers(map);
-
-  var infoWindow = new google.maps.InfoWindow({map: map});
-
-   // Try HTML5 geolocation.
-  // if (navigator.geolocation) {
-  //   navigator.geolocation.getCurrentPosition(function(position) {
-  //     var pos = {
-  //       lat: position.coords.latitude,
-  //       lng: position.coords.longitude
-  //     };
-
-  //     infoWindow.setPosition(pos);
-  //     infoWindow.setContent('Location found.');
-  //     // map.setCenter(pos);
-  //   }, function() {
-  //     handleLocationError(true, infoWindow, map.getCenter());
-  //   });
-  // } else {
-  // // Browser doesn't support Geolocation
-  //   handleLocationError(false, infoWindow, map.getCenter());
-  // }
-
 } // end initMap
 
-
-function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-  infoWindow.setPosition(pos);
-  infoWindow.setContent(browserHasGeolocation ?
-                        'Error: The Geolocation service failed.' :
-                        'Error: Your browser doesn\'t support geolocation.');
-}
 
 // JSON = {'gltn': [{'biz_id': biz_id, 'avg_cat_review': avg_cat_review, 'lat': lat, 'lng': lng}, {}, {}],
 //         'vgan': [{}, {}, {}],
@@ -106,7 +54,8 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 
 
 function setMarkers(map) {
-// Adds markers to the map.
+  console.log("setMarkers called");
+  // Adds markers to the map.
   
   locationArray = getCityState();
   city = locationArray[0].split('%20').join(' ');
@@ -115,14 +64,17 @@ function setMarkers(map) {
   // '/<state>/<city>/city.json'
   page = "/" + state + "/" + city + "/city.json";
 
-  $.get(page, function(top5json) {
-      console.log('in $.get');
+  $.getJSON(page, function(top5json) {
+      console.log('in $.get top5json');
       console.log(top5json);
-      // iterate over each item in the dictionary with $.each()
+      
+      // iterate over each item in the dictionary
       for (var cat in top5json) {
         markers[cat] = new Array();
 
         var resList = $("#results-list-"+cat);
+        // console.log('This is resList');
+        // console.log(resList);
         var infoWindow = new google.maps.InfoWindow();
 
         for (var i=0; i<top5json[cat].length; i++){
@@ -141,16 +93,6 @@ function setMarkers(map) {
           if (cat !== 'gltn'){
             marker.setVisible(false);
           }
-          // // show only the first 5 businesses
-          // else {
-          // if (i < 5){
-          // marker.setVisible(true);
-          // }
-          // else{
-          // marker.setVisible(false);
-          // }
-
-          // }
 
           // create an event handler to listen for marker clicks
           // opens an infoWindow on the marker when clicked
@@ -173,6 +115,7 @@ function setMarkers(map) {
           markers[cat].push(marker);
 
           resList.append("<li>" + biz.name + " " + biz.avg_cat_review + "</li>");
+          console.log('appended to resList');
         } // end inner for loop over businesses in list by category
                 
       } // end outer for loop over categories
@@ -291,8 +234,8 @@ $("a.map-nav").on('click', function(evt){
 });
 
 
-$(document).ready(initMap());
-
+// $(document).ready(initMap());
+// initMap();
 // create click listener on all update results links results list
 // $("a.update-results").on('click', function(evt){
 // $("a#gltn-next-5.update-results").on('click', function(evt){

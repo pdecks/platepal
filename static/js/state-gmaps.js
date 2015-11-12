@@ -27,7 +27,7 @@ function initMap(){
   // define markers
   setMarkers(map);
 
-  var infoWindow = new google.maps.InfoWindow({map: map});
+  // var infoWindow = new google.maps.InfoWindow({map: map});
 
    // Try HTML5 geolocation.
   // if (navigator.geolocation) {
@@ -243,7 +243,7 @@ $("a.map-nav").on('click', function(evt){
 });
 
 
-$(document).ready(initMap());
+// $(document).ready(initMap());
 
 // create click listener on all update results links results list
 // $("a.update-results").on('click', function(evt){

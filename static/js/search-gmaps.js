@@ -1,3 +1,4 @@
+//TODO: document ready issue
 // define arrays for the markers by category
 var markers = new Array();
 
@@ -69,11 +70,12 @@ function setMarkers(map) {
   // Adds markers to the map.
   
   locationArray = getCityState();
-  city = locationArray[0].split('%20').join(' ');
-  state = locationArray[1];
+  // city = locationArray[0].split('%20').join(' ');
+  // state = locationArray[1];
 
   // '/<state>/<city>/city.json'
-  page = "/" + state + "/" + city + "/city.json";
+  // page = "/" + state + "/" + city + "/city.json";
+  page='/search/cupcake/Palo%20Alto/search.json'
 
   $.getJSON(page, function(top5json) {
       console.log('in $.get top5json');

@@ -11,6 +11,9 @@ div.nav-outer, div.citynav-outer {
 
 }
 
+div.searchnav-outer {
+    padding-left: 5%;
+}
 div.biznav-outer {
     height: 125px;
     width: 100%;

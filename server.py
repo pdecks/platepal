@@ -13,7 +13,9 @@ from model import connect_to_db, db
 from sqlalchemy import distinct
 from model import CAT_CODES
 from statecodes import STATE_CODES
+
 import os
+import usaddress
 
 # from geopy.geocoders import Nominatim
 
@@ -236,6 +238,61 @@ def search_bar_results():
     city = 'Palo Alto'
 
     return render_template('search.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, search_terms=search_terms)
+
+
+@app.route('/search/<search_terms>/<search_loc>/search.json')
+def query_search(search_terms, search_loc):
+    """
+    return json of biz results by search
+    """
+    categories = dict(CAT_CODES)
+    # del categories['unknown']
+
+    address = usaddress.parse(search_loc)
+    print "this is address", address
+
+    state = 'CA'
+    city = 'Palo Alto'
+    search_terms = ['cupcakes']
+
+    data_list_of_dicts = {}
+    # query database for top 5 businesses for each category
+    for cat_name in categories:
+        print "this is cat_name", cat_name
+        cat_code = categories[cat_name]
+
+        # select distinct Biz.biz_id, Biz.name, Biz.city from Biz
+        # join Revcats on biz.biz_id = revcats.biz_id
+        # join Reviews on revcats.review_id = reviews.review_id
+        # where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
+        state_biz = db.session.query(PlatePalBiz).join(ReviewCategory).join(PlatePalReview).filter(PlatePalBiz.state==state)
+        city_biz = state_biz.filter(PlatePalBiz.city==city).filter(PlatePalReview.text.like('%'+search_term+'%'))
+
+        if cat_code != 'unkn':
+            city_biz_cat = city_biz.filter(ReviewCategory.cat_code==cat_code).all()
+        else:
+            city_biz_cat = city_biz.all()
+
+        cat_list = []
+        for biz in city_biz_cat:
+            biz_dict = {'biz_id': biz.biz_id,
+                        'name': biz.name,
+                        'address': biz.address,
+                        'city': biz.city,
+                        'state': biz.state,
+                        'lat': biz.lat,
+                        'lng': biz.lng,
+                        'is_open': biz.is_open,
+                        'photo_url': biz.photo_url
+                        }
+            # if biz_dict not in cat_list:
+            cat_list.append(biz_dict)
+
+        data_list_of_dicts[cat_code] = cat_list
+
+    return jsonify(data_list_of_dicts)
+
+    return jsonify({'lat': city_entry.lat, 'lng': city_entry.lng})
 
 
 @app.route('/biz')

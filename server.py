@@ -222,10 +222,20 @@ def get_next_n_results(cat, n, oset):
     return jsonify(data_list_of_dicts)
 
 
-@app.route('/search')
+@app.route('/search', methods=['GET'])
 def search_bar_results():
     """Page displaying results of search bar search."""
-    return render_template('search.html')
+    # get search form inputs
+    search_loc = request.args.get("search-loc")
+    if not search_loc:
+        search_loc = 'Palo Alto, CA'
+    search_terms = request.args.get("search-terms")
+
+    # TODO query db for location parsing
+    state = 'CA'
+    city = 'Palo Alto'
+
+    return render_template('search.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, search_terms=search_terms)
 
 
 @app.route('/biz')

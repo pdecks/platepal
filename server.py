@@ -246,7 +246,6 @@ def search_bar_results():
     search_terms = request.args.get("search-terms")
     search_terms = search_terms.split()
 
-
     return render_template('search.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, search_terms=search_terms)
 
 

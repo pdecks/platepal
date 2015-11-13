@@ -303,7 +303,6 @@ class SentenceCategory(db.Model):
 
     sentcat_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     sent_id = db.Column(db.Integer, db.ForeignKey('sentences.sent_id'))
-    revcat_id = db.Column(db.Integer, db.ForeignKey('revcats.revcat_id'))
     cat_code = db.Column(db.Integer, db.ForeignKey('categories.cat_code'))
     sen_score = db.Column(db.Integer, nullable=True)
 

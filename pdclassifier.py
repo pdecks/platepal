@@ -450,21 +450,49 @@ def vectorize(X_docs, vocab=None):
                                      ngram_range=(1, 2),
                                      preprocessor=PennTreebankPunkt(),
                                      vocabulary=vocab)
-        
+
     X = vectorizer.fit_transform(X_docs)
     return vectorizer.vocabulary_, X
 
 
+## FEATURE EXTRACTION ##
+from sklearn.feature_selection import chi2
+
+def sorted_features (cat_code, V, X, y, topN):
+    """
+    Use chi-square test scores to select top N features from vectorizer.
+
+    Aims to simplify the classifier by training on only the most important
+    features. The relative importance of the features is important in text
+    classification. Chi-square feature selection can be used to rank features
+    but is not appropriate for making statements about statistical dependence
+    or independence of variables. [see Stanford NLP]
+
+    cat_code: the 4-character category code (e.g., 'gltn', 'pleo')
+    V: vectorizer vocabulary, vectorizer.vocabulary_
+    X: numpy sparse matrix of vectorized documents
+    y: numpy array of labels (target vector)
+
+    Returns a list of the topN features.
+    """
+    # define the inverse dictionary for the vocabulary
+    # key = rank, value = word
+    iv = {v:k for k, v in V.items()}
+
+    chi2_scores = chi2(X, y)[0]
+
+    top_features = [(x[1], iv[x[0]], x[0])
+                    for x in sorted(enumerate(chi2_scores),
+                    key=operator.itemgetter(1), reverse=True)]
+
+    print "TOP %s FEATURES FOR: %s" % (topN, cat_code)
+    for top_feature in top_features[0:topN]:
+        print "%7.3f %s (%d)" % (top_feature[0], top_feature[1], top_feature[2])
+
+    return [x[1] for x in top_features]
 
 
-
-
-
-## FREQUENCY DISTRIBUTIONS ##
-
-## COLLOCATIONS, BIGRAMS, TRIGRAMS ##
-
-## CHUNKING ##
+## FREQUENCY DISTRIBUTIONS?? ##
 
 ## Helper function for checking if input string represents an int
 def represents_int(s):

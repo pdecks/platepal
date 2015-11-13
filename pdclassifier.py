@@ -351,10 +351,6 @@ class LemmaTokenizer(object):
     def __call__(self, doc):
         return [self.wnl.lemmatize(t) for t in word_tokenize(doc)]
 
-## TOKENIZATION ##
-# Caution: when tokenizing a Unicode string, make sure you are not using an
-# encoded version of the string (it may be necessary to decode it first,
-# e.g. with s.decode("utf8").
 
 ## PREPROCESSOR ##
 class PennTreebankPunkt(object):
@@ -367,16 +363,22 @@ class PennTreebankPunkt(object):
     1. Tokenize reviews on sentences with nltk.sent_tokenize
     2. Tokenize sentences with nltk.word_tokenize
     3. Correct contraction tokens (n't, 'll, etc.)
-    4. Rejoin words into entire document delimited on white space
-    5. Optional: Store sentences in database with review_id info
+    4. Rejoin words into entire document delimited on white space --> string
+    5. Optional: Store sentences in database with review_id info --> use with
+       use_flag = "independent"
     """
 
-
-    def __init__(self):
+    def __init__(self, use_flag="vectorizer"):
         self.pst = sent_tokenize()
         self.ptt = word_tokenize()
+        self.use_flag = use_flag
 
     def __call__(self, doc):
+        """
+        if use_flag == vectorizer, return the entire document as a string
+        else, if use_flag == 'independent', return the lists of sentences and
+        the original words along with the preprocessed doc as a string.
+        """
         # 1. tokenize into sentences
         sentence_list = self.pst(doc)
 
@@ -397,10 +399,13 @@ class PennTreebankPunkt(object):
         for i, word in enumerate(word_list):
             word_list[i] = check_contraction(word)
 
-        # 4. rejoin words into single document
+        # 4. rejoin words into single string
         prepocessed_doc = " ".join(word_list)
 
-        return (sentence_list, original_word_list, preprocessed_doc)
+        if self.use_flag == 'independent':
+            return (sentence_list, original_word_list, preprocessed_doc)
+        else:
+            return preprocessed_doc
 
 
     def check_contraction(word):
@@ -417,27 +422,41 @@ class PennTreebankPunkt(object):
         return word
 
 
-def vectorize(docs, vocab=None):
-    """Vectorizer for use with sentiment analysis."""
+## TOKENIZATION ##
+# Caution: when tokenizing a Unicode string, make sure you are not using an
+# encoded version of the string (it may be necessary to decode it first,
+# e.g. with s.decode("utf8").
+def vectorize(X_docs, vocab=None):
+    """Vectorizer for use with sentiment analysis.
+
+    X_docs is a numpy array of documents to be vectorized.
+
+    vocab is the vectorizer vocabulary, vectorizer.vocabulary_
+
+    note on preprocessor:
+    a callable that takes an entire document as input (as a single string),
+    and returns a possibly transformed version of the document, still as an
+    entire string."""
 
     vectorizer = CountVectorizer(strip_accents='unicode',
                                  stop_words='english',
                                  decode_error='strict',
                                  ngram_range=(1, 2),
-                                 prepocessor=PennTreebankPunkt())
+                                 preprocessor=PennTreebankPunkt())
     if vocab:
         vectorizer = CountVectorizer(strip_accents='unicode',
                                      stop_words="english",
+                                     decode_error='strict',
                                      ngram_range=(1, 2),
+                                     preprocessor=PennTreebankPunkt(),
                                      vocabulary=vocab)
-    X = vectorizer.fit_transform(docs)
+        
+    X = vectorizer.fit_transform(X_docs)
     return vectorizer.vocabulary_, X
 
-## PART OF SPEECH TAGGING ##
 
-## REMOVING PUNCTUATION ##
 
-## REMOVING STOPWORDS ##
+
 
 
 
@@ -524,7 +543,7 @@ if __name__ == "__main__":
             persist_component(count_vect, pickle_path_v)
         else:
             print 'Vectorizer not pickled.'
-      
+
         decision = raw_input("Would you like to persist the transformer? (Y) or (N) >>")
         if decision.lower() == 'y':
             persist_component(tfidf_transformer, pickle_path_t)

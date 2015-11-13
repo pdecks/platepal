@@ -324,7 +324,6 @@ from nltk import word_tokenize, sent_tokenize
 ## STEMMING / LEMMATIZATION ##
 from nltk.stem import WordNetLemmatizer
 
-
 class LemmaTokenizer(object):
     """
     Stemming, lemmatizing, compound splitting, filtering based on POS, etc.
@@ -357,18 +356,75 @@ class LemmaTokenizer(object):
 # encoded version of the string (it may be necessary to decode it first,
 # e.g. with s.decode("utf8").
 
-# 1. Tokenize reviews on sentences with sent_tokenize
-# 2. Tokenize sentences with word_tokenize
-# 3. Correct contraction tokens (n't, 'll, etc.)
-# 4. Store sentences in database with review_id info for later processing
-# 5. Rejoin sentences into entire document delimited on white space
+## PREPROCESSOR ##
+class PennTreebankPunkt(object):
+    """
+    Create a custom preprocessor for use with sklearn's CountVectorizer using
+    NLTK's Punkt Sentence Tokenizer (sent_tokenize) and NLTK's Penn Treebank
+    Tokenizer (word_tokenize)
+
+    This preprocessor aims to:
+    1. Tokenize reviews on sentences with nltk.sent_tokenize
+    2. Tokenize sentences with nltk.word_tokenize
+    3. Correct contraction tokens (n't, 'll, etc.)
+    4. Rejoin words into entire document delimited on white space
+    5. Optional: Store sentences in database with review_id info
+    """
+
+
+    def __init__(self):
+        self.pst = sent_tokenize()
+        self.ptt = word_tokenize()
+
+    def __call__(self, doc):
+        # 1. tokenize into sentences
+        sentence_list = self.pst(doc)
+
+        # 2. tokenize into words
+        word_list = []
+        for sentence in sentence_list:
+            word_list.extend(self.ptt(sentence))
+        # word_list = [word_list.extend(self.ptt(sentence)) for sentence in sentence_list]
+
+        # 2a. save original list of words
+        original_word_list = word_list[:]
+
+        # 3. correct contraction tokens, uses slice assignment
+        # word_list[:] = [check_contraction(word) for word in word_list]
+        # second form doesn't require the create of a temporary list and an
+        # assignment of it to replace the original, although it does
+        # require more indexing operations
+        for i, word in enumerate(word_list):
+            word_list[i] = check_contraction(word)
+
+        # 4. rejoin words into single document
+        prepocessed_doc = " ".join(word_list)
+
+        return (sentence_list, original_word_list, preprocessed_doc)
+
+
+    def check_contraction(word):
+        """Converts contraction fragments to their equivalent words"""
+        contraction_dict = {"'m": 'am',
+                            "n't": 'not',
+                            "'ll": 'will',
+                            "ca":   'can',
+                            "gon":  'going',
+                            "na":   'to',
+                            }
+        if contraction_dict[word]:
+            word = contraction_dict[word]
+        return word
+
 
 def vectorize(docs, vocab=None):
     """Vectorizer for use with sentiment analysis."""
 
     vectorizer = CountVectorizer(strip_accents='unicode',
-                                 stop_words="english",
-                                 ngram_range=(1, 2))
+                                 stop_words='english',
+                                 decode_error='strict',
+                                 ngram_range=(1, 2),
+                                 prepocessor=PennTreebankPunkt())
     if vocab:
         vectorizer = CountVectorizer(strip_accents='unicode',
                                      stop_words="english",

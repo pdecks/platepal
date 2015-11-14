@@ -164,20 +164,30 @@ def create_train_classifier(X, y):
 
 
 ## SCORE THE CLASSIFIER OVER K-Folds ##
-
-def score_kfolds(X, y, num_folds=2, num_iter=1):
+# add number of features ...
+def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
     """Perform cross-validation on sparse matrix (tf-idf).
 
-    Returns a dictionary of the scores by fold."""
+    Returns a dictionary of the scores by fold.
+    atype: if "sentiment", cross-validate sentiment analysis model
+           which assumes the input X is already transformed into a
+           sparse matrix of tf-idf values
 
-    count_vect = create_vectorizer(X)
-    X_counts = count_vect.transform(X)
+    """
+    if atype is None:
+        count_vect = create_vectorizer(X)
+        X_counts = count_vect.transform(X)
 
-    tfidf_transformer = create_transformer(X_counts)
-    X_tfidf = tfidf_transformer.transform(X_counts)
+        tfidf_transformer = create_transformer(X_counts)
+        X_tfidf = tfidf_transformer.transform(X_counts)
+    else:
+        X_tfidf = X
 
     clf = LinearSVC()
 
+    if num_feats:
+        print "Number of features:", num_feats
+        print
     print "Running score_kfolds with num_folds=%d, num_iter=%d" % (num_folds, num_iter)
     print "..."
     # randomly partition data set into 10 folds ignoring the classification variable
@@ -198,7 +208,7 @@ def score_kfolds(X, y, num_folds=2, num_iter=1):
         k_dict[i] = []
 
       for j in range(1, num_iter +1):
-        k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+        k_fold = KFold(n=X_tfidf.shape[0], n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
         # print "iteration: %d ..." % j
         i = 1
         for train, test in k_fold:
@@ -450,7 +460,7 @@ def vectorize(X_docs, vocab=None):
                                  decode_error='strict',
                                  ngram_range=(1, 1),
                                  preprocessor=PennTreebankPunkt())
-    if vocab:
+    if vocab is not None:
         vectorizer = TfidfVectorizer(strip_accents='unicode',
                                      stop_words="english",
                                      encoding='utf-8',
@@ -467,7 +477,7 @@ def vectorize(X_docs, vocab=None):
 from sklearn.feature_selection import SelectKBest, chi2
 import operator
 
-def sorted_features (feature_names, X_numerical, y, kBest):
+def sorted_features (feature_names, X_numerical, y, kBest=None):
     """
     Use chi-square test scores to select top N features from vectorizer.
 
@@ -480,16 +490,44 @@ def sorted_features (feature_names, X_numerical, y, kBest):
     feature_names: vectorizer vocabulary, vectorizer.get_feature_names()
     X: numpy sparse matrix of vectorized documents (can also be tf-idf transformed)
     y: numpy array of labels (target vector)
+    kBest: integer value of number of best features to extract
 
-    Returns a list of the topN features.
+    Returns a list of the features as the words themselves in descending order
+    of importance.
     """
+    if not kBest:
+        kBest = X_numerical.shape[1]
     ch2 = SelectKBest(chi2, kBest)
+
     X_numerical = ch2.fit_transform(X_numerical, y)
 
-    feature_names = [feature_names[i] for i in ch2.get_support(indices=True)]
-    feature_names = np.asarray(feature_names)
+    # ch2.get_support() is an array of booleans, where True indicates that
+    # the feature is among the bestK features
+    # ch2.get_support(indicies=True) returns an array of the best feature indices
+    # feature_names[i] maps the index to the vocabulary from the vectorizer to
+    # retrieve the word at that index
+    # best_feature_names is not ranked from best to worst
+    best_feature_names = [feature_names[i] for i in ch2.get_support(indices=True)]
+    best_feature_names = np.asarray(best_feature_names)
 
-    return feature_names
+    # sort on score in descending order, but provide index and score.
+    top_ranked_features = sorted(enumerate(ch2.scores_),key=lambda x:x[1], reverse=True)[:kBest]
+
+    # zip(*top_ranked_features) splits the list of kBest (rank, score) tuples into 2 tuples:
+    # 0: kBest-long tuple (best index, ... , least best index)
+    # 1: kBest-long tuple (best score, ... , least best score)
+    # top_ranked_features_indices = map(list,zip(*top_ranked_features))[0]
+    top_ranked_features_indices = [x for x in zip(*top_ranked_features)[0]]
+
+    # ranked from best to worst
+    top_ranked_feature_names = np.asarray([feature_names[i] for i in top_ranked_features_indices])
+
+    # P-values
+    # for feature_pvalue in zip(np.asarray(train_vectorizer.get_feature_names())[top_ranked_features_indices],ch2.pvalues_[top_ranked_features_indices]):
+    #     print feature_pvalue
+    # # np.asarray(vectorizer.get_feature_names())[ch2.get_support()]
+
+    return top_ranked_feature_names
 
 
 ## FREQUENCY DISTRIBUTIONS?? ##
@@ -502,15 +540,45 @@ def sentiment_analysis():
     # for cat in categories_pd:
     #     # documents = loads_yelp_reviews(container_path, [cat])
 
+    # tranform y to a binary array (0 or 1 only where 1="good" and 0="bad")
+    for i in range(y.shape[0]):
+        if y[i] in [0, 3, 4, 5]:
+            y[i] = 0
+        else:
+            y[i] = 1
 
     feature_names, X_tfidf = vectorize(X)
 
-    feature_names = sorted_features('gltn', feature_names, X_tfidf, y, kBest=10)
+    # cross-validate
+    num_folds = raw_input("Enter a number of folds (2-10): ")
+    num_iter = raw_input("Enter a number of iterations (1-50): ")
+    print
 
-    print "Best Features from Chi-square Test:"
-    for feature in feature_names:
+    while not represents_int(num_folds) or not represents_int(num_iter):
+        num_folds = raw_input("Enter a number of folds (2-10): ")
+        num_iter = raw_input("Enter a number of iterations (1-50): ")
+        print
+
+    num_folds = int(num_folds)
+    num_iter = int(num_iter)
+    fold_avg_scores = score_kfolds(X_tfidf, y, num_folds, num_iter, atype='sentiment')
+
+    # Extract best features using chi2 test
+    bestK = None
+    sorted_feats = sorted_features(feature_names, X_tfidf, y, kBest=bestK)
+
+    print "Best %d Features from Chi-square Test for Category 'gltn':" % 10
+    for feature in sorted_feats[0:10]:
         print "feature: ", feature
 
+    # Check other features and update vocabulary
+    for nfeats in [100, 500, 1000]:
+        feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
+        print
+        print "-"*20
+        print "Perforing Cross-Validation with %d Features" % nfeats
+        print "-"*20
+        score_kfolds(X_tfidf, y, num_folds, num_iter, 'sentiment', nfeats)
     print
     print "Test successful"
 

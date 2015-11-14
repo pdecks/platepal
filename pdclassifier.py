@@ -430,6 +430,8 @@ class PennTreebankPunkt(object):
 # Caution: when tokenizing a Unicode string, make sure you are not using an
 # encoded version of the string (it may be necessary to decode it first,
 # e.g. with s.decode("utf8").
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 def vectorize(X_docs, vocab=None):
     """Vectorizer for use with sentiment analysis.
 
@@ -442,14 +444,14 @@ def vectorize(X_docs, vocab=None):
     and returns a possibly transformed version of the document, still as an
     entire string."""
 
-    vectorizer = CountVectorizer(strip_accents='unicode',
+    vectorizer = TfidfVectorizer(strip_accents='unicode',
                                  stop_words='english',
                                  encoding='utf-8',
                                  decode_error='strict',
                                  ngram_range=(1, 1),
                                  preprocessor=PennTreebankPunkt())
     if vocab:
-        vectorizer = CountVectorizer(strip_accents='unicode',
+        vectorizer = TfidfVectorizer(strip_accents='unicode',
                                      stop_words="english",
                                      encoding='utf-8',
                                      decode_error='strict',
@@ -458,14 +460,14 @@ def vectorize(X_docs, vocab=None):
                                      vocabulary=vocab)
 
     X = vectorizer.fit_transform(X_docs)
-    return vectorizer.vocabulary_, X
+    return vectorizer.get_feature_names(), X
 
 
 ## FEATURE EXTRACTION ##
-from sklearn.feature_selection import chi2
+from sklearn.feature_selection import SelectKBest, chi2
 import operator
 
-def sorted_features (cat_code, V, X_count, y, topN):
+def sorted_features (feature_names, X_numerical, y, kBest):
     """
     Use chi-square test scores to select top N features from vectorizer.
 
@@ -475,30 +477,19 @@ def sorted_features (cat_code, V, X_count, y, topN):
     but is not appropriate for making statements about statistical dependence
     or independence of variables. [see Stanford NLP]
 
-    cat_code: the 4-character category code (e.g., 'gltn', 'pleo')
-    V: vectorizer vocabulary, vectorizer.vocabulary_
-    X: numpy sparse matrix of vectorized documents
+    feature_names: vectorizer vocabulary, vectorizer.get_feature_names()
+    X: numpy sparse matrix of vectorized documents (can also be tf-idf transformed)
     y: numpy array of labels (target vector)
 
     Returns a list of the topN features.
     """
-    # define the inverse dictionary for the vocabulary
-    # V.key = iv.value, V.value = iv.key
-    # thus, for iv ... key = rank, value = word
-    # import pdb; pdb.set_trace()
-    iv = {v:k for k, v in V.items()}
+    ch2 = SelectKBest(chi2, kBest)
+    X_numerical = ch2.fit_transform(X_numerical, y)
 
-    chi2_scores = chi2(X_count, y)[0]
+    feature_names = [feature_names[i] for i in ch2.get_support(indices=True)]
+    feature_names = np.asarray(feature_names)
 
-    top_features = [(x[1], iv[x[0]], x[0])
-                    for x in sorted(enumerate(chi2_scores),
-                    key=operator.itemgetter(1), reverse=True)]
-
-    print "TOP %s FEATURES FOR: %s" % (topN, cat_code)
-    for top_feature in top_features[0:topN]:
-        print "%7.3f %s (%d)" % (top_feature[0], top_feature[1], top_feature[2])
-
-    return [x[1] for x in top_features]
+    return feature_names
 
 
 ## FREQUENCY DISTRIBUTIONS?? ##
@@ -506,16 +497,21 @@ def sorted_features (cat_code, V, X_count, y, topN):
 def sentiment_analysis():
     documents = loads_pdecks_reviews()
     X, y = bunch_to_np(documents)
-    import pdb; pdb.set_trace()
+
     # for cat in categories:
     # for cat in categories_pd:
     #     # documents = loads_yelp_reviews(container_path, [cat])
 
 
-    V, X_count = vectorize(X)
+    feature_names, X_tfidf = vectorize(X)
 
-    sorted_features('gltn', V, X_count, y, 10)
+    feature_names = sorted_features('gltn', feature_names, X_tfidf, y, kBest=10)
 
+    print "Best Features from Chi-square Test:"
+    for feature in feature_names:
+        print "feature: ", feature
+
+    print
     print "Test successful"
 
     return

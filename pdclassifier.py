@@ -413,10 +413,14 @@ class PennTreebankPunkt(object):
         contraction_dict = {"'m": 'am',
                             "n't": 'not',
                             "'ll": 'will',
-                            "ca":   'can',
-                            "gon":  'going',
-                            "na":   'to',
+                            "ca": 'can',
+                            "gon": 'going',
+                            "na": 'to',
+                            "'re": 'are',
+                            "'ve": 'have',
+                            "'d": 'had'
                             }
+
         if contraction_dict.get(word):
             word = contraction_dict[word]
         return word

@@ -49,6 +49,9 @@ from sklearn.externals import joblib
 container_path = './data/training/'
 categories = ['gluten', 'unknown']
 
+container_path_pd = './pdecks-reviews/'
+categories_pd = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
+
 pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
 pickle_path_v = 'classifiers/LSVCcomponents/vectorizer/linearSVCvectorizer.pkl'
 pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl'
@@ -74,11 +77,8 @@ def loads_yelp_reviews(container_path, categories):
     return documents
 
 
-def loads_pdecks_reviews():
+def loads_pdecks_reviews(container_path=container_path_pd, categories=categories_pd):
     """Load toy data set and check classifier working."""
-
-    container_path = './pdecks-reviews/'
-    categories = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 
     documents = sk_base.load_files(container_path,
                                    categories=categories,
@@ -446,13 +446,14 @@ def vectorize(X_docs, vocab=None):
                                  stop_words='english',
                                  encoding='utf-8',
                                  decode_error='strict',
-                                 ngram_range=(1, 2),
+                                 ngram_range=(1, 1),
                                  preprocessor=PennTreebankPunkt())
     if vocab:
         vectorizer = CountVectorizer(strip_accents='unicode',
                                      stop_words="english",
+                                     encoding='utf-8',
                                      decode_error='strict',
-                                     ngram_range=(1, 2),
+                                     ngram_range=(1, 1),
                                      preprocessor=PennTreebankPunkt(),
                                      vocabulary=vocab)
 
@@ -462,8 +463,9 @@ def vectorize(X_docs, vocab=None):
 
 ## FEATURE EXTRACTION ##
 from sklearn.feature_selection import chi2
+import operator
 
-def sorted_features (cat_code, V, X, y, topN):
+def sorted_features (cat_code, V, X_count, y, topN):
     """
     Use chi-square test scores to select top N features from vectorizer.
 
@@ -481,10 +483,12 @@ def sorted_features (cat_code, V, X, y, topN):
     Returns a list of the topN features.
     """
     # define the inverse dictionary for the vocabulary
-    # key = rank, value = word
+    # V.key = iv.value, V.value = iv.key
+    # thus, for iv ... key = rank, value = word
+    # import pdb; pdb.set_trace()
     iv = {v:k for k, v in V.items()}
 
-    chi2_scores = chi2(X, y)[0]
+    chi2_scores = chi2(X_count, y)[0]
 
     top_features = [(x[1], iv[x[0]], x[0])
                     for x in sorted(enumerate(chi2_scores),
@@ -500,12 +504,17 @@ def sorted_features (cat_code, V, X, y, topN):
 ## FREQUENCY DISTRIBUTIONS?? ##
 
 def sentiment_analysis():
-    documents = loads_yelp_reviews(container_path, categories)
+    documents = loads_pdecks_reviews()
     X, y = bunch_to_np(documents)
+    import pdb; pdb.set_trace()
+    # for cat in categories:
+    # for cat in categories_pd:
+    #     # documents = loads_yelp_reviews(container_path, [cat])
+
 
     V, X_count = vectorize(X)
-    for cat in categories:
-        sorted_features(cat, X_count, y, 10)
+
+    sorted_features('gltn', V, X_count, y, 10)
 
     print "Test successful"
 

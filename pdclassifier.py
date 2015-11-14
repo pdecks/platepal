@@ -369,8 +369,8 @@ class PennTreebankPunkt(object):
     """
 
     def __init__(self, use_flag="vectorizer"):
-        self.pst = sent_tokenize()
-        self.ptt = word_tokenize()
+        self.pst = sent_tokenize
+        self.ptt = word_tokenize
         self.use_flag = use_flag
 
     def __call__(self, doc):
@@ -397,10 +397,10 @@ class PennTreebankPunkt(object):
         # assignment of it to replace the original, although it does
         # require more indexing operations
         for i, word in enumerate(word_list):
-            word_list[i] = check_contraction(word)
+            word_list[i] = self.check_contraction(word)
 
         # 4. rejoin words into single string
-        prepocessed_doc = " ".join(word_list)
+        preprocessed_doc = " ".join(word_list)
 
         if self.use_flag == 'independent':
             return (sentence_list, original_word_list, preprocessed_doc)
@@ -408,7 +408,7 @@ class PennTreebankPunkt(object):
             return preprocessed_doc
 
 
-    def check_contraction(word):
+    def check_contraction(self, word):
         """Converts contraction fragments to their equivalent words"""
         contraction_dict = {"'m": 'am',
                             "n't": 'not',
@@ -417,7 +417,7 @@ class PennTreebankPunkt(object):
                             "gon":  'going',
                             "na":   'to',
                             }
-        if contraction_dict[word]:
+        if contraction_dict.get(word):
             word = contraction_dict[word]
         return word
 
@@ -440,6 +440,7 @@ def vectorize(X_docs, vocab=None):
 
     vectorizer = CountVectorizer(strip_accents='unicode',
                                  stop_words='english',
+                                 encoding='utf-8',
                                  decode_error='strict',
                                  ngram_range=(1, 2),
                                  preprocessor=PennTreebankPunkt())
@@ -493,6 +494,19 @@ def sorted_features (cat_code, V, X, y, topN):
 
 
 ## FREQUENCY DISTRIBUTIONS?? ##
+
+def sentiment_analysis():
+    documents = loads_yelp_reviews(container_path, categories)
+    X, y = bunch_to_np(documents)
+
+    V, X_count = vectorize(X)
+    for cat in categories:
+        sorted_features(cat, X_count, y, 10)
+
+    print "Test successful"
+
+    return
+
 
 ## Helper function for checking if input string represents an int
 def represents_int(s):
@@ -620,6 +634,10 @@ if __name__ == "__main__":
                 print "Actual: %s" % str(int(y_trans_pd[i]))
                 print '-'*20
 
+    ## TEST SENTIMENT ANALYSIS
+    to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
+    if to_test.lower() == 'y':
+        sentiment_analysis()
 
     # ## VERIFY classifier accuracy on training data
     # count = 0

@@ -16,7 +16,6 @@ from statecodes import STATE_CODES
 
 import re
 import os
-import usaddress
 
 # from geopy.geocoders import Nominatim
 

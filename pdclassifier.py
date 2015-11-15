@@ -19,19 +19,33 @@ where 1.0 is good and 0.0 is bad.
 
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.datasets import base as sk_base
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import cross_val_score
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.pipeline import Pipeline
 from sklearn.externals import joblib
 
+from nltk import word_tokenize, sent_tokenize
+from nltk.stem import WordNetLemmatizer
+
+
 # import reviewfilter as rf
 
+## DIRECTORIES FOR PICKLING CLASSIFIER & COMPONENTS ##########################
+
+pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
+pickle_path_v = 'classifiers/LSVCcomponents/vectorizer/linearSVCvectorizer.pkl'
+pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl'
+pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
 #### LOAD DATA ###############################################################
 
@@ -52,20 +66,8 @@ categories = ['gluten', 'unknown']
 container_path_pd = './pdecks-reviews/'
 categories_pd = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 
-pickle_path_SVC = 'classifiers/LinearSVC/linearSVC.pkl'
-pickle_path_v = 'classifiers/LSVCcomponents/vectorizer/linearSVCvectorizer.pkl'
-pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl'
-pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
-# project goal (might be V2.0):
-# categories = ['gluten-free',
-#               'paleo',
-#               'pescatarian',
-#               'vegan',
-#               'vegetarian',
-#               'omnivorous',
-#               'kosher',
-#               'halal']
+
 
 def loads_yelp_reviews(container_path, categories):
     """Load the training documents in data/training directory."""
@@ -165,8 +167,8 @@ def create_train_classifier(X, y):
 
 ## SCORE THE CLASSIFIER OVER K-Folds ##
 # add number of features ...
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
+
+def score_kfolds(X, y, min_num_folds=2, max_num_folds=2, num_iter=1, atype=None, num_feats=None):
     """Perform cross-validation on sparse matrix (tf-idf).
 
     Returns a dictionary of the scores by fold.
@@ -189,7 +191,7 @@ def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
     if num_feats:
         print "Number of features:", num_feats
         print
-    print "Running score_kfolds with num_folds=%d, num_iter=%d" % (num_folds, num_iter)
+    print "Running score_kfolds with min_num_folds=%d, max_num_folds=%d, num_iter=%d" % (min_num_folds, max_num_folds, num_iter)
     print "..."
     # randomly partition data set into 10 folds ignoring the classification variable
     # b/c we want to see how the classifier performs in this real-world situation
@@ -197,10 +199,10 @@ def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
     # start with k=2, eventually increase to k=10 with larger dataset
     avg_scores = {}
     all_avg_scores = {}
-    for k in range(2, num_folds + 1):
+    for k in range(min_num_folds, max_num_folds + 1):
         avg_scores[k] = {}
         all_avg_scores[k] = {}
-    for k in range(2, num_folds + 1):
+    for k in range(min_num_folds, max_num_folds + 1):
         n_fold = k
         print "Fold number %d ..." % k
         # run k_fold num_iter number of times at each value of k (2, 3, ..., k)
@@ -226,7 +228,7 @@ def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
                 # print "Fold: {} | Score:  {:.4f}".format(i, score)
                 # k_fold_scores = np.append(k_fold_scores, score)
                 i += 1
-        # import pdb; pdb.set_trace()
+
         avg_scores[k] = k_dict
         all_avg_scores[k] = all_scores
 
@@ -236,7 +238,7 @@ def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
     print '-- K-Fold Cross Validation --------'
     print '-- Mean Scores for {} Iterations --'.format(j)
     print
-    for k in range(2, num_folds + 1):
+    for k in range(min_num_folds, max_num_folds + 1):
       print '-- k = {} --'.format(k)
       for i in range(1, k+1):
         print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
@@ -306,6 +308,7 @@ def persist_component(component, pickle_path):
     print
     return
 
+
 ## REVIVE COMPONENT ##
 def revive_component(pickle_path):
     component_clone = joblib.load(pickle_path)
@@ -346,13 +349,9 @@ def get_category_name(category_id):
     return categories[category_id]
 
 
-
 #### SENTIMENT ANALYSIS CLASSIFIER ####
-from nltk import word_tokenize, sent_tokenize
 
 ## STEMMING / LEMMATIZATION ##
-from nltk.stem import WordNetLemmatizer
-
 class LemmaTokenizer(object):
     """
     Stemming, lemmatizing, compound splitting, filtering based on POS, etc.
@@ -459,7 +458,6 @@ class PennTreebankPunkt(object):
 # Caution: when tokenizing a Unicode string, make sure you are not using an
 # encoded version of the string (it may be necessary to decode it first,
 # e.g. with s.decode("utf8").
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 def vectorize(X_docs, vocab=None):
     """Vectorizer for use with sentiment analysis.
@@ -493,8 +491,6 @@ def vectorize(X_docs, vocab=None):
 
 
 ## FEATURE EXTRACTION ##
-from sklearn.feature_selection import SelectKBest, chi2
-import operator
 
 def sorted_features (feature_names, X_numerical, y, kBest=None):
     """
@@ -549,8 +545,6 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
     return top_ranked_feature_names
 
 
-## FREQUENCY DISTRIBUTIONS?? ##
-
 def sentiment_analysis():
     documents = loads_pdecks_reviews()
     X, y = bunch_to_np(documents)
@@ -568,19 +562,8 @@ def sentiment_analysis():
 
     feature_names, X_tfidf = vectorize(X)
 
-    # cross-validate
-    num_folds = raw_input("Enter a number of folds (2-10): ")
-    num_iter = raw_input("Enter a number of iterations (1-50): ")
-    print
-
-    while not represents_int(num_folds) or not represents_int(num_iter):
-        num_folds = raw_input("Enter a number of folds (2-10): ")
-        num_iter = raw_input("Enter a number of iterations (1-50): ")
-        print
-
-    num_folds = int(num_folds)
-    num_iter = int(num_iter)
-    fold_avg_scores = score_kfolds(X_tfidf, y, num_folds, num_iter, atype='sentiment')
+    min_num_folds, max_num_folds, num_iter = get_folds_and_iter()
+    fold_avg_scores = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, atype='sentiment')
 
     # Extract best features using chi2 test
     bestK = None
@@ -593,20 +576,18 @@ def sentiment_analysis():
     avg_score_nfeats = {}
     scores_by_nfeats = {}
     # Check other features and update vocabulary
-    for nfeats in [100, 500, 1000]:
+    for nfeats in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
         feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
         print
         print "-"*20
         print "Perforing Cross-Validation with %d Features" % nfeats
         print "-"*20
-        avg_score_nfeats[nfeats], scores_by_nfeats[nfeats] = score_kfolds(X_tfidf, y, num_folds, num_iter, 'sentiment', nfeats)
+        avg_score_nfeats[nfeats], scores_by_nfeats[nfeats] = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, 'sentiment', nfeats)
     print
     print "Test successful"
 
     return (avg_score_nfeats, scores_by_nfeats)
 
-
-import matplotlib.pyplot as plt
 
 def plot_sentiment_model_scores(scores_by_nfeats):
     """
@@ -617,18 +598,19 @@ def plot_sentiment_model_scores(scores_by_nfeats):
     nfeats = scores_by_nfeats.keys()
 
     # retrieve number of folds
-    max_folds = max(scores_by_nfeats[nfeats[0]].keys())
-    num_iter = len(scores_by_nfeats[nfeats[0]][2])
+    min_num_folds = min(scores_by_nfeats[nfeats[0]].keys())
+    max_num_folds = max(scores_by_nfeats[nfeats[0]].keys())
+    num_iter = len(scores_by_nfeats[nfeats[0]][min_num_folds])
 
     mean_scores_by_kfolds = {}
-    for k in range(2, max_folds + 1):
+    for k in range(min_num_folds, max_num_folds + 1):
         mean_scores_by_kfolds[k] = {'accuracy': {},
                                     'precision': {},
                                     'recall': {}
                                     }
     # calculate mean scores for fold j in max k folds
     for nfeat in nfeats:
-        for k in range(2, max_folds + 1):
+        for k in range(min_num_folds, max_num_folds + 1):
             k_average = []
             for j in range (1, k + 1):
                 # matrix: num_iter rows x 3 columns, where cols = accuracy, precision, recall
@@ -645,26 +627,59 @@ def plot_sentiment_model_scores(scores_by_nfeats):
             mean_scores_by_kfolds[k]['precision'][nfeat] = k_average[1]
             mean_scores_by_kfolds[k]['recall'][nfeat] = k_average[2]
 
-    for k in range(2, max_folds + 1):
+    # reference an Axes object to keep drawing on the same subplot
+    fig = plt.figure()
+    ax_all_k = fig.add_subplot(111)
+
+    pstyle = ['o-', 's-', 'v-', '*-', '+-', 'o--', 's--', 'v--', '*--', '+--', 'o-.', 's-.', 'v-.', '*-.', '+-.']
+
+    for k in range(min_num_folds, max_num_folds + 1):
 
         d = mean_scores_by_kfolds[k]
         with plt.style.context('fivethirtyeight'):
             for data_name, data_dict in sorted(d.items(), key=lambda x: x[0]):
-                title_str = "K = %d, %s" % (k, data_name)
-                data_points = zip(*sorted(data_dict.items()))
-                plt.plot(data_points[0], data_points[1])
-                plt.xlabel("Number of Features (words)")
-                plt.title(title_str)
+                # title_str = "K = %d, %s" % (k, data_name)
 
-            plt.legend(d.keys())
-            plt.show(block="False")
+                data_points = zip(*sorted(data_dict.items()))
+
+                # plt.plot(data_points[0], data_points[1])
+                # plt.xlabel("Number of Features (words)")
+                # plt.title(title_str)
+                label_str = "K=%d" % k
+                labels = data_name + ' ' + label_str
+                # styles = pstyle[(k-2):(k+1)]
+                ax_all_k.plot(data_points[0], data_points[1], pstyle[k - min_num_folds], label=labels, linewidth=1)
+                # plt.xlabel("Number of Features (words)")
+                # plt.title(title_str)
+
+            # plt.legend(d.keys())
+            # plt.show(block="False")
+
+    # TODO: create subplots
+    # plt.figure(1)
+    # plt.subplot(211)
+    # plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+
+    # plt.subplot(212)
+    # plt.plot(t2, np.cos(2*np.pi*t2), 'r--')
+    # plt.show()
+    # END TODO
+
+    # fix y-axis range
+    x1,x2,y1,y2 = plt.axis()
+    plt.axis((x1,x2,0.5,1))
+    plt.xlabel("Number of Features (words)")
+    title_str = "Accuracy, Precision, and Recall VS nfeatures\n K folds: 2-%d" % max_num_folds
+    plt.title(title_str)
+    plt.legend(loc='lower left', fontsize='x-small')
+    plt.show()
 
     return mean_scores_by_kfolds
 
-# [np.mean(np.array(x)) for x in zip(*myTuples)]
+# TODO: frequency distributions
 
-## Helper function for checking if input string represents an int
 def represents_int(s):
+    """Helper function for checking if input string represents an int"""
     try:
         int(s)
         return True
@@ -672,74 +687,137 @@ def represents_int(s):
         return False
 
 
+def get_folds_and_iter():
+    """
+    Prompt the user for number of Kfolds (min and max) and iterations
 
-if __name__ == "__main__":
-    ## TRAIN AND PERSIST CLASSIFIER ##
-    to_train = raw_input("Train the classifier? Y or N >> ")
-    if to_train.lower() == 'y':
-        # LOAD the training documents
-        # documents = loads_pdecks_reviews(container_path, categories)
-        documents = loads_yelp_reviews(container_path, categories)
-        X, y = bunch_to_np(documents)
+    This information is passed to score_kfolds
+    """
 
-        # Train the model and cross-validate
-        num_folds = raw_input("Enter a number of folds (2-10): ")
+    # cross-validate
+    # minimum K
+    min_num_folds = raw_input("Enter a minimum number of folds (2-10): ")
+    while not represents_int(min_num_folds):
+        min_num_folds = raw_input("Enter a number of folds (2-10): ")
+        print
+    # maximum K
+    if int(min_num_folds) != 10:
+        max_num_folds = raw_input("Enter a maximum number of folds (%d-10): " % int(min_num_folds))
+        while not represents_int(max_num_folds):
+            max_num_folds = raw_input("Enter a maximum number of folds (%d-10): " % int(min_num_folds))
+            print
+    else:
+        max_num_folds = 10
+
+    # number of iterations
+    num_iter = raw_input("Enter a number of iterations (1-50): ")
+    print
+
+    while not represents_int(num_iter):
         num_iter = raw_input("Enter a number of iterations (1-50): ")
         print
 
-        while not represents_int(num_folds) or not represents_int(num_iter):
-            num_folds = raw_input("Enter a number of folds (2-10): ")
-            num_iter = raw_input("Enter a number of iterations (1-50): ")
-            print
+    min_num_folds = int(min_num_folds)
+    max_num_folds = int(max_num_folds)
+    num_iter = int(num_iter)
 
-        num_folds = int(num_folds)
-        num_iter = int(num_iter)
-        fold_avg_scores = score_kfolds(X, y, num_folds, num_iter)
-
-        scores = tunes_parameters(X, y, 10)
-
-        # CREATE and TRAIN the classifier
-        X, y = bunch_to_np(documents)
-        count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(X, y)
+    return (min_num_folds, max_num_folds, num_iter)
 
 
-
-        ##TEST the classifier
-        new_doc = ['I love gluten-free foods. This restaurant is the best.']
-        # new_doc_category_id = categorizes_review(new_doc,
-        #                                          count_vect,
-        #                                          tfidf_transformer,
-        #                                          clf)
-
-        # new_doc_category = get_category_name(new_doc_category_id)
-        new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
-        new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
-
-        print
-        print "-- Test document --"
-        print
-        # print "Using Vectorizer, Transformer, and Classifier:"
-        # for doc, category in zip(new_doc, predicted):
-        # print "%r => %s" % (new_doc[0], new_doc_category)
-        print
-        print "Using Pipeline:"
-        print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
-
-
-        ## PERSIST THE MODEL ##
-        decision = raw_input("Would you like to persist the pipeline classifier? (Y) or (N) >>")
-        if decision.lower() == 'y':
-            persist_pipeline(pipeline_clf, pickle_path_SVC)
+def check_toy_dataset():
+    """Checks the accuracy of the pickled classifier for the toy dataset predictions"""
+    documents_pd = loads_pdecks_reviews()
+    X_pd, y_pd = bunch_to_np(documents_pd)
+    # transform toy dataset labels to 0 = gluten, 1 = unknown
+    y_trans_pd = np.array([])
+    for target in y_pd:
+        if target == 0 or target == 4:
+            # unknown
+            y_trans_pd = np.append(y_trans_pd, 1)
         else:
-            print 'Classifier not pickled.'
-            print
+            # gluten
+            y_trans_pd = np.append(y_trans_pd, 0)
 
-        ## PERSIST THE COMPONENTS ##
-        decision = raw_input("Would you like to persist the vectorizer? (Y) or (N) >>")
-        if decision.lower() == 'y':
-            persist_component(count_vect, pickle_path_v)
-        else:
-            print 'Vectorizer not pickled.'
+    pipeline_clf = revives_pipeline(pickle_path_SVC)
+
+    inaccurate = 0
+    predicted_pd = []
+    for i in range(0, len(X_pd)):
+        predicted = pipeline_clf.predict([X_pd[i]])
+        # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
+        if y_trans_pd[i] != predicted:
+            inaccurate += 1
+        i += 1
+        predicted_pd.append(predicted)
+    print "-- Accuracy check of toy dataset --"
+    print "PERCENT INACCURATE: ", (inaccurate/(len(y_trans_pd)))*100.0000
+    for i in range(0, len(y_trans_pd)):
+        print "Index i: %s" % i
+        print "Predicted: %s" % predicted_pd[i][0]
+        print "Actual: %s" % str(int(y_trans_pd[i]))
+        print '-'*20
+
+    return
+
+
+def train_classifier():
+    """
+    Trains the classifier on the labeled yelp data.
+
+    Tests the classifier pipeline on a "new doc".
+
+    Provides opportunities to persist the trained model and/or its components
+    """
+    # LOAD the training documents
+    # documents = loads_pdecks_reviews(container_path, categories)
+    documents = loads_yelp_reviews(container_path, categories)
+    X, y = bunch_to_np(documents)
+
+    min_num_folds, max_num_folds, num_iter = get_folds_and_iter()
+    fold_avg_scores = score_kfolds(X, y, min_num_folds, max_num_folds, num_iter)
+
+    scores = tunes_parameters(X, y, 10)
+
+    # CREATE and TRAIN the classifier
+    X, y = bunch_to_np(documents)
+    count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(X, y)
+
+    # TEST the classifier
+    new_doc = ['I love gluten-free foods. This restaurant is the best.']
+    # new_doc_category_id = categorizes_review(new_doc,
+    #                                          count_vect,
+    #                                          tfidf_transformer,
+    #                                          clf)
+
+    # new_doc_category = get_category_name(new_doc_category_id)
+    new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
+    new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
+
+    print
+    print "-- Test document --"
+    print
+    # print "Using Vectorizer, Transformer, and Classifier:"
+    # for doc, category in zip(new_doc, predicted):
+    # print "%r => %s" % (new_doc[0], new_doc_category)
+    print
+    print "Using Pipeline:"
+    print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
+
+
+    # PERSIST THE MODEL
+    decision = raw_input("Would you like to persist the pipeline classifier? (Y) or (N) >>")
+    if decision.lower() == 'y':
+        persist_pipeline(pipeline_clf, pickle_path_SVC)
+    else:
+        print 'Classifier not pickled.'
+        print
+
+    # PERSIST THE COMPONENTS
+    decision = raw_input("Would you like to persist the vectorizer? (Y) or (N) >>")
+    if decision.lower() == 'y':
+        persist_component(count_vect, pickle_path_v)
+    else:
+        print 'Vectorizer not pickled.'
 
         decision = raw_input("Would you like to persist the transformer? (Y) or (N) >>")
         if decision.lower() == 'y':
@@ -753,131 +831,23 @@ if __name__ == "__main__":
         else:
             print 'Classifier not pickled.'
 
+    return
 
-    ## CHECK PERFORMANCE ON TOY DATA SET ##
+
+if __name__ == "__main__":
+    ## TRAIN AND PERSIST CLASSIFIER ##
+    to_train = raw_input("Train the classifier? Y or N >> ")
+    if to_train.lower() == 'y':
+        train_classifier()
+
+    ## CHECK PERFORMANCE OF PICKLED CLASSIFIER ON TOY DATA SET ##
     else:
         to_test = raw_input("Check the pipeline classifier on the toy data set? Y or N >>")
         if to_test.lower() == 'y':
-            documents_pd = loads_pdecks_reviews()
-            X_pd, y_pd = bunch_to_np(documents_pd)
-            # transform toy dataset labels to 0 = gluten, 1 = unknown
-            y_trans_pd = np.array([])
-            for target in y_pd:
-                if target == 0 or target == 4:
-                    # unknown
-                    y_trans_pd = np.append(y_trans_pd, 1)
-                else:
-                    # gluten
-                    y_trans_pd = np.append(y_trans_pd, 0)
-
-            pipeline_clf = revives_pipeline(pickle_path_SVC)
-
-            inaccurate = 0
-            predicted_pd = []
-            for i in range(0, len(X_pd)):
-                predicted = pipeline_clf.predict([X_pd[i]])
-                # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
-                if y_trans_pd[i] != predicted:
-                    inaccurate += 1
-                i += 1
-                predicted_pd.append(predicted)
-            print "-- Accuracy check of toy dataset --"
-            print "PERCENT INACCURATE: ", (inaccurate/(len(y_trans_pd)))*100
-            for i in range(0, len(y_trans_pd)):
-                print "Index i: %s" % i
-                print "Predicted: %s" % predicted_pd[i][0]
-                print "Actual: %s" % str(int(y_trans_pd[i]))
-                print '-'*20
-
-    ## TEST SENTIMENT ANALYSIS
+            check_toy_dataset()
+            
+    ## TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
         avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis()
         mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)
-
-    # plot results
-    # sentiment_model_scores[nfeat]
-
-    # ## VERIFY classifier accuracy on training data
-    # count = 0
-    # inaccurate = 0
-
-    # predicted_array = np.array([])
-    # for x_var, y_actual in zip(X_train, y_train):
-    #   # print "###################"
-    #   # print "x_var: \n", x_var
-    #   # print
-    #   X_new_counts = count_vect.transform([x_var])  # transform only, as
-    #   X_new_tfidf = tfidf_transformer.transform(X_new_counts)
-    #   # print X_new_tfidf.shape   # (1, 5646)
-    #   predicted = clf.predict(X_new_tfidf)
-    #   predicted_array = np.append(predicted_array, predicted)
-    #   # print "predicted: %r, actual: %r" % (predicted, y_actual)
-    #   # print "###################"
-    #   if y_actual != predicted[0]:
-    #     inaccurate += 1
-    #   count += 1
-
-    # print
-    # print "-- Accuracy check by hand --"
-    # print "PERCENT INACCURATE:", (inaccurate/(count*1.0))*100
-    # print
-    # print "-- Numpy mean calculation --"
-    # print "PERCENT ACCURATE:", np.mean(predicted_array == y_test)*100
-
-### MOVED INTO FUNCTION ABOVE score_kfolds ###
-    # ## CROSS-VALIDATING CLASSIFIERS ##
-    # # randomly partition data set into 10 folds ignoring the classification variable
-    # # b/c we want to see how the classifier performs in this real-world situation
-
-    # X = np.copy(X_train)
-    # y = np.copy(y_train)
-    # X_train_counts = count_vect.transform(X)
-    # X_train_tfidf = tfidf_transformer.transform(X_train_counts)
-
-    # # start with k=2, eventually increase to k=10 with larger dataset
-    # avg_scores = {}
-    # for k in range(2,6):
-    #   avg_scores[k] = {}
-
-    # for k in range(2, 6):
-    #   n_fold = k
-    #   # run k_fold 50 times at each value of k (2, 3, 4, 5)
-    #   # take average score for each fold, keeping track of scores in dictionary
-    #   k_dict = {}
-    #   for i in range(1, n_fold+1):
-    #     k_dict[i] = []
-
-    #   for j in range(1, len(X)+1):
-    #     k_fold = KFold(n=len(X), n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
-
-    #     # k_fold_scores = [clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test]) for train, test in k_fold]
-
-    #     # print
-    #     # print "-- Results of k-fold training and testing --"
-    #     # print
-    #     # print "Number of folds: {}".format(n_fold)
-    #     # k_fold_scores = np.array([])
-
-
-    #     i = 1
-    #     for train, test in k_fold:
-    #         score = clf.fit(X_train_tfidf[train], y[train]).score(X_train_tfidf[test], y[test])
-    #         k_dict[i].append(score)
-    #         # print "Fold: {} | Score:  {:.4f}".format(i, score)
-    #         # k_fold_scores = np.append(k_fold_scores, score)
-    #         i += 1
-    #   # import pdb; pdb.set_trace()
-    #   avg_scores[k] = k_dict
-
-    # print
-    # print '-- K-Fold Cross Validation --------'
-    # print '-- Mean Scores for {} Iterations --'.format(j)
-    # print
-    # for k in range(2,6):
-    #   print '-- k = {} --'.format(k)
-    #   for i in range(1, k+1):
-    #     print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
-    # print
-
-    # # print "Fold: {} | Score:  {:.4f}".format(i, score)

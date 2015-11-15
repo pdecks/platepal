@@ -165,6 +165,7 @@ def create_train_classifier(X, y):
 
 ## SCORE THE CLASSIFIER OVER K-Folds ##
 # add number of features ...
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
     """Perform cross-validation on sparse matrix (tf-idf).
 
@@ -195,32 +196,41 @@ def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
 
     # start with k=2, eventually increase to k=10 with larger dataset
     avg_scores = {}
+    all_avg_scores = {}
     for k in range(2, num_folds + 1):
-      avg_scores[k] = {}
-
+        avg_scores[k] = {}
+        all_avg_scores[k] = {}
     for k in range(2, num_folds + 1):
-      n_fold = k
-      print "Fold number %d ..." % k 
-      # run k_fold num_iter number of times at each value of k (2, 3, ..., k)
-      # take average score for each fold, keeping track of scores in dictionary
-      k_dict = {}
-      for i in range(1, n_fold + 1):
-        k_dict[i] = []
+        n_fold = k
+        print "Fold number %d ..." % k
+        # run k_fold num_iter number of times at each value of k (2, 3, ..., k)
+        # take average score for each fold, keeping track of scores in dictionary
+        k_dict = {}
+        all_scores = {}
+        for i in range(1, n_fold + 1):
+            k_dict[i] = []
+            all_scores[i] = []
 
-      for j in range(1, num_iter +1):
-        k_fold = KFold(n=X_tfidf.shape[0], n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
-        # print "iteration: %d ..." % j
-        i = 1
-        for train, test in k_fold:
-            score = clf.fit(X_tfidf[train], y[train]).score(X_tfidf[test], y[test])
-            k_dict[i].append(score)
-            # print "Fold: {} | Score:  {:.4f}".format(i, score)
-            # k_fold_scores = np.append(k_fold_scores, score)
-            i += 1
-      # import pdb; pdb.set_trace()
-      avg_scores[k] = k_dict
+        for j in range(1, num_iter +1):
+            k_fold = KFold(n=X_tfidf.shape[0], n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
+            # print "iteration: %d ..." % j
+            i = 1
+            for train, test in k_fold:
+                score = clf.fit(X_tfidf[train], y[train]).score(X_tfidf[test], y[test])
+                y_predict = clf.predict(X_tfidf[test])
+                accuracy = accuracy_score(y[test], y_predict)
+                precision = precision_score(y[test], y_predict)
+                recall = recall_score(y[test], y_predict)
+                all_scores[i].append((accuracy, precision, recall))
+                k_dict[i].append(score)
+                # print "Fold: {} | Score:  {:.4f}".format(i, score)
+                # k_fold_scores = np.append(k_fold_scores, score)
+                i += 1
+        # import pdb; pdb.set_trace()
+        avg_scores[k] = k_dict
+        all_avg_scores[k] = all_scores
 
-      print "Iterations for fold %d complete." % k
+        print "Iterations for fold %d complete." % k
 
     print
     print '-- K-Fold Cross Validation --------'
@@ -230,9 +240,12 @@ def score_kfolds(X, y, num_folds=2, num_iter=1, atype=None, num_feats=None):
       print '-- k = {} --'.format(k)
       for i in range(1, k+1):
         print 'Fold: {} | Mean Score: {}'.format(i, np.array(avg_scores[k][i]).mean())
+        print 'Fold: {} | Mean Accuracy Score: {}'.format(i, np.array(all_avg_scores[k][i][0]).mean())
+        print 'Fold: {} | Mean Precision Score: {}'.format(i, np.array(all_avg_scores[k][i][1]).mean())
+        print 'Fold: {} | Mean Recall Score: {}'.format(i, np.array(all_avg_scores[k][i][2]).mean())
     print
 
-    return avg_scores
+    return (avg_scores, all_avg_scores)
 
 
 def tunes_parameters(X, y, n_fold=2):
@@ -571,6 +584,8 @@ def sentiment_analysis():
     for feature in sorted_feats[0:10]:
         print "feature: ", feature
 
+    avg_score_nfeats = {}
+    scores_by_nfeats = {}
     # Check other features and update vocabulary
     for nfeats in [100, 500, 1000]:
         feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
@@ -578,12 +593,69 @@ def sentiment_analysis():
         print "-"*20
         print "Perforing Cross-Validation with %d Features" % nfeats
         print "-"*20
-        score_kfolds(X_tfidf, y, num_folds, num_iter, 'sentiment', nfeats)
+        avg_score_nfeats[nfeats], scores_by_nfeats[nfeats] = score_kfolds(X_tfidf, y, num_folds, num_iter, 'sentiment', nfeats)
     print
     print "Test successful"
 
-    return
+    return (avg_score_nfeats, scores_by_nfeats)
 
+
+import matplotlib.pyplot as plt
+
+def plot_sentiment_model_scores(scores_by_nfeats):
+    """
+    take the dictionary of scores returned by score_kfolds and generate plots
+
+    plot nfreatures (independent) vs. precision, vs. accuracy, vs. recall
+    """
+    nfeats = scores_by_nfeats.keys()
+
+    # retrieve number of folds
+    max_folds = max(scores_by_nfeats[nfeats[0]].keys())
+    num_iter = len(scores_by_nfeats[nfeats[0]][2])
+
+    mean_scores_by_kfolds = {}
+    for k in range(2, max_folds + 1):
+        mean_scores_by_kfolds[k] = {'accuracy': {},
+                                    'precision': {},
+                                    'recall': {}
+                                    }
+    # calculate mean scores for fold j in max k folds
+    for nfeat in nfeats:
+        for k in range(2, max_folds + 1):
+            k_average = []
+            for j in range (1, k + 1):
+                # matrix: num_iter rows x 3 columns, where cols = accuracy, precision, recall
+                # current_matrix = np.matrix(scores_by_nfeats[nfeats][k][j])
+                # current_accuracy = np.mean(current_matrix[:, 0].A1)
+                # current_precision = np.mean(current_matrix[:, 1].A1)
+                # current_recall = np.mean(current_matrix[:, 2].A1)
+                # import pdb; pdb.set_trace()
+                mean_scores = tuple([np.mean(np.array(x)) for x in zip(*scores_by_nfeats[nfeat][k][j])])
+                # print "this is mean_scores", mean_scores
+                k_average.append(mean_scores)
+                # print "this is k_average inside j loop", k_average
+
+            k_average = [np.mean(np.array(x)) for x in zip(*k_average)]
+
+            mean_scores_by_kfolds[k]['accuracy'][nfeat] = k_average[0]
+            mean_scores_by_kfolds[k]['precision'][nfeat] = k_average[1]
+            mean_scores_by_kfolds[k]['recall'][nfeat] = k_average[2]
+
+    for k in range(2, max_folds + 1):
+        d = mean_scores_by_kfolds[k]
+        for data_dict in d.values():
+            x = data_dict.keys()
+            y = data_dict.values()
+            plt.scatter(x,y,color=colors.pop())
+        plot.legend(d.keys())
+        plt.show()
+        # d_accuracy = mean_scores_by_kfolds[k]['accuracy']
+        # d_precision = mean_scores_by_kfolds[k]['precision']
+        # d_recall = mean_scores_by_kfolds[k]['recall']
+    return mean_scores_by_kfolds
+
+# [np.mean(np.array(x)) for x in zip(*myTuples)]
 
 ## Helper function for checking if input string represents an int
 def represents_int(s):
@@ -714,7 +786,11 @@ if __name__ == "__main__":
     ## TEST SENTIMENT ANALYSIS
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
-        sentiment_analysis()
+        avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis()
+        mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)
+
+    # plot results
+    # sentiment_model_scores[nfeat]
 
     # ## VERIFY classifier accuracy on training data
     # count = 0

@@ -643,16 +643,22 @@ def plot_sentiment_model_scores(scores_by_nfeats):
             mean_scores_by_kfolds[k]['recall'][nfeat] = k_average[2]
 
     for k in range(2, max_folds + 1):
+
         d = mean_scores_by_kfolds[k]
-        for data_dict in d.values():
-            x = data_dict.keys()
-            y = data_dict.values()
-            plt.scatter(x,y,color=colors.pop())
-        plot.legend(d.keys())
-        plt.show()
-        # d_accuracy = mean_scores_by_kfolds[k]['accuracy']
-        # d_precision = mean_scores_by_kfolds[k]['precision']
-        # d_recall = mean_scores_by_kfolds[k]['recall']
+        with plt.style.context('fivethirtyeight'):
+            for data_name, data_dict in sorted(d.items(), key=lambda x: x[0]):
+                title_str = "K = %d, %s" % (k, data_name)
+                x = data_dict.keys()
+                y = data_dict.values()
+                plt.plot(x,y)
+                plt.xlabel("Number of Features (words)")
+                plt.title(title_str)
+
+            plt.legend(d.keys())
+            plt.show()
+            # d_accuracy = mean_scores_by_kfolds[k]['accuracy']
+            # d_precision = mean_scores_by_kfolds[k]['precision']
+            # d_recall = mean_scores_by_kfolds[k]['recall']
     return mean_scores_by_kfolds
 
 # [np.mean(np.array(x)) for x in zip(*myTuples)]

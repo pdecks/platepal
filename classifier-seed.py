@@ -1,11 +1,10 @@
 """Utility file to seed PlatePalReview classifications."""
 
-import pdlinclass
-
+import pdclassifier
 
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
-
 from model import connect_to_db, db
+
 from server import app
 
 pickle_path = pdlinclass.pickle_path_SVC

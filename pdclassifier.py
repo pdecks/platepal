@@ -67,8 +67,6 @@ container_path_pd = './pdecks-reviews/'
 categories_pd = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 
 
-
-
 def loads_yelp_reviews(container_path, categories):
     """Load the training documents in data/training directory."""
     # TODO: update to handle pipes for keyword search directory .txt files
@@ -631,6 +629,7 @@ def plot_sentiment_model_scores(scores_by_nfeats):
     fig = plt.figure()
     ax_all_k = fig.add_subplot(111)
 
+    # plotting styles (letter = marker type, dashes and dots are line type)
     pstyle = ['o-', 's-', 'v-', '*-', '+-', 'o--', 's--', 'v--', '*--', '+--', 'o-.', 's-.', 'v-.', '*-.', '+-.']
 
     for k in range(min_num_folds, max_num_folds + 1):
@@ -845,7 +844,7 @@ if __name__ == "__main__":
         to_test = raw_input("Check the pipeline classifier on the toy data set? Y or N >>")
         if to_test.lower() == 'y':
             check_toy_dataset()
-            
+
     ## TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':

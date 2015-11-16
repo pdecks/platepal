@@ -18,6 +18,7 @@ where 1.0 is good and 0.0 is bad.
 """
 
 import random
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -49,6 +50,7 @@ pickle_path_v = 'classifiers/LSVCcomponents/vectorizer/linearSVCvectorizer.pkl'
 pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl'
 pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
+pickle_path_SA_v = 'classifiers/SentimentComponents/vectorizer/vectorizer.pkl'
 #### LOAD DATA ###############################################################
 
 # directory containing toy data set: reviews by pdecks as .txt files
@@ -281,26 +283,6 @@ def tunes_parameters(X, y, n_fold=2):
     return scores
 
 
-## PERSIST THE MODEL ##
-def persist_pipeline(pipeline_clf, pickle_path):
-    """Use joblib to pickle the pipeline model to disk."""
-    joblib.dump(pipeline_clf, pickle_path)
-    print 'Classifier pickled to directory: %s' % pickle_path
-    print
-
-    return
-
-
-## REVIVE CLASSIFIER TO CATEGORIZE NEW REVIEWS ##
-def revives_pipeline(pickle_name):
-    """Takes the name of the pickled object and returns the revived model.
-
-    ex: clf_revive = pickle.loads(pdecks_trained_classifier)
-    """
-    model_clone = joblib.load(pickle_name)
-    return model_clone
-
-
 ## PERSIST A COMPONENT OF THE MODEL ##
 def persist_component(component, pickle_path):
     """Use joblib to pickle the individual classifier components"""
@@ -311,7 +293,11 @@ def persist_component(component, pickle_path):
 
 
 ## REVIVE COMPONENT ##
-def revive_component(pickle_path):
+def revives_component(pickle_path):
+    """Takes the name of the pickled object and returns the revived model.
+
+    ex: clf_revive = pickle.loads(pdecks_trained_classifier)
+    """
     component_clone = joblib.load(pickle_path)
     return component_clone
 
@@ -488,7 +474,7 @@ def vectorize(X_docs, vocab=None):
                                      vocabulary=vocab)
 
     X = vectorizer.fit_transform(X_docs)
-    return vectorizer.get_feature_names(), X
+    return vectorizer, vectorizer.get_feature_names(), X
 
 
 ## FEATURE EXTRACTION ##
@@ -573,7 +559,7 @@ def sentiment_analysis(dataset='pdecks'):
             else:
                 y[i] = 1
 
-    feature_names, X_tfidf = vectorize(X)
+    vectorizer, feature_names, X_tfidf = vectorize(X)
     print "there are %d features" % len(feature_names)
     print
 
@@ -581,33 +567,47 @@ def sentiment_analysis(dataset='pdecks'):
     fold_avg_scores = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, atype='sentiment')
 
     # Extract best features using chi2 test
-    bestK = None
+    bestK = int(math.floor(len(feature_names) / 2))
     sorted_feats = sorted_features(feature_names, X_tfidf, y, kBest=bestK)
 
-    print "Best %d Features from Chi-square Test for Category 'gltn':" % 10
+    print "Top %d Features from Chi-square Test for Category 'gltn':" % 10
     for feature in sorted_feats[0:10]:
         print "feature: ", feature
-    avg_score_nfeats = {}
-    scores_by_nfeats = {}
-    if dataset != 'yelp':
-        feats_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-    elif len(feature_names) > 25000:
-        feats_list = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 20000, 25000]
-    else:
-        feats_list = [len(feature_names) / 10, len(feature_names) / 5, len(feature_names) / 2, len(feature_names)]
 
-    # Check other features and update vocabulary
-    for nfeats in feats_list:
-        feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
+
+    user_choice = raw_input("Would you like to evaluate the best features? Y or N >> ")
+    while user_choice.lower() not in ['y', 'n']:
+        user_choice = raw_input("Would you like to evaluate the best features? Y or N >> ")
+    if user_choice.lower() == 'y':
+        avg_score_nfeats = {}
+        scores_by_nfeats = {}
+        if dataset != 'yelp':
+            feats_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+        elif len(feature_names) > 25000:
+            feats_list = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 20000, 25000]
+        else:
+            feats_list = [len(feature_names) / 10, len(feature_names) / 5, len(feature_names) / 2, len(feature_names)]
+
+        # Check other features and update vocabulary
+        for nfeats in feats_list:
+            k_vectorizer, feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
+            print
+            print "-"*20
+            print "Perforing Cross-Validation with %d Features" % nfeats
+            print "-"*20
+            avg_score_nfeats[nfeats], scores_by_nfeats[nfeats] = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, 'sentiment', nfeats)
         print
-        print "-"*20
-        print "Perforing Cross-Validation with %d Features" % nfeats
-        print "-"*20
-        avg_score_nfeats[nfeats], scores_by_nfeats[nfeats] = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, 'sentiment', nfeats)
-    print
-    print "Test successful"
+        print "Test successful"
 
-    return (avg_score_nfeats, scores_by_nfeats)
+    if user_choice.lower() == 'n':
+        nfeats = ''
+        while not represents_int(nfeats) or int(nfeats) > len(feature_names):
+            nfeats = raw_input("Enter the number of features to use for the vectorizer: 1-%r" % str(len(feature_names)))
+        nfeats = int(nfeats)
+        vectorizer, feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
+        avg_score_nfeats, scores_by_nfeats = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, 'sentiment', nfeats)
+
+    return (vectorizer, scores_by_nfeats)
 
 
 def plot_sentiment_model_scores(scores_by_nfeats):
@@ -799,7 +799,7 @@ def train_classifier():
 
     scores = tunes_parameters(X, y, 10)
 
-    # CREATE and TRAIN the classifier
+    # CREATE and TRAIN the classifier PIPELINE
     X, y = bunch_to_np(documents)
     count_vect, tfidf_transformer, clf, pipeline_clf = create_train_classifier(X, y)
 
@@ -824,34 +824,57 @@ def train_classifier():
     print "Using Pipeline:"
     print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
 
+    # PERSIST THE MODEL / COMPONENTS
+    items_to_pickle = [pipeline_clf, count_vect, tfidf_transformer, clf]
+    pickling_paths = [pickle_path_SVC, pickle_path_v, pickle_path_t, pickle_path_c]
+    to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
-    # PERSIST THE MODEL
-    decision = raw_input("Would you like to persist the pipeline classifier? (Y) or (N) >>")
-    if decision.lower() == 'y':
-        persist_pipeline(pipeline_clf, pickle_path_SVC)
-    else:
-        print 'Classifier not pickled.'
-        print
+    # # PERSIST THE MODEL
+    # decision = raw_input("Would you like to persist the pipeline classifier? (Y) or (N) >>")
+    # if decision.lower() == 'y':
+    #     persist_pipeline(pipeline_clf, pickle_path_SVC)
+    # else:
+    #     print 'Classifier not pickled.'
+    #     print
 
-    # PERSIST THE COMPONENTS
-    decision = raw_input("Would you like to persist the vectorizer? (Y) or (N) >>")
-    if decision.lower() == 'y':
-        persist_component(count_vect, pickle_path_v)
-    else:
-        print 'Vectorizer not pickled.'
+    # # PERSIST THE COMPONENTS
+    # decision = raw_input("Would you like to persist the vectorizer? (Y) or (N) >>")
+    # if decision.lower() == 'y':
+    #     persist_component(count_vect, pickle_path_v)
+    # else:
+    #     print 'Vectorizer not pickled.'
 
-        decision = raw_input("Would you like to persist the transformer? (Y) or (N) >>")
-        if decision.lower() == 'y':
-            persist_component(tfidf_transformer, pickle_path_t)
-        else:
-            print 'Transformer not pickled.'
+    #     decision = raw_input("Would you like to persist the transformer? (Y) or (N) >>")
+    #     if decision.lower() == 'y':
+    #         persist_component(tfidf_transformer, pickle_path_t)
+    #     else:
+    #         print 'Transformer not pickled.'
 
-        decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
-        if decision.lower() == 'y':
-            persist_component(clf, pickle_path_c)
-        else:
-            print 'Classifier not pickled.'
+    #     decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
+    #     if decision.lower() == 'y':
+    #         persist_component(clf, pickle_path_c)
+    #     else:
+    #         print 'Classifier not pickled.'
 
+    return
+
+
+def to_persist(items_to_pickle=None, pickling_paths=None):
+    """
+    Takes a list of components to pickle and a list of paths for each item
+    to be pickled.
+    """
+    # todo: check pipeline case...
+    if items_to_pickle and pickling_paths and len(items_to_pickle) == len(pickling_paths):
+        for item, path in zip(items_to_pickle, pickling_paths):
+            decision = raw_input("Would you like to persist %s to %s? (Y) or (N) >>"  % (str(item), str(path)))
+            if decision.lower() == 'y':
+                persist_component(item, path)
+            else:
+                print '%s not pickled.' % (str(item))
+                print
+
+    print "Persistance complete."
     return
 
 
@@ -871,12 +894,20 @@ if __name__ == "__main__":
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
         data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
+
         while data_choice.lower() not in ['y', 'p']:
             data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
-        print "this is data_choice", data_choice
-        if data_choice.lower() == 'y':
-            avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis(dataset='yelp')
-        else:
-            avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis()
 
-        mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)
+        if data_choice.lower() == 'y':
+            vectorizer, all_avg_sentiment_scores = sentiment_analysis(dataset='yelp')
+        else:
+            vectorizer, all_avg_sentiment_scores = sentiment_analysis()
+
+        user_choice = ''
+        while user_choice.lower() not in ['y', 'n']:
+            user_choice = raw_input("Would you like to plot the cross-validation results? Y or N >> ")
+
+        if user_choice.lower() == 'y':
+            mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)
+
+        to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])

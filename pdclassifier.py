@@ -829,33 +829,6 @@ def train_classifier():
     pickling_paths = [pickle_path_SVC, pickle_path_v, pickle_path_t, pickle_path_c]
     to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
-    # # PERSIST THE MODEL
-    # decision = raw_input("Would you like to persist the pipeline classifier? (Y) or (N) >>")
-    # if decision.lower() == 'y':
-    #     persist_pipeline(pipeline_clf, pickle_path_SVC)
-    # else:
-    #     print 'Classifier not pickled.'
-    #     print
-
-    # # PERSIST THE COMPONENTS
-    # decision = raw_input("Would you like to persist the vectorizer? (Y) or (N) >>")
-    # if decision.lower() == 'y':
-    #     persist_component(count_vect, pickle_path_v)
-    # else:
-    #     print 'Vectorizer not pickled.'
-
-    #     decision = raw_input("Would you like to persist the transformer? (Y) or (N) >>")
-    #     if decision.lower() == 'y':
-    #         persist_component(tfidf_transformer, pickle_path_t)
-    #     else:
-    #         print 'Transformer not pickled.'
-
-    #     decision = raw_input("Would you like to persist the classifier? (Y) or (N) >>")
-    #     if decision.lower() == 'y':
-    #         persist_component(clf, pickle_path_c)
-    #     else:
-    #         print 'Classifier not pickled.'
-
     return
 
 
@@ -867,7 +840,8 @@ def to_persist(items_to_pickle=None, pickling_paths=None):
     # todo: check pipeline case...
     if items_to_pickle and pickling_paths and len(items_to_pickle) == len(pickling_paths):
         for item, path in zip(items_to_pickle, pickling_paths):
-            decision = raw_input("Would you like to persist %s to %s? (Y) or (N) >>"  % (str(item), str(path)))
+
+            decision = raw_input("Would you like to persist %s?\nPath: %s\n(Y) or (N) >>"  % (str(item), str(path)))
             if decision.lower() == 'y':
                 persist_component(item, path)
             else:
@@ -893,16 +867,19 @@ if __name__ == "__main__":
     ## TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
+        # LOAD DATASET
         data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
 
         while data_choice.lower() not in ['y', 'p']:
             data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
 
+        # FEATURE EXTRACTION
         if data_choice.lower() == 'y':
             vectorizer, all_avg_sentiment_scores = sentiment_analysis(dataset='yelp')
         else:
             vectorizer, all_avg_sentiment_scores = sentiment_analysis()
 
+        # PLOT RESULTS
         user_choice = ''
         while user_choice.lower() not in ['y', 'n']:
             user_choice = raw_input("Would you like to plot the cross-validation results? Y or N >> ")
@@ -910,4 +887,5 @@ if __name__ == "__main__":
         if user_choice.lower() == 'y':
             mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)
 
+        # PERSIST THE VECTORIZER
         to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])

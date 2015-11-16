@@ -21,6 +21,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+from matplotlib import gridspec
+
 from sklearn.datasets import base as sk_base
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
@@ -654,15 +656,6 @@ def plot_sentiment_model_scores(scores_by_nfeats):
             # plt.legend(d.keys())
             # plt.show(block="False")
 
-    # TODO: create subplots
-    # plt.figure(1)
-    # plt.subplot(211)
-    # plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
-
-    # plt.subplot(212)
-    # plt.plot(t2, np.cos(2*np.pi*t2), 'r--')
-    # plt.show()
-    # END TODO
 
     # fix y-axis range
     x1,x2,y1,y2 = plt.axis()
@@ -672,6 +665,31 @@ def plot_sentiment_model_scores(scores_by_nfeats):
     plt.title(title_str)
     plt.legend(loc='lower left', fontsize='x-small')
     plt.show()
+
+    # TODO: create subplots
+    # reference an Axes object to keep drawing on the same subplot
+    num_subplots = max_num_folds - min_num_folds + 1
+    if num_subplots > 1:
+        fig, axs = plt.subplots(num_subplots, 1)
+        # import pdb; pdb.set_trace()
+        i = 0
+        for k in range(min_num_folds, max_num_folds + 1):
+            ax = axs[i]
+            d = mean_scores_by_kfolds[k]
+            with plt.style.context('fivethirtyeight'):
+                for data_name, data_dict in sorted(d.items(), key=lambda x: x[0]):
+                    data_points = zip(*sorted(data_dict.items()))
+                    label_str = "K=%d" % k
+                    labels = data_name + ' ' + label_str
+                    ax.plot(data_points[0], data_points[1], pstyle[k - min_num_folds], label=labels, linewidth=1)
+            ax.legend(loc='lower left', fontsize='x-small')
+            i += 1
+        # fix y-axis range
+        # x1,x2,y1,y2 = plt.axis()
+        # plt.axis((x1,x2,0.5,1))
+        fig.suptitle(title_str, fontsize=10)
+        plt.xlabel("Number of Features (words)")
+        plt.show()
 
     return mean_scores_by_kfolds
 
@@ -699,10 +717,12 @@ def get_folds_and_iter():
     while not represents_int(min_num_folds):
         min_num_folds = raw_input("Enter a number of folds (2-10): ")
         print
+    min_num_folds = int(min_num_folds)
+
     # maximum K
     if int(min_num_folds) != 10:
         max_num_folds = raw_input("Enter a maximum number of folds (%d-10): " % int(min_num_folds))
-        while not represents_int(max_num_folds):
+        while not represents_int(max_num_folds) or int(max_num_folds) < min_num_folds:
             max_num_folds = raw_input("Enter a maximum number of folds (%d-10): " % int(min_num_folds))
             print
     else:
@@ -716,7 +736,7 @@ def get_folds_and_iter():
         num_iter = raw_input("Enter a number of iterations (1-50): ")
         print
 
-    min_num_folds = int(min_num_folds)
+
     max_num_folds = int(max_num_folds)
     num_iter = int(num_iter)
 

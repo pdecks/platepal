@@ -174,7 +174,8 @@ def score_kfolds(X, y, min_num_folds=2, max_num_folds=2, num_iter=1, atype=None,
     Returns a dictionary of the scores by fold.
     atype: if "sentiment", cross-validate sentiment analysis model
            which assumes the input X is already transformed into a
-           sparse matrix of tf-idf values
+           sparse matrix of tf-idf values. if None, assumes X needs
+           to first be vectorized.
 
     """
     if atype is None:
@@ -546,6 +547,13 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
 
 
 def sentiment_analysis(dataset='pdecks'):
+    """
+    Run selected dataset through sentiment analysis classifer.
+
+    Cross validates model for k folds and n features.
+
+    Use with plot_sentiment_model_scores to select proper number of features
+    """
     if dataset == 'yelp':
         documents = loads_yelp_reviews(container_path, categories)
     else:
@@ -579,10 +587,9 @@ def sentiment_analysis(dataset='pdecks'):
     print "Best %d Features from Chi-square Test for Category 'gltn':" % 10
     for feature in sorted_feats[0:10]:
         print "feature: ", feature
-
     avg_score_nfeats = {}
     scores_by_nfeats = {}
-    if dataset == 'yelp':
+    if dataset != 'yelp':
         feats_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
     elif len(feature_names) > 25000:
         feats_list = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 20000, 25000]
@@ -863,5 +870,13 @@ if __name__ == "__main__":
     ## TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
-        avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis()
+        data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
+        while data_choice.lower() not in ['y', 'p']:
+            data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
+        print "this is data_choice", data_choice
+        if data_choice.lower() == 'y':
+            avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis(dataset='yelp')
+        else:
+            avg_sentiment_scores, all_avg_sentiment_scores = sentiment_analysis()
+
         mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)

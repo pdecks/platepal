@@ -545,8 +545,12 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
     return top_ranked_feature_names
 
 
-def sentiment_analysis():
-    documents = loads_pdecks_reviews()
+def sentiment_analysis(dataset='pdecks'):
+    if dataset == 'yelp':
+        documents = loads_yelp_reviews(container_path, categories)
+    else:
+        documents = loads_pdecks_reviews()
+
     X, y = bunch_to_np(documents)
 
     # for cat in categories:
@@ -554,13 +558,16 @@ def sentiment_analysis():
     #     # documents = loads_yelp_reviews(container_path, [cat])
 
     # tranform y to a binary array (0 or 1 only where 1="good" and 0="bad")
-    for i in range(y.shape[0]):
-        if y[i] in [0, 3, 4, 5]:
-            y[i] = 0
-        else:
-            y[i] = 1
+    if dataset == 'pdecks':
+        for i in range(y.shape[0]):
+            if y[i] in [0, 3, 4, 5]:
+                y[i] = 0
+            else:
+                y[i] = 1
 
     feature_names, X_tfidf = vectorize(X)
+    print "there are %d features" % len(feature_names)
+    print
 
     min_num_folds, max_num_folds, num_iter = get_folds_and_iter()
     fold_avg_scores = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, atype='sentiment')
@@ -575,8 +582,15 @@ def sentiment_analysis():
 
     avg_score_nfeats = {}
     scores_by_nfeats = {}
+    if dataset == 'yelp':
+        feats_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    elif len(feature_names) > 25000:
+        feats_list = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 20000, 25000]
+    else:
+        feats_list = [len(feature_names) / 10, len(feature_names) / 5, len(feature_names) / 2, len(feature_names)]
+
     # Check other features and update vocabulary
-    for nfeats in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
+    for nfeats in feats_list:
         feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
         print
         print "-"*20
@@ -639,39 +653,23 @@ def plot_sentiment_model_scores(scores_by_nfeats):
         d = mean_scores_by_kfolds[k]
         with plt.style.context('fivethirtyeight'):
             for data_name, data_dict in sorted(d.items(), key=lambda x: x[0]):
-                # title_str = "K = %d, %s" % (k, data_name)
-
                 data_points = zip(*sorted(data_dict.items()))
-
-                # plt.plot(data_points[0], data_points[1])
-                # plt.xlabel("Number of Features (words)")
-                # plt.title(title_str)
                 label_str = "K=%d" % k
                 labels = data_name + ' ' + label_str
-                # styles = pstyle[(k-2):(k+1)]
                 ax_all_k.plot(data_points[0], data_points[1], pstyle[k - min_num_folds], label=labels, linewidth=1)
-                # plt.xlabel("Number of Features (words)")
-                # plt.title(title_str)
 
-            # plt.legend(d.keys())
-            # plt.show(block="False")
-
-
-    # fix y-axis range
     x1,x2,y1,y2 = plt.axis()
     plt.axis((x1,x2,0.5,1))
     plt.xlabel("Number of Features (words)")
-    title_str = "Accuracy, Precision, and Recall VS nfeatures\n K folds: 2-%d" % max_num_folds
+    title_str = "Accuracy, Precision, and Recall VS nfeatures\n K folds: %d-%d" % (min_num_folds, max_num_folds)
     plt.title(title_str)
     plt.legend(loc='lower left', fontsize='x-small')
     plt.show()
 
-    # TODO: create subplots
     # reference an Axes object to keep drawing on the same subplot
     num_subplots = max_num_folds - min_num_folds + 1
     if num_subplots > 1:
         fig, axs = plt.subplots(num_subplots, 1)
-        # import pdb; pdb.set_trace()
         i = 0
         for k in range(min_num_folds, max_num_folds + 1):
             ax = axs[i]
@@ -684,9 +682,6 @@ def plot_sentiment_model_scores(scores_by_nfeats):
                     ax.plot(data_points[0], data_points[1], pstyle[k - min_num_folds], label=labels, linewidth=1)
             ax.legend(loc='lower left', fontsize='x-small')
             i += 1
-        # fix y-axis range
-        # x1,x2,y1,y2 = plt.axis()
-        # plt.axis((x1,x2,0.5,1))
         fig.suptitle(title_str, fontsize=10)
         plt.xlabel("Number of Features (words)")
         plt.show()

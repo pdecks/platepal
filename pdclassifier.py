@@ -548,9 +548,9 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
     return top_ranked_feature_names
 
 
-def sentiment_analysis(dataset='pdecks'):
+def train_sentiment_analysis(dataset='pdecks'):
     """
-    Run selected dataset through sentiment analysis classifer.
+    Run selected dataset through sentiment analysis vectorizer.
 
     Cross validates model for k folds and n features.
 
@@ -564,8 +564,23 @@ def sentiment_analysis(dataset='pdecks'):
         X, y = bunch_to_np(documents)
     elif dataset == 'stars':
         documents = loads_yelp_reviews(container_path="./data/sentiment", categories=['gluten'])
-        # correct the data field and store additional data on documents
         X, y = bunch_to_np(documents, class_type='sentiment')
+        X = X.tolist()
+
+        # correct the data field and store additional data on documents
+        true_index = 0
+        while true_index < len(y):
+            print "True Index: %d, y = %d, len(y): %s, len(X): %s" % (true_index, y[true_index], len(y), len(X))
+            if y[true_index] == 5:
+                y[true_index] = 1
+                true_index += 1
+            elif y[true_index] == 1:
+                y[true_index] = 0
+                true_index += 1
+            else:
+                y.pop(true_index)
+                X.pop(true_index)
+        X = np.array(X)
         y = np.array(y)
     else:
         documents = loads_pdecks_reviews()
@@ -582,12 +597,20 @@ def sentiment_analysis(dataset='pdecks'):
                 y[i] = 0
             else:
                 y[i] = 1
-    if dataset == 'stars':
-        for i in range(y.shape[0]):
-            if y[i] in [1, 2, 3]:
-                y[i] = 0
-            else:
-                y[i] = 1
+    # if dataset == 'stars':
+    #     for i in range(y.shape[0]):
+    #         if y[i] == 5:
+    #             y[i] = 1
+    #         elif y[i] == 1:
+    #             y[i] = 0
+    #         else:
+    #             np.delete(y, i)
+    #             X.pop(i)
+    #             # remove datapoints
+    #         # if y[i] in [1, 2, 3]:
+    #         #     y[i] = 0
+    #         # else:
+    #             # y[i] = 1
 
 
     vectorizer, feature_names, X_tfidf = vectorize(X)
@@ -604,7 +627,7 @@ def sentiment_analysis(dataset='pdecks'):
     print "Top %d Features from Chi-square Test for Category 'gltn':" % 10
     for feature in sorted_feats[0:10]:
         print "feature: ", feature
-
+    print len(sorted_feats)
 
     user_choice = raw_input("Would you like to evaluate the best features? Y or N >> ")
     while user_choice.lower() not in ['y', 'n']:
@@ -613,7 +636,7 @@ def sentiment_analysis(dataset='pdecks'):
         avg_score_nfeats = {}
         scores_by_nfeats = {}
         if dataset == 'stars':
-            feats_list = [100, 200, 300, 400, 500, 1000, 2500, 5000, 7500, 9000]
+            feats_list = [100, 200, 300, 400, 500, 1000, 2500, 4500]
         elif dataset != 'yelp':
             feats_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
         elif len(feature_names) > 25000:
@@ -642,7 +665,14 @@ def sentiment_analysis(dataset='pdecks'):
 
     return (vectorizer, scores_by_nfeats)
 
+# def predict_sentiment(category='gltn', ):
+#     # decision = raw_input("Revive the trained vectorizer? Y or N >> ")
+#         # if decision.lower() == 'y':
+#     vectorizer = revives_component(pickle_path_SA_v)
+    
 
+#     return prediction
+    
 def plot_sentiment_model_scores(scores_by_nfeats):
     """
     take the dictionary of scores returned by score_kfolds and generate plots
@@ -720,8 +750,14 @@ def plot_sentiment_model_scores(scores_by_nfeats):
                     label_str = "K=%d" % k
                     labels = data_name + ' ' + label_str
                     ax.plot(data_points[0], data_points[1], pstyle[k - min_num_folds], label=labels, linewidth=1)
-            ax.legend(loc='lower left', fontsize='x-small')
+            # Shrink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+            # ax.legend(loc='lower right', fontsize='x-small')
             i += 1
+
         fig.suptitle(title_str, fontsize=10)
         plt.xlabel("Number of Features (words)")
         plt.show()
@@ -863,6 +899,7 @@ def train_classifier():
     to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
     return
+
 
 # def random_forest_classifier():
 #     """loads the documents from random_forest directory for multilabel classification"""
@@ -1009,12 +1046,11 @@ if __name__ == "__main__":
 
         # FEATURE EXTRACTION
         if data_choice.lower() == 'y':
-            vectorizer, all_avg_sentiment_scores = sentiment_analysis(dataset='yelp')
+            vectorizer, all_avg_sentiment_scores = train_sentiment_analysis(dataset='yelp')
         if data_choice.lower() == 's':
-            vectorizer, all_avg_sentiment_scores = sentiment_analysis(dataset='stars')
-        
+            vectorizer, all_avg_sentiment_scores = train_sentiment_analysis(dataset='stars')
         else:
-            vectorizer, all_avg_sentiment_scores = sentiment_analysis()
+            vectorizer, all_avg_sentiment_scores = train_sentiment_analysis()
 
         # PLOT RESULTS
         user_choice = ''
@@ -1026,6 +1062,11 @@ if __name__ == "__main__":
 
         # PERSIST THE VECTORIZER
         to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])
+
+    ## USE SENTIMENT ANALYSIS PROTOTYPE
+    to_test = raw_input("Perform sentiment analysis? Y or N >>")
+    if to_test.lower() == 'y':
+        target = predict_sentiment(category='gltn')
 
     ## RANDOM FOREST MULTILABEL PROBLEM
     to_test = raw_input("Check the random forest multilabel classifier? Y or N >>")

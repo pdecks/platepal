@@ -30,6 +30,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import cross_val_score
 from sklearn.feature_selection import SelectKBest, chi2
@@ -64,15 +65,19 @@ pickle_path_SA_v = 'classifiers/SentimentComponents/vectorizer/vectorizer.pkl'
 # training data set from yelp academic database:
 # 969 reviews containing the word 'gluten'
 # 1000 reviews randomly sampled from 217,000 reviews NOT containing the word 'gluten'
-container_path = './data/training/'
-categories = ['gluten', 'unknown']
+container_path = './data/keywords/'
 
 container_path_pd = './pdecks-reviews/'
 categories_pd = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
 
 
-def loads_yelp_reviews(container_path, categories):
-    """Load the training documents in data/training directory."""
+def loads_yelp_reviews(container_path, categories=None):
+    # categories = ['gluten', 'unknown']
+    # load all categories for random forest
+    if not categories:
+        categories = ['unknown', 'gluten', 'allergy', 'paleo', 'kosher', 'vegan']
+
+    """Load the training documents in container_path directory."""
     # TODO: update to handle pipes for keyword search directory .txt files
     # where format --> review_id | biz_id | biz_name | review_date | review_text
     documents = sk_base.load_files(container_path,
@@ -447,7 +452,7 @@ class PennTreebankPunkt(object):
 # e.g. with s.decode("utf8").
 
 def vectorize(X_docs, vocab=None):
-    """Vectorizer for use with sentiment analysis.
+    """Vectorizer for use with random forests / sentiment analysis.
 
     X_docs is a numpy array of documents to be vectorized.
 
@@ -539,9 +544,12 @@ def sentiment_analysis(dataset='pdecks'):
     Cross validates model for k folds and n features.
 
     Use with plot_sentiment_model_scores to select proper number of features
+
+    Assumes results will be used with LinearSVC or MultinomialNB classifiers,
+    not random forests, which has its own built-in feature importance ranker.
     """
     if dataset == 'yelp':
-        documents = loads_yelp_reviews(container_path, categories)
+        documents = loads_yelp_reviews(container_path, categories=['gluten', 'unknown'])
     else:
         documents = loads_pdecks_reviews()
 
@@ -830,6 +838,78 @@ def train_classifier():
     to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
     return
+
+def random_forest_classifier():
+    # LOAD THE TEST DATA
+    # loading incorrectly...
+    documents = loads_yelp_reviews(container_path)
+    X, y = bunch_to_np(documents)
+    # TODO: update .... X not loading correctly.
+    for i in range(X.shape[0]):
+        split_x = X[i].split('|')
+        print "this is split_x", split_x
+        X[i] = '\ufeff' + split_x[4]
+
+
+    rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
+                                 stop_words='english',
+                                 encoding='utf-8',
+                                 decode_error='strict',
+                                 ngram_range=(1, 1),
+                                 preprocessor=PennTreebankPunkt())
+
+    X_tfidf = rf_vectorizer.fit_transform(X)
+
+    # Initialize a random forest with 100 trees
+    forest = RandomForestClassifier(n_estimators = 100)
+
+    # fit the forest to the training set, using the tf-idf as features
+    # and the category labels as the response variable
+    forest = forest.fit(X_tfidf, y)
+
+    # # test the forest on the toy data set
+    # documents_pd = loads_pdecks_reviews()
+    # X_pd, y_pd = bunch_to_np(documents_pd)
+
+    # X_pd_tfidf = vectorizer.transform(X_pd)
+
+    # # transform toy dataset labels to 0 = gluten, 1 = unknown
+    # # for i in range(y_pd.shape[0]):
+    # #     if y_pd[i] in [0, 3, 4, 5]:
+    # #         y_pd[i] = 0
+    # #     else:
+    # #         y_pd[i] = 1
+
+    # inaccurate = 0
+    # predicted_pd = []
+    # for i in range(0, X_pd_tfidf.shape[0]):
+    #     predicted = forest.predict(X_pd_tfidf[i])
+    #     # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
+    #     if y_pd[i] != predicted:
+    #         inaccurate += 1
+    #     i += 1
+    #     predicted_pd.append(predicted)
+    # print "-- Accuracy check of toy dataset --"
+    # print "PERCENT INACCURATE: ", (inaccurate/(len(y_pd)))*100.0000
+    # print "inaccurate", inaccurate
+
+    # for i in range(0, len(y_pd)):
+    #     print "Index i: %s" % i
+    #     print "Predicted: %s" % predicted_pd[i][0]
+    #     print "Actual: %s" % str(int(y_pd[i]))
+    #     print '-'*20
+
+    sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
+    # import pdb; pdb.set_trace()
+    # X_sample = np.array(sample_text)
+    X_sample_tfidf = rf_vectorizer.transform([sample_text])
+
+    sample_predict = forest.predict(X_sample_tfidf)
+    print "this is sample_predict", sample_predict
+
+    return forest
+
+# forest = random_forest_classifier()
 
 
 def to_persist(items_to_pickle=None, pickling_paths=None):

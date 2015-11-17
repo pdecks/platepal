@@ -107,7 +107,7 @@ def get_category_reviews(cat_name, search_terms, max_results=1000):
             j += 1
 
         QUERY =  """
-        SELECT Biz.biz_id, Biz.name, Reviews.review_id, Reviews.review_date, Reviews.text
+        SELECT Biz.biz_id, Biz.name, Reviews.yelp_stars, Reviews.review_id, Reviews.review_date, Reviews.text
         FROM Reviews
         JOIN Biz on Reviews.biz_id = Biz.biz_id
         """ + not_str
@@ -127,7 +127,7 @@ def get_category_reviews(cat_name, search_terms, max_results=1000):
             j += 1
 
         QUERY = """
-        SELECT Biz.biz_id, Biz.name, Reviews.review_id, Reviews.review_date, Reviews.text
+        SELECT Biz.biz_id, Biz.name, Reviews.yelp_stars, Reviews.review_id, Reviews.review_date, Reviews.text
         FROM Reviews
         JOIN Biz on Reviews.biz_id = Biz.biz_id
         """ + search_str
@@ -144,19 +144,22 @@ def get_category_reviews(cat_name, search_terms, max_results=1000):
     return cat_search
 
 
-def create_path(cat_name):
+def create_path(cat_name, class_type=None):
     """Create path where .txt files will be saved"""
     # if cat_name == 'unknown':
     #     cat_rel_path = "/data/" + cat_name + "/"
     # else:
-    cat_rel_path = "/data/keywords/" + cat_name + "/"
+    if not class_type:
+        cat_rel_path = "/data/keywords/" + cat_name + "/"
+    else:
+        cat_rel_path = "/data/random_forest/"
     cat_abs_path = os.path.join(script_dir, cat_rel_path)
 
     return cat_abs_path
 
 
 # TODO: add flag for commiting rev-cat cat_code (cat_search, cat_abs_path, db_flag)
-def create_category_files(cat_search, cat_abs_path, search_terms):
+def create_category_files(cat_search, cat_abs_path, search_terms, class_type=None):
     """exports review text as .txt files path mvp/data/training/gluten_reviews"""
 
     # create a .txt file of the keywords used to generate the query
@@ -169,16 +172,21 @@ def create_category_files(cat_search, cat_abs_path, search_terms):
     result_count = 0
     for csearch in cat_search:
         for review in csearch:
-            # SELECT Biz.biz_id, Biz.name, Reviews.review_id, Reviews.review_date, Reviews.text
+            # SELECT Biz.biz_id, Biz.name, Reviews.yelp_stars, Reviews.review_id, Reviews.review_date, Reviews.text
             biz_id = str(review[0])
             biz_name = review[1]
-            review_id = str(review[2])
-            review_date = review[3]
-            review_text = review[4]
+            stars = review[2]
+            review_id = str(review[3])
+            review_date = review[4]
+            review_text = review[5]
+
 
             # create new text file for each review
             doc_count = '{0:04d}'.format((result_count))
-            name = cat_name + str(doc_count) + '.txt'
+            if not class_type:
+                name = cat_name + str(doc_count) + '.txt'
+            else:
+                name = 'rf' + str(doc_count) + '.txt'
             file_path = '.' + os.path.join(cat_abs_path, name)
             print 'Creating new text file: %s' % name
             print '-'*20
@@ -189,10 +197,14 @@ def create_category_files(cat_search, cat_abs_path, search_terms):
 
             # open and write to the file object
             # use codecs to encode as UTF-8 (handling accented characters)
-            with codecs.open(file_path, 'w', 'utf-8-sig') as f:
-                f.write(review_id + '|' + biz_id + '|' + biz_name + '|' + review_date + '|' + review_text)
-                f.close()
-
+            if not class_type:
+                with codecs.open(file_path, 'w', 'utf-8-sig') as f:
+                    f.write(review_id + '|' + biz_id + '|' + biz_name + '|' + review_date + '|' + review_text)
+                    f.close()
+            else:
+                with codecs.open(file_path, 'w', 'utf-8-sig') as f:
+                    f.write(stars + '|' + review_id + '|' + biz_id + '|' + biz_name + '|' + review_date + '|' + review_text)
+                    f.close()
             result_count += 1
 
 

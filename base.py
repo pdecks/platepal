@@ -138,9 +138,9 @@ def load_files(container_path, description=None, categories=None,
             biz_name = review[2]
             review_date = review[3]
             review_text = review[4]
-            
+
             data.append(review_text)
-            
+
             # get document labels
             # 'gltn'|'vgan'|'kshr'|'algy'|'pleo'|'unkn'|# stars|review_id|biz_id|biz_name|review_date|text
             # 1|1|0|0|0|17776|975|The Wine Cellar|2006-08-22|There is a great ( think dollar store) place ...  

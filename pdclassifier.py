@@ -65,7 +65,7 @@ pickle_path_SA_v = 'classifiers/SentimentComponents/vectorizer/vectorizer.pkl'
 # training data set from yelp academic database:
 # 969 reviews containing the word 'gluten'
 # 1000 reviews randomly sampled from 217,000 reviews NOT containing the word 'gluten'
-container_path = './data/keywords/'
+
 
 container_path_pd = './pdecks-reviews/'
 categories_pd = ['bad', 'excellent', 'good', 'limited', 'neutral', 'shady']
@@ -839,77 +839,79 @@ def train_classifier():
 
     return
 
-def random_forest_classifier():
-    # LOAD THE TEST DATA
-    # loading incorrectly...
-    documents = loads_yelp_reviews(container_path)
-    X, y = bunch_to_np(documents)
-    # TODO: update .... X not loading correctly.
-    for i in range(X.shape[0]):
-        split_x = X[i].split('|')
-        print "this is split_x", split_x
-        X[i] = '\ufeff' + split_x[4]
+# def random_forest_classifier():
+#     """loads the documents from random_forest directory for multilabel classification"""
+#     # LOAD THE TEST DATA
+#     container_path = './data/random_forest/'
+#     # loading incorrectly...
+#     documents = loads_yelp_reviews(container_path)
+#     X, y = bunch_to_np(documents)
+#     # TODO: update .... X not loading correctly.
+#     for i in range(X.shape[0]):
+#         split_x = X[i].split('|')
+#         print "this is split_x", split_x
+#         X[i] = '\ufeff' + split_x[4]
 
 
-    rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
-                                 stop_words='english',
-                                 encoding='utf-8',
-                                 decode_error='strict',
-                                 ngram_range=(1, 1),
-                                 preprocessor=PennTreebankPunkt())
+#     rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
+#                                  stop_words='english',
+#                                  encoding='utf-8',
+#                                  decode_error='strict',
+#                                  ngram_range=(1, 1),
+#                                  preprocessor=PennTreebankPunkt())
 
-    X_tfidf = rf_vectorizer.fit_transform(X)
+#     X_tfidf = rf_vectorizer.fit_transform(X)
 
-    # Initialize a random forest with 100 trees
-    forest = RandomForestClassifier(n_estimators = 100)
+#     # Initialize a random forest with 100 trees
+#     forest = RandomForestClassifier(n_estimators = 100)
 
-    # fit the forest to the training set, using the tf-idf as features
-    # and the category labels as the response variable
-    forest = forest.fit(X_tfidf, y)
+#     # fit the forest to the training set, using the tf-idf as features
+#     # and the category labels as the response variable
+#     forest = forest.fit(X_tfidf, y)
 
-    # # test the forest on the toy data set
-    # documents_pd = loads_pdecks_reviews()
-    # X_pd, y_pd = bunch_to_np(documents_pd)
+#     # # test the forest on the toy data set
+#     # documents_pd = loads_pdecks_reviews()
+#     # X_pd, y_pd = bunch_to_np(documents_pd)
 
-    # X_pd_tfidf = vectorizer.transform(X_pd)
+#     # X_pd_tfidf = vectorizer.transform(X_pd)
 
-    # # transform toy dataset labels to 0 = gluten, 1 = unknown
-    # # for i in range(y_pd.shape[0]):
-    # #     if y_pd[i] in [0, 3, 4, 5]:
-    # #         y_pd[i] = 0
-    # #     else:
-    # #         y_pd[i] = 1
+#     # # transform toy dataset labels to 0 = gluten, 1 = unknown
+#     # # for i in range(y_pd.shape[0]):
+#     # #     if y_pd[i] in [0, 3, 4, 5]:
+#     # #         y_pd[i] = 0
+#     # #     else:
+#     # #         y_pd[i] = 1
 
-    # inaccurate = 0
-    # predicted_pd = []
-    # for i in range(0, X_pd_tfidf.shape[0]):
-    #     predicted = forest.predict(X_pd_tfidf[i])
-    #     # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
-    #     if y_pd[i] != predicted:
-    #         inaccurate += 1
-    #     i += 1
-    #     predicted_pd.append(predicted)
-    # print "-- Accuracy check of toy dataset --"
-    # print "PERCENT INACCURATE: ", (inaccurate/(len(y_pd)))*100.0000
-    # print "inaccurate", inaccurate
+#     # inaccurate = 0
+#     # predicted_pd = []
+#     # for i in range(0, X_pd_tfidf.shape[0]):
+#     #     predicted = forest.predict(X_pd_tfidf[i])
+#     #     # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
+#     #     if y_pd[i] != predicted:
+#     #         inaccurate += 1
+#     #     i += 1
+#     #     predicted_pd.append(predicted)
+#     # print "-- Accuracy check of toy dataset --"
+#     # print "PERCENT INACCURATE: ", (inaccurate/(len(y_pd)))*100.0000
+#     # print "inaccurate", inaccurate
 
-    # for i in range(0, len(y_pd)):
-    #     print "Index i: %s" % i
-    #     print "Predicted: %s" % predicted_pd[i][0]
-    #     print "Actual: %s" % str(int(y_pd[i]))
-    #     print '-'*20
+#     # for i in range(0, len(y_pd)):
+#     #     print "Index i: %s" % i
+#     #     print "Predicted: %s" % predicted_pd[i][0]
+#     #     print "Actual: %s" % str(int(y_pd[i]))
+#     #     print '-'*20
 
-    sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
-    # import pdb; pdb.set_trace()
-    # X_sample = np.array(sample_text)
-    X_sample_tfidf = rf_vectorizer.transform([sample_text])
+#     sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
+#     # import pdb; pdb.set_trace()
+#     # X_sample = np.array(sample_text)
+#     X_sample_tfidf = rf_vectorizer.transform([sample_text])
 
-    sample_predict = forest.predict(X_sample_tfidf)
-    print "this is sample_predict", sample_predict
+#     sample_predict = forest.predict(X_sample_tfidf)
+#     print "this is sample_predict", sample_predict
 
-    return forest
+#     return forest
 
-# forest = random_forest_classifier()
+# # forest = random_forest_classifier()
 
 
 def to_persist(items_to_pickle=None, pickling_paths=None):
@@ -930,6 +932,33 @@ def to_persist(items_to_pickle=None, pickling_paths=None):
 
     print "Persistance complete."
     return
+
+
+def random_forest_training_set():
+    """Makes a copy of the files in /data/keywords/subfolder for use with random forest classifier"""
+    from os import listdir
+    import codecs
+
+    old_path = './data/keywords/'
+    new_path = './data/random_forest/'
+    categories = ['unknown', 'gluten', 'allergy', 'paleo', 'kosher', 'vegan']
+    for cat in categories:
+        # open file in old path, copy to new path, strip out info ...
+
+        # get list of document name
+        container_path = old_path + cat
+        new_container_path = new_path + cat
+        documents = [d for d in sorted(listdir(container_path))]
+        for d in documents:
+            file_path = container_path + '/' + d
+            with codecs.open(file_path, 'r', 'utf-8-sig') as f:
+                file_text = f.read()
+                file_text = file_text.split('|')[4]
+                f.close()
+            new_file_path = new_container_path + '/' + d
+            with codecs.open(new_file_path, 'w', 'utf-8-sig') as f:
+                f.write(file_text)
+                f.close()
 
 
 if __name__ == "__main__":
@@ -969,3 +998,61 @@ if __name__ == "__main__":
 
         # PERSIST THE VECTORIZER
         to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])
+
+    ## RANDOM FOREST MULTILABEL PROBLEM
+    to_test = raw_input("Check the random forest multilabel classifier? Y or N >>")
+    if to_test.lower() == 'y':
+        container_path = './data/random_forest/'
+        # loading incorrectly...
+        documents = loads_yelp_reviews(container_path)
+        X, y = bunch_to_np(documents)
+
+        rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
+                                     stop_words='english',
+                                     encoding='utf-8',
+                                     decode_error='strict',
+                                     ngram_range=(1, 1),
+                                     preprocessor=PennTreebankPunkt())
+
+        X_tfidf = rf_vectorizer.fit_transform(X)
+
+        # Initialize a random forest with 100 trees
+        forest = RandomForestClassifier(n_estimators = 100)
+
+        # fit the forest to the training set, using the tf-idf as features
+        # and the category labels as the response variable
+        forest = forest.fit(X_tfidf, y)
+
+        sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
+        # import pdb; pdb.set_trace()
+        # X_sample = np.array(sample_text)
+        X_sample_tfidf = rf_vectorizer.transform([sample_text])
+
+        sample_predict = forest.predict(X_sample_tfidf)
+        print "this is sample_predict", sample_predict
+
+        # >>> documents.target_names
+        # ['allergy', 'gluten', 'kosher', 'paleo', 'unknown', 'vegan']
+        # >>> sample_text = 'I love gluten-free foods!'
+        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
+        # >>> sample_predict = forest.predict(X_sample_tfidf)
+        # >>> sample_predict
+        # array([1])
+        # >>> sample_text = 'I love kosher foods!'
+        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
+        # >>> sample_predict = forest.predict(X_sample_tfidf)
+        # >>> sample_predict
+        # array([4])
+        # >>> sample_text = 'I love paleo foods!'
+        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
+        # >>> sample_predict = forest.predict(X_sample_tfidf)
+        # >>> sample_predict
+        # array([4])
+        # >>> sample_text = 'I love vegan foods!'
+        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
+        # >>> sample_predict = forest.predict(X_sample_tfidf)
+        # >>> sample_predict
+        # array([5])
+
+
+# forest = random_forest_classifier()

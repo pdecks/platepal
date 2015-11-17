@@ -208,6 +208,8 @@ def create_category_files(cat_search, cat_abs_path, search_terms, class_type=Non
             result_count += 1
 
 
+
+
 ## Helper function for checking if input string represents an int
 def represents_int(s):
     try:

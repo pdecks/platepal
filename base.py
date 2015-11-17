@@ -65,24 +65,24 @@ def load_files(container_path, description=None, categories=None,
                encoding=None, decode_error='strict'):
     """Load text files **categories extracted from beginning of file
     (pipe-delimited)** (differs from original sklearn version)
-    
+
     The individual file names are not important.
-    
+
     This function does not try to extract features into a numpy array or
     scipy sparse matrix. In addition, if load_content is false it
     does not try to load the files in memory.
-    
+
     To use text files in a scikit-learn classification or clustering
     algorithm, you will need to use the `sklearn.feature_extraction.text`
     module to build a feature extraction transformer that suits your
     problem.
-    
+
     Specify the encoding of the text using the 'encoding' parameter.
     For many modern text files, 'utf-8' will be the correct encoding. If
     you leave encoding equal to None, then the content will be made of bytes
     instead of Unicode, and you will not be able to use most functions in
     `sklearn.feature_extraction.text`.
-    
+
     Parameters
     ----------
     container_path : string or unicode
@@ -143,7 +143,7 @@ def load_files(container_path, description=None, categories=None,
 
             # get document labels
             # 'gltn'|'vgan'|'kshr'|'algy'|'pleo'|'unkn'|# stars|review_id|biz_id|biz_name|review_date|text
-            # 1|1|0|0|0|17776|975|The Wine Cellar|2006-08-22|There is a great ( think dollar store) place ...  
+            # 1|1|0|0|0|17776|975|The Wine Cellar|2006-08-22|There is a great ( think dollar store) place ...
             # if category binary = 1, document in category
             # if all five category binaries == 0, then categorize as 'unkn'
             # for cat in cats
@@ -151,7 +151,7 @@ def load_files(container_path, description=None, categories=None,
             # ... target.append([cat])
             # ... data.append([text])
 
-        # 
+
     target = np.array(target)
 
     if encoding is not None:
@@ -163,7 +163,7 @@ def load_files(container_path, description=None, categories=None,
     #     folder_path = join(container_path, folder)
     #     documents = [join(folder_path, d)
     #                  for d in sorted(listdir(folder_path))]
-        
+
     #     target.extend(len(documents) * [label])
     #     filenames.extend(documents)
 
@@ -171,16 +171,14 @@ def load_files(container_path, description=None, categories=None,
     # filenames = np.array(filenames)
     # target = np.array(target)
 
-    
     if load_content:
         data = []
         for filename in filenames:
             with open(filename, 'rb') as f:
                 data.append(f.read())
-        
+
     return Bunch(data=data,
                  filenames=filenames,
                  target_names=target_names,
                  target=target,
                  DESCR=description)
-

@@ -61,7 +61,7 @@ pickle_path_SA_v = 'classifiers/SentimentComponents/vectorizer/vectorizer.pkl'
 # contain more than just review information delimited on pipes
 
 # toy data set: 45 reviews by author
-# container_path = 'pdecks-reviews/'
+container_path = 'pdecks-reviews/'
 # categories = ['bad', 'good', 'limited', 'shady', 'excellent']
 
 # training data set from yelp academic database:
@@ -97,20 +97,29 @@ def loads_pdecks_reviews(container_path=container_path_pd, categories=categories
     return documents
 
 
-def bunch_to_np(documents):
+def bunch_to_np(documents, class_type=None):
     """
     Takes complete dataset and convert to np arrays.
 
     Documents input as a scikit bunch.
+
+    For class_type="sentiment", the text files loaded into documents.data
+    should contain the yelp stars as the first pipe-delimited value. Split
+    this score off the text and store as the target (y), and correct data
+    to only contain the review text, still returning (X, y)
     """
-    # TODO: update how data is split into a test set and a training set
-    # Define the training dataset
-    # train_docs = documents
-    # test_docs = train_docs
-
-    X = np.array(documents.data)
-    y = documents.target
-
+    print class_type
+    if class_type == 'sentiment':
+        X = []
+        y = []
+        for i, val in enumerate(documents.data):
+            split_text = val.split("|")
+            y.append(int(split_text[0][-1]))
+            X.append(split_text[5])
+        X = np.array(X)
+    else:
+        X = np.array(documents.data)
+        y = documents.target
     return (X, y)
 
 
@@ -552,10 +561,15 @@ def sentiment_analysis(dataset='pdecks'):
     """
     if dataset == 'yelp':
         documents = loads_yelp_reviews(container_path, categories=['gluten', 'unknown'])
+        X, y = bunch_to_np(documents)
+    elif dataset == 'stars':
+        documents = loads_yelp_reviews(container_path="./data/sentiment", categories=['gluten'])
+        # correct the data field and store additional data on documents
+        X, y = bunch_to_np(documents, class_type='sentiment')
+        y = np.array(y)
     else:
         documents = loads_pdecks_reviews()
-
-    X, y = bunch_to_np(documents)
+        X, y = bunch_to_np(documents)
 
     # for cat in categories:
     # for cat in categories_pd:
@@ -568,6 +582,13 @@ def sentiment_analysis(dataset='pdecks'):
                 y[i] = 0
             else:
                 y[i] = 1
+    if dataset == 'stars':
+        for i in range(y.shape[0]):
+            if y[i] in [1, 2, 3]:
+                y[i] = 0
+            else:
+                y[i] = 1
+
 
     vectorizer, feature_names, X_tfidf = vectorize(X)
     print "there are %d features" % len(feature_names)
@@ -591,7 +612,9 @@ def sentiment_analysis(dataset='pdecks'):
     if user_choice.lower() == 'y':
         avg_score_nfeats = {}
         scores_by_nfeats = {}
-        if dataset != 'yelp':
+        if dataset == 'stars':
+            feats_list = [100, 200, 300, 400, 500, 1000, 2500, 5000, 7500, 9000]
+        elif dataset != 'yelp':
             feats_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
         elif len(feature_names) > 25000:
             feats_list = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 20000, 25000]
@@ -979,14 +1002,17 @@ if __name__ == "__main__":
     to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
         # LOAD DATASET
-        data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
+        data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp, [S]tars >> ")
 
-        while data_choice.lower() not in ['y', 'p']:
+        while data_choice.lower() not in ['y', 'p', 's']:
             data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp >> ")
 
         # FEATURE EXTRACTION
         if data_choice.lower() == 'y':
             vectorizer, all_avg_sentiment_scores = sentiment_analysis(dataset='yelp')
+        if data_choice.lower() == 's':
+            vectorizer, all_avg_sentiment_scores = sentiment_analysis(dataset='stars')
+        
         else:
             vectorizer, all_avg_sentiment_scores = sentiment_analysis()
 

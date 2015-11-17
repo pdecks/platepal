@@ -152,7 +152,7 @@ def create_path(cat_name, class_type=None):
     if not class_type:
         cat_rel_path = "/data/keywords/" + cat_name + "/"
     else:
-        cat_rel_path = "/data/random_forest/"
+        cat_rel_path = "/data/sentiment/" + cat_name + "/"
     cat_abs_path = os.path.join(script_dir, cat_rel_path)
 
     return cat_abs_path
@@ -185,7 +185,7 @@ def create_category_files(cat_search, cat_abs_path, search_terms, class_type=Non
             doc_count = '{0:04d}'.format((result_count))
             if not class_type:
                 name = cat_name + str(doc_count) + '.txt'
-            else:
+            else: # TODO: check this
                 name = 'rf' + str(doc_count) + '.txt'
             file_path = '.' + os.path.join(cat_abs_path, name)
             print 'Creating new text file: %s' % name
@@ -203,7 +203,7 @@ def create_category_files(cat_search, cat_abs_path, search_terms, class_type=Non
                     f.close()
             else:
                 with codecs.open(file_path, 'w', 'utf-8-sig') as f:
-                    f.write(stars + '|' + review_id + '|' + biz_id + '|' + biz_name + '|' + review_date + '|' + review_text)
+                    f.write(str(stars) + '|' + review_id + '|' + biz_id + '|' + biz_name + '|' + review_date + '|' + review_text)
                     f.close()
             result_count += 1
 
@@ -235,8 +235,16 @@ if __name__ == "__main__":
         decision = raw_input("Y or N >> ")
         if decision.lower() == 'y':
             cat_abs_path = create_path(cat_name)
-            print "Creating .txt files ... "
-            create_category_files(cat_reviews, cat_abs_path, search_terms)
+
+            print "Would you like to include the yelp stars in the .txt file?"
+            decision = raw_input("Y or N >> ")
+            if decision.lower() == 'y':
+                print "Creating .txt files ... "
+                create_category_files(cat_reviews, cat_abs_path, search_terms, class_type='sentiment')
+            else:
+                print "Creating .txt files ... "
+                create_category_files(cat_reviews, cat_abs_path, search_terms)
+
             print "File creation completed."
             print
 

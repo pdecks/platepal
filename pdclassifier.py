@@ -31,6 +31,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.datasets import make_multilabel_classification
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import cross_val_score
 from sklearn.feature_selection import SelectKBest, chi2
@@ -1007,6 +1009,14 @@ if __name__ == "__main__":
         documents = loads_yelp_reviews(container_path)
         X, y = bunch_to_np(documents)
 
+        # ['allergy', 'gluten', 'kosher', 'paleo', 'unknown', 'vegan'] --> [0, 1, 2, 3, 4, 5]
+        binary_labels = [[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]]
+        y_transform = []
+        for i, label in enumerate(y):
+            y_transform.append(binary_labels[label])
+
+        y_transform = np.array(y_transform)
+
         rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
                                      stop_words='english',
                                      encoding='utf-8',
@@ -1017,19 +1027,24 @@ if __name__ == "__main__":
         X_tfidf = rf_vectorizer.fit_transform(X)
 
         # Initialize a random forest with 100 trees
-        forest = RandomForestClassifier(n_estimators = 100)
+        forest_clf = OneVsRestClassifier(RandomForestClassifier(n_estimators = 100))
 
         # fit the forest to the training set, using the tf-idf as features
         # and the category labels as the response variable
-        forest = forest.fit(X_tfidf, y)
+        forest_clf = forest_clf.fit(X_tfidf, y_transform)
 
         sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
         # import pdb; pdb.set_trace()
         # X_sample = np.array(sample_text)
         X_sample_tfidf = rf_vectorizer.transform([sample_text])
 
-        sample_predict = forest.predict(X_sample_tfidf)
+        sample_predict = forest_clf.predict(X_sample_tfidf)
         print "this is sample_predict", sample_predict
+
+        sample_text2 = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
+        X_sample_tfidf2 = rf_vectorizer.transform([sample_text2])
+        sample_predict2 = forest_clf.predict(X_sample_tfidf2)
+        print "this is sample_predict2", sample_predict2
 
         # >>> documents.target_names
         # ['allergy', 'gluten', 'kosher', 'paleo', 'unknown', 'vegan']
@@ -1053,6 +1068,20 @@ if __name__ == "__main__":
         # >>> sample_predict = forest.predict(X_sample_tfidf)
         # >>> sample_predict
         # array([5])
+        # CLEARLY, FROM BELOW, THE CLASSIFIER IS NOT WORKING AS MULTILABEL
+        # >>> sample_text = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
+        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
+        # >>> sample_predict = forest.predict(X_sample_tfidf)
+        # >>> sample_predict                                                      
+        # array([1])
+
+# THIS IS A WORKING EXAMPLE OF MULTILABEL
+# >>> sample_text = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
+# >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
+# >>> sample_predict = forest_clf.predict(X_sample_tfidf)
+# >>> sample_predict
+# array([[0, 1, 0, 0, 0, 1]])
+
 
 
 # forest = random_forest_classifier()

@@ -127,7 +127,7 @@ def load_files(container_path, description=None, categories=None,
 
     # TODO added by pd
     data = []
-    for i, filename in enumerate(documents): 
+    for i, filename in enumerate(documents):
         with open(filename, 'rb') as f:
             review_data = f.read()
             # split on pipes ...

@@ -19,6 +19,9 @@ from sqlalchemy import distinct
 from geopy.geocoders import Nominatim
 from geopy.distance import vincenty
 
+from pdclassifier import predict_sentiment
+from pdclassifier import PennTreebankPunkt
+
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
 
@@ -212,24 +215,28 @@ def seed_revcat(cat_search, category):
                 db.session.commit()
     return
 
-def update_revcat_sen_score():
+def update_revcat_sen_score(cat='gltn'):
     """Update RevCat table with sen_scores"""
-    from pdclassifier import predict_sentiment
-    from pdclassifier import PennTreebankPunkt
-    # revcat_id, review_id, biz_id, cat_code
-    # SELECT Reviews.text, Revcats.revcat_id FROM Revcats
-    # JOIN Reviews ON Revcats.review_id = Reviews.review_id LIMIT 1;
+    # select all revcat entries where cat_code == category and return the review text
     results = db.session.query(ReviewCategory.revcat_id, PlatePalReview.text).join(PlatePalReview)
-    results_by_cat = results.filter(ReviewCategory.cat_code==cat).limit(1).all()
+    results_by_cat = results.filter(ReviewCategory.cat_code==cat).all()
+    # for the list of revcats / review text, predict_sentiment
     for result in results_by_cat:
         revcat_id = result[0]
         text = result[1]
         sentiment_score = predict_sentiment([text])
-    import pdb; pdb.set_trace()
-    # select all revcat entries where cat_code == category and return the review text
+        # store prediction_list[0][0][2] (decision_function score) as sen_score
+        sen_score = sentiment_score[0][2]
 
-    # for the list of revcats / review text, predict_sentiment
-    # store prediction_list[0][0][2] (decision_function score) as sen_score
+        # update entry in db --> get entire entry from revcat by revcat_id
+        revcat = db.session.query(ReviewCategory).filter(ReviewCategory.revcat_id==revcat_id).one()
+        revcat.sen_score = sen_score
+        # print "this is revcat.revcat_id", revcat.revcat_id
+        # print "this is revcat.sen_score", revcat.sen_score
+        db.session.add(revcat)
+
+    db.session.commit()
+    print "... database updated!"
 
     return
 

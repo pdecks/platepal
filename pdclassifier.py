@@ -1150,9 +1150,6 @@ if __name__ == "__main__":
         # PERSIST THE VECTORIZER
         to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])
 
-
-
-    
     ## USE SENTIMENT ANALYSIS PROTOTYPE
     print
     to_test = raw_input("Perform sentiment analysis? Y or N >>")

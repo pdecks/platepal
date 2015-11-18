@@ -30,6 +30,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.datasets import make_multilabel_classification
@@ -58,6 +59,7 @@ pickle_path_rfv = 'classifiers/random_forest/vectorizer/randomforest.pkl'
 
 pickle_path_SA_v = './classifiers/SentimentComponents/gltn_vectorizer/vectorizer.pkl'
 pickle_path_SA_gltn = './classifiers/SentimentComponents/gltn_classifier/gltn_classifier.pkl'
+pickle_path_SANB_gltn = './classifiers/SentimentComponents/gltn_naivebayes/gltn_naivebayes.pkl'
 
 #### LOAD DATA ###############################################################
 
@@ -718,20 +720,29 @@ def train_sentiment_classifier():
 
     """fit-transform the vectorized data on classifier"""
     ## CLASSIFIER ##
-    # Linear SVC, recommended by sklearn machine learning map
+    # MultinomialNB, because ant to use predict_probab
     # clf = Classifier().fit(features_matrix, targets_vector)
-    SA_clf = LinearSVC().fit(X_tfidf, y)
+    # SA_clf = LinearSVC().fit(X_tfidf, y)
+    SA_clf = MultinomialNB().fit(X_tfidf, y)
 
     # TEST the classifier
     # import pdb; pdb.set_trace()
     new_doc = ['I love gluten-free foods. This restaurant is the best.']
 
     new_doc_tfidf = vectorizer.transform(new_doc)
-
+    new_doc_predict = SA_clf.predict(new_doc_tfidf).tolist()
+    predict = new_doc_predict[0]
+    new_doc_proba = SA_clf.predict_proba(new_doc_tfidf).tolist()
+    proba = new_doc_proba[0][predict]
+    if predict == 1:
+        print "the text was classified for 'gltn' as 'good' (1) with probability %f" % proba
+    else:
+        print "the text was classified for 'gltn' as 'bad' (0) with probability %f" % proba
 
     # PERSIST THE MODEL / COMPONENTS
     items_to_pickle = [SA_clf]
-    pickling_paths = [pickle_path_SA_gltn]
+    pickling_paths = [pickle_path_SANB_gltn]
+    # pickling_paths = [pickle_path_SA_gltn]
     to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
     return
@@ -769,21 +780,24 @@ def predict_sentiment(text, categories=None, revive=True):
         for category in categories:
             # revive correct classifier
             if category  == 'gltn':
-                SA_clf = revives_component(pickle_path_SA_gltn)
+                SA_clf = revives_component(pickle_path_SANB_gltn)
             elif category  == 'vgan':
-                SA_clf = revives_component(pickle_path_SA_vgan)
+                SA_clf = revives_component(pickle_path_SANB_vgan)
             elif category  == 'kshr':
-                SA_clf = revives_component(pickle_path_SA_kshr)
+                SA_clf = revives_component(pickle_path_SANB_kshr)
             elif category  == 'algy':
-                SA_clf = revives_component(pickle_path_SA_algy)
+                SA_clf = revives_component(pickle_path_SANB_algy)
             elif category  == 'pleo':
-                SA_clf = revives_component(pickle_path_SA_pleo)
+                SA_clf = revives_component(pickle_path_SANB_pleo)
             else:
                 pass
             prediction = SA_clf.predict(text_tfidf).tolist()
-            pred_score = SA_clf.decision_function(text_tfidf).tolist()
+            pred_score = SA_clf.predict_proba(text_tfidf).tolist()
+            # pred_score = SA_clf.decision_function(text_tfidf).tolist()
             prediction = int(prediction[0])
-            pred_score = float(pred_score[0])
+            # always take the 1st item (not 0th) because we want
+            # to score probability with respect to 'good'
+            pred_score = float(pred_score[0][1])
             # print "this is prediction %s and its type %r" % (prediction, type(prediction))
             prediction_list.append((category, prediction, pred_score))
     return prediction_list
@@ -1087,18 +1101,26 @@ def categorize_text(text, revive=True):
     For a text, classify it with multilabel classifier (random forest)
     return an array of label categories ('gltn', etc.)
 
-    >>> documents = loads_pdecks_reviews()
-    >>> X = np.array(documents.data)
-    >>> predictions = [predict_sentiment([doc]) for doc in X]
-    >>> predictions[0:2]
-    [[('gltn', 1, 0.5657259340602369)], [('gltn', 1, 0.6276715390190348)]]
-    >>> X_list = X.tolist()
-    >>> pairs = zip(X_list, predictions)
-    (u"Even though people rave about the GF baked goods here, I am not such a fan because they use lots of soy, which I can't eat, either. I have enjoyed their coconut macaroons, but usually I just keep walking to Le Panier to get some French macarons instead.", [('gltn', 1, 0.5657259340602369)])
+    >>> text = "This gluten-free restaurant also has great vegan and paleo options."
+    >>> predictions = categorize_text(text)
+
+    -- Text prediction --
+    [[0 0 0 0 0 0]]
+
+    >>> text = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
+    >>> predictions = categorize_text(text)
+
+    -- Text prediction --
+    [[0 1 0 0 0 0]]
+    Predicted categories:
+    gltn
+
 
     This shows that even though the restaurant was categorized as 'good' (1),
     the probability that it is good is only 0.56, which is almost neutral.
     """
+    labels = ['algy', 'gltn', 'kshr', 'pleo', 'unkn', 'vgan']
+
     if not isinstance(text, (np.ndarray, np.generic) ):
         if isinstance(text, list):
             text = np.array(text)
@@ -1108,29 +1130,25 @@ def categorize_text(text, revive=True):
     # TODO: keep pickle_paths in list
     prediction_list = []
     if revive == True:
-        vectorizer = revives_component(pickle_path_SA_v)
+        # revive vectorizer
+        vectorizer = revives_component(pickle_path_rfv)
         text_tfidf = vectorizer.transform(text)
+        # revive classifier
+        forest_clf = revives_component(pickle_path_rfc)
+        text_predict = forest_clf.predict(text_tfidf)
+        print
+        print "-- Text prediction --"
+        print text_predict
+        print "Predicted categories: "
+        for predict_list in text_predict:
+            for i, label in enumerate(predict_list):
+                if label == 1:
+                    print labels[i]
+                    prediction_list.append(labels[i])
+    # if the text does not fit in any category, classify it as unknown
+    if not prediction_list:
+        prediction_list = ['unkn']
 
-        for category in categories:
-            # revive correct classifier
-            if category  == 'gltn':
-                SA_clf = revives_component(pickle_path_SA_gltn)
-            elif category  == 'vgan':
-                SA_clf = revives_component(pickle_path_SA_vgan)
-            elif category  == 'kshr':
-                SA_clf = revives_component(pickle_path_SA_kshr)
-            elif category  == 'algy':
-                SA_clf = revives_component(pickle_path_SA_algy)
-            elif category  == 'pleo':
-                SA_clf = revives_component(pickle_path_SA_pleo)
-            else:
-                pass
-            prediction = SA_clf.predict(text_tfidf).tolist()
-            pred_score = SA_clf.decision_function(text_tfidf).tolist()
-            prediction = int(prediction[0])
-            pred_score = float(pred_score[0])
-            # print "this is prediction %s and its type %r" % (prediction, type(prediction))
-            prediction_list.append((category, prediction, pred_score))
     return prediction_list
 
 
@@ -1207,7 +1225,14 @@ if __name__ == "__main__":
     print
     to_test = raw_input("Perform sentiment analysis? Y or N >>")
     if to_test.lower() == 'y':
-        target = predict_sentiment(category='gltn')
+        text = raw_input("Enter a sentence to parse >> ")
+        target = predict_sentiment(text, categories=['gltn'])
+        print "Target category: %s" % target[0][0]
+        if target[0][1] == 1:
+            print "Prediction: good"
+        else:
+            print "Prediction: bad"
+        print "Probability of good:" % target[0][2]
 
 
     ## SUPERCEDED CLASSIFIERS ##
@@ -1223,4 +1248,3 @@ if __name__ == "__main__":
         to_test = raw_input("Check the pipeline classifier on the toy data set? Y or N >>")
         if to_test.lower() == 'y':
             check_toy_dataset()
-

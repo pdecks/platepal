@@ -20,8 +20,10 @@ from sqlalchemy import distinct
 from geopy.geocoders import Nominatim
 from geopy.distance import vincenty
 
+from pdclassifier import categorize_text
 from pdclassifier import predict_sentiment
 from pdclassifier import PennTreebankPunkt
+
 
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
@@ -247,22 +249,26 @@ def seed_sentences():
     For reviews in RevCats, split reviews into sentences and store
     sentences in Sentences table.
     """
-    # instantiate preprocessor imported from pdclassifier.py
-    preprocessor = PennTreebankPunkt(use_flag="sentences")
-    # query db for reviews in revcats
-    results = db.session.query(PlatePalReview.review_id, PlatePalReview.text).join(ReviewCategory).all()
+    decision = raw_input("Are you sure you want to seed SENTENCES table? Y or N")
+    if decision.lower() == 'y':
+        # instantiate preprocessor imported from pdclassifier.py
+        preprocessor = PennTreebankPunkt(use_flag="sentences")
+        # query db for reviews in revcats
+        results = db.session.query(PlatePalReview.review_id, PlatePalReview.text).join(ReviewCategory).all()
 
-    # for each review...
-    for review in results:
-        # split reviews into sentences
-        sentence_list = preprocessor(review.text)
-            # add sentence to Sentences table
-        for sentence in sentence_list:
-            sent = Sentence(review_id=review.review_id,
-                            sent_text=sentence
-                            )
-            db.session.add(sent)
-        db.session.commit()
+        # for each review...
+        for review in results:
+            # split reviews into sentences
+            sentence_list = preprocessor(review.text)
+                # add sentence to Sentences table
+            for sentence in sentence_list:
+                sent = Sentence(review_id=review.review_id,
+                                sent_text=sentence
+                                )
+                db.session.add(sent)
+            db.session.commit()
+    else:
+        print "Phew! That was close."
     return
 
 
@@ -274,9 +280,28 @@ def seed_sentcats():
     # select all sentences from Sentences table
     results = db.session.query(Sentence).all()
     # for each sentence, categorize with classifier
-
-
-    pass
+    for sentence in results:
+        sent_id = sentence.sent_id
+        text = sentence.sent_text
+        predictions = categorize_text(text)
+        for cat in predictions:
+            # for 'gltn', perform sentiment analysis
+            if cat == 'gltn':
+                # note: predict_sentiment components revived in function
+                sentiment_score = predict_sentiment([text])
+                # store prediction_list[0][0][2] (decision_function score) as sen_score
+                sen_score = sentiment_score[0][2]
+                sentcat = SentenceCategory(sent_id=sent_id,
+                                           cat_code='gltn',
+                                           sen_score=sen_score)
+            else:
+                # TODO: will have to perform sentiment analysis and update later
+                sentcat = SentenceCategory(sent_id=sent_id,
+                                           cat_code=cat
+                                           )
+            db.session.add(sentcat)
+        db.session.commit()
+    return
 
 
 def update_sentcat_sen_score():

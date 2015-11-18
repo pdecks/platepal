@@ -456,8 +456,8 @@ class PennTreebankPunkt(object):
         # 4. rejoin words into single string
         preprocessed_doc = " ".join(word_list)
 
-        if self.use_flag == 'independent':
-            return (sentence_list, original_word_list, preprocessed_doc)
+        if self.use_flag == 'sentences':
+            return sentence_list
         else:
             return preprocessed_doc
 

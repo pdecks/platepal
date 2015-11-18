@@ -7,6 +7,7 @@ from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
+from model import Sentence, SentenceCategory
 from model import City, CityDistance
 from model import connect_to_db, db
 
@@ -240,6 +241,43 @@ def update_revcat_sen_score(cat='gltn'):
 
     return
 
+def seed_sentences():
+    """
+    For reviews in RevCats, split reviews into sentences and store
+    sentences in Sentences table.
+    """
+    # instantiate preprocessor imported from pdclassifier.py
+    preprocessor = PennTreebankPunkt(use_flag="sentences")
+    # query db for reviews in revcats
+    results = db.session.query(PlatePalReview.review_id, PlatePalReview.text).join(ReviewCategory).all()
+
+    # for each review...
+    for review in results:
+        # split reviews into sentences
+        sentence_list = preprocessor(review.text)
+            # add sentence to Sentences table
+        for sentence in sentence_list:
+            sent = Sentence(review_id=review.review_id,
+                            sent_text=sentence
+                            )
+            db.session.add(sent)
+        db.session.commit()
+    return
+
+
+def seed_sentcats():
+    """
+    For sentences in Sentences, categorize using multilabel classifier
+    Add results to SentCats -- Initial seeding version
+    """
+    
+    pass
+
+
+def update_sentcat_sen_score():
+    pass
+
+
 # MVP 3a. build class/method for avg rating per cat
 # this should only be applied to the businesses that are in revcats, as the other
 # businesses are classified as "unknown" and therefore don't have a category
@@ -391,7 +429,7 @@ if __name__ == "__main__":
     # if decision.lower() == 'y':
     #     seed_cities()
 
-    print "Would you like to seed NearbyCities?"
-    decision = raw_input("Y or N >> ")
-    if decision.lower() == 'y':
-        seed_city_distance()
+    # print "Would you like to seed NearbyCities?"
+    # decision = raw_input("Y or N >> ")
+    # if decision.lower() == 'y':
+    #     seed_city_distance()

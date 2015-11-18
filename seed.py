@@ -278,7 +278,7 @@ def seed_sentcats():
     Add results to SentCats -- Initial seeding version
     """
     # select all sentences from Sentences table
-    results = db.session.query(Sentence).all()
+    results = db.session.query(Sentence).offset(1710).all()
     # for each sentence, categorize with classifier
     for sentence in results:
         sent_id = sentence.sent_id
@@ -291,14 +291,24 @@ def seed_sentcats():
                 sentiment_score = predict_sentiment([text])
                 # store prediction_list[0][0][2] (decision_function score) as sen_score
                 sen_score = sentiment_score[0][2]
-                sentcat = SentenceCategory(sent_id=sent_id,
-                                           cat_code='gltn',
-                                           sen_score=sen_score)
+                # query db to check for entry
+                sentcat = SentenceCategory.query.filter(SentenceCategory.sent_id==sent_id).first()
+                if not sentcat:
+                    sentcat = SentenceCategory(sent_id=sent_id,
+                                               cat_code='gltn',
+                                               sen_score=sen_score)
+                else:
+                    sentcat.sen_score=sen_score
             else:
+                # query db to check for entry
+                sentcat = SentenceCategory.query.filter(SentenceCategory.sent_id==sent_id).first()
+                if not sentcat:
                 # TODO: will have to perform sentiment analysis and update later
-                sentcat = SentenceCategory(sent_id=sent_id,
-                                           cat_code=cat
-                                           )
+                    sentcat = SentenceCategory(sent_id=sent_id,
+                                               cat_code=cat
+                                               )
+                else:
+                    pass
             db.session.add(sentcat)
         db.session.commit()
     return

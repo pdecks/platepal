@@ -221,10 +221,11 @@ def update_revcat_sen_score(cat='gltn'):
     # select all revcat entries where cat_code == category and return the review text
     results = db.session.query(ReviewCategory.revcat_id, PlatePalReview.text).join(PlatePalReview)
     results_by_cat = results.filter(ReviewCategory.cat_code==cat).all()
-    # for the list of revcats / review text, predict_sentiment
+    # for the list of revcats / review text
     for result in results_by_cat:
         revcat_id = result[0]
         text = result[1]
+        # note: predict_sentiment components revived in function
         sentiment_score = predict_sentiment([text])
         # store prediction_list[0][0][2] (decision_function score) as sen_score
         sen_score = sentiment_score[0][2]
@@ -270,7 +271,11 @@ def seed_sentcats():
     For sentences in Sentences, categorize using multilabel classifier
     Add results to SentCats -- Initial seeding version
     """
-    
+    # select all sentences from Sentences table
+    results = db.session.query(Sentence).all()
+    # for each sentence, categorize with classifier
+
+
     pass
 
 

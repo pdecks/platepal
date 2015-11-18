@@ -54,6 +54,7 @@ pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl
 pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
 pickle_path_rfc = 'classifiers/random_forest/classifier/randomforest.pkl'
+pickle_path_rfv = 'classifiers/random_forest/vectorizer/randomforest.pkl'
 
 pickle_path_SA_v = './classifiers/SentimentComponents/gltn_vectorizer/vectorizer.pkl'
 pickle_path_SA_gltn = './classifiers/SentimentComponents/gltn_classifier/gltn_classifier.pkl'
@@ -1074,11 +1075,63 @@ def train_random_forest_classifier():
 
     # PERSIST THE MODEL / COMPONENTS
     # TODO: do I need to pickle the vectorizer used here??
-    items_to_pickle = [forest_clf]
-    pickling_paths = [pickle_path_rfc]
+    items_to_pickle = [rf_vectorizer, forest_clf]
+    pickling_paths = [pickle_path_rfv, pickle_path_rfc]
     to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
     return forest_clf
+
+
+def categorize_text(text, revive=True):
+    """
+    For a text, classify it with multilabel classifier (random forest)
+    return an array of label categories ('gltn', etc.)
+
+    >>> documents = loads_pdecks_reviews()
+    >>> X = np.array(documents.data)
+    >>> predictions = [predict_sentiment([doc]) for doc in X]
+    >>> predictions[0:2]
+    [[('gltn', 1, 0.5657259340602369)], [('gltn', 1, 0.6276715390190348)]]
+    >>> X_list = X.tolist()
+    >>> pairs = zip(X_list, predictions)
+    (u"Even though people rave about the GF baked goods here, I am not such a fan because they use lots of soy, which I can't eat, either. I have enjoyed their coconut macaroons, but usually I just keep walking to Le Panier to get some French macarons instead.", [('gltn', 1, 0.5657259340602369)])
+
+    This shows that even though the restaurant was categorized as 'good' (1),
+    the probability that it is good is only 0.56, which is almost neutral.
+    """
+    if not isinstance(text, (np.ndarray, np.generic) ):
+        if isinstance(text, list):
+            text = np.array(text)
+        else:
+            text = np.array([text])
+
+    # TODO: keep pickle_paths in list
+    prediction_list = []
+    if revive == True:
+        vectorizer = revives_component(pickle_path_SA_v)
+        text_tfidf = vectorizer.transform(text)
+
+        for category in categories:
+            # revive correct classifier
+            if category  == 'gltn':
+                SA_clf = revives_component(pickle_path_SA_gltn)
+            elif category  == 'vgan':
+                SA_clf = revives_component(pickle_path_SA_vgan)
+            elif category  == 'kshr':
+                SA_clf = revives_component(pickle_path_SA_kshr)
+            elif category  == 'algy':
+                SA_clf = revives_component(pickle_path_SA_algy)
+            elif category  == 'pleo':
+                SA_clf = revives_component(pickle_path_SA_pleo)
+            else:
+                pass
+            prediction = SA_clf.predict(text_tfidf).tolist()
+            pred_score = SA_clf.decision_function(text_tfidf).tolist()
+            prediction = int(prediction[0])
+            pred_score = float(pred_score[0])
+            # print "this is prediction %s and its type %r" % (prediction, type(prediction))
+            prediction_list.append((category, prediction, pred_score))
+    return prediction_list
 
 
 def random_forest_training_set():

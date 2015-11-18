@@ -212,6 +212,26 @@ def seed_revcat(cat_search, category):
                 db.session.commit()
     return
 
+def update_revcat_sen_score():
+    """Update RevCat table with sen_scores"""
+    from pdclassifier import predict_sentiment
+    from pdclassifier import PennTreebankPunkt
+    # revcat_id, review_id, biz_id, cat_code
+    # SELECT Reviews.text, Revcats.revcat_id FROM Revcats
+    # JOIN Reviews ON Revcats.review_id = Reviews.review_id LIMIT 1;
+    results = db.session.query(ReviewCategory.revcat_id, PlatePalReview.text).join(PlatePalReview)
+    results_by_cat = results.filter(ReviewCategory.cat_code==cat).limit(1).all()
+    for result in results_by_cat:
+        revcat_id = result[0]
+        text = result[1]
+        sentiment_score = predict_sentiment([text])
+    import pdb; pdb.set_trace()
+    # select all revcat entries where cat_code == category and return the review text
+
+    # for the list of revcats / review text, predict_sentiment
+    # store prediction_list[0][0][2] (decision_function score) as sen_score
+
+    return
 
 # MVP 3a. build class/method for avg rating per cat
 # this should only be applied to the businesses that are in revcats, as the other

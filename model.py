@@ -234,6 +234,9 @@ class ReviewCategory(db.Model):
     biz = db.relationship('PlatePalBiz',
                           backref=db.backref('revcat', order_by=cat_code))
 
+    review = db.relationship('PlatePalReview',
+                             backref=db.backref('revcat', order_by=cat_code))
+
     def __repr__(self):
         return "<ReviewCategory revcat_id=%s>" % (self.revcat_id)
 

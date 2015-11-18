@@ -55,8 +55,8 @@ pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
 pickle_path_rfc = 'classifiers/random_forest/classifier/randomforest.pkl'
 
-pickle_path_SA_v = 'classifiers/SentimentComponents/gltn_vectorizer/vectorizer.pkl'
-pickle_path_SA_gltn = 'classifiers/SentimentComponents/gltn_classifier/gltn_classifier.pkl'
+pickle_path_SA_v = './classifiers/SentimentComponents/gltn_vectorizer/vectorizer.pkl'
+pickle_path_SA_gltn = './classifiers/SentimentComponents/gltn_classifier/gltn_classifier.pkl'
 
 #### LOAD DATA ###############################################################
 
@@ -741,11 +741,16 @@ def predict_sentiment(text, categories=None, revive=True):
     an array of predictions.
 
     >>> documents = loads_pdecks_reviews()
-    >>> X = documents.data
-    >>> X = np.array(X)
+    >>> X = np.array(documents.data)
     >>> predictions = [predict_sentiment([doc]) for doc in X]
-    >>> predictions[0:5]
-    [[('gltn', 1)], [('gltn', 1)], [('gltn', 1)], [('gltn', 1)], [('gltn', 1)]]
+    >>> predictions[0:2]
+    [[('gltn', 1, 0.5657259340602369)], [('gltn', 1, 0.6276715390190348)]]
+    >>> X_list = X.tolist()
+    >>> pairs = zip(X_list, predictions)
+    (u"Even though people rave about the GF baked goods here, I am not such a fan because they use lots of soy, which I can't eat, either. I have enjoyed their coconut macaroons, but usually I just keep walking to Le Panier to get some French macarons instead.", [('gltn', 1, 0.5657259340602369)])
+
+    This shows that even though the restaurant was categorized as 'good' (1),
+    the probability that it is good is only 0.56, which is almost neutral.
     """
     if not isinstance(text, (np.ndarray, np.generic) ):
         if isinstance(text, list):
@@ -775,9 +780,11 @@ def predict_sentiment(text, categories=None, revive=True):
             else:
                 pass
             prediction = SA_clf.predict(text_tfidf).tolist()
+            pred_score = SA_clf.decision_function(text_tfidf).tolist()
             prediction = int(prediction[0])
+            pred_score = float(pred_score[0])
             # print "this is prediction %s and its type %r" % (prediction, type(prediction))
-            prediction_list.append((category, prediction))
+            prediction_list.append((category, prediction, pred_score))
     return prediction_list
 
 

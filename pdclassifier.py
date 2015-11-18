@@ -53,7 +53,11 @@ pickle_path_v = 'classifiers/LSVCcomponents/vectorizer/linearSVCvectorizer.pkl'
 pickle_path_t = 'classifiers/LSVCcomponents/transformer/linearSVCtransformer.pkl'
 pickle_path_c = 'classifiers/LSVCcomponents/classifier/linearSVCclassifier.pkl'
 
-pickle_path_SA_v = 'classifiers/SentimentComponents/vectorizer/vectorizer.pkl'
+pickle_path_rfc = 'classifiers/random_forest/classifier/randomforest.pkl'
+
+pickle_path_SA_v = 'classifiers/SentimentComponents/gltn_vectorizer/vectorizer.pkl'
+pickle_path_SA_gltn = 'classifiers/SentimentComponents/gltn_classifier/gltn_classifier.pkl'
+
 #### LOAD DATA ###############################################################
 
 # directory containing toy data set: reviews by pdecks as .txt files
@@ -62,7 +66,6 @@ pickle_path_SA_v = 'classifiers/SentimentComponents/vectorizer/vectorizer.pkl'
 
 # toy data set: 45 reviews by author
 container_path = 'pdecks-reviews/'
-# categories = ['bad', 'good', 'limited', 'shady', 'excellent']
 
 # training data set from yelp academic database:
 # 969 reviews containing the word 'gluten'
@@ -108,7 +111,7 @@ def bunch_to_np(documents, class_type=None):
     this score off the text and store as the target (y), and correct data
     to only contain the review text, still returning (X, y)
     """
-    print class_type
+
     if class_type == 'sentiment':
         X = []
         y = []
@@ -300,6 +303,26 @@ def tunes_parameters(X, y, n_fold=2):
 
 
 ## PERSIST A COMPONENT OF THE MODEL ##
+def to_persist(items_to_pickle=None, pickling_paths=None):
+    """
+    Takes a list of components to pickle and a list of paths for each item
+    to be pickled.
+    """
+    # todo: check pipeline case...
+    if items_to_pickle and pickling_paths and len(items_to_pickle) == len(pickling_paths):
+        for item, path in zip(items_to_pickle, pickling_paths):
+
+            decision = raw_input("Would you like to persist %s?\nPath: %s\n(Y) or (N) >>"  % (str(item), str(path)))
+            if decision.lower() == 'y':
+                persist_component(item, path)
+            else:
+                print '%s not pickled.' % (str(item))
+                print
+
+    print "Persistance complete."
+    return
+
+
 def persist_component(component, pickle_path):
     """Use joblib to pickle the individual classifier components"""
     joblib.dump(component, pickle_path)
@@ -548,7 +571,7 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
     return top_ranked_feature_names
 
 
-def train_sentiment_analysis(dataset='pdecks'):
+def train_sentiment_vectorizer(dataset='pdecks'):
     """
     Run selected dataset through sentiment analysis vectorizer.
 
@@ -665,14 +688,99 @@ def train_sentiment_analysis(dataset='pdecks'):
 
     return (vectorizer, scores_by_nfeats)
 
-# def predict_sentiment(category='gltn', ):
-#     # decision = raw_input("Revive the trained vectorizer? Y or N >> ")
-#         # if decision.lower() == 'y':
-#     vectorizer = revives_component(pickle_path_SA_v)
-    
 
-#     return prediction
-    
+def train_sentiment_classifier():
+    documents = loads_yelp_reviews(container_path="./data/sentiment", categories=['gluten'])
+    X, y = bunch_to_np(documents, class_type='sentiment')
+    X = X.tolist()
+
+    # correct the data field and store additional data on documents
+    true_index = 0
+    while true_index < len(y):
+        print "True Index: %d, y = %d, len(y): %s, len(X): %s" % (true_index, y[true_index], len(y), len(X))
+        if y[true_index] == 5:
+            y[true_index] = 1
+            true_index += 1
+        elif y[true_index] == 1:
+            y[true_index] = 0
+            true_index += 1
+        else:
+            y.pop(true_index)
+            X.pop(true_index)
+    X = np.array(X)
+    y = np.array(y)
+    vectorizer = revives_component(pickle_path_SA_v)
+    # for cat in categories:
+    # for cat in categories_pd:
+    #     # documents = loads_yelp_reviews(container_path, [cat])
+    X_tfidf = vectorizer.transform(X)
+
+    """fit-transform the vectorized data on classifier"""
+    ## CLASSIFIER ##
+    # Linear SVC, recommended by sklearn machine learning map
+    # clf = Classifier().fit(features_matrix, targets_vector)
+    SA_clf = LinearSVC().fit(X_tfidf, y)
+
+    # TEST the classifier
+    # import pdb; pdb.set_trace()
+    new_doc = ['I love gluten-free foods. This restaurant is the best.']
+
+    new_doc_tfidf = vectorizer.transform(new_doc)
+
+
+    # PERSIST THE MODEL / COMPONENTS
+    items_to_pickle = [SA_clf]
+    pickling_paths = [pickle_path_SA_gltn]
+    to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
+
+    return
+
+
+def predict_sentiment(text, categories=None, revive=True):
+    """For a text, perform 'sentiment analysis' and return
+    an array of predictions.
+
+    >>> documents = loads_pdecks_reviews()
+    >>> X = documents.data
+    >>> X = np.array(X)
+    >>> predictions = [predict_sentiment([doc]) for doc in X]
+    >>> predictions[0:5]
+    [[('gltn', 1)], [('gltn', 1)], [('gltn', 1)], [('gltn', 1)], [('gltn', 1)]]
+    """
+    if not isinstance(text, (np.ndarray, np.generic) ):
+        if isinstance(text, list):
+            text = np.array(text)
+        else:
+            text = np.array([text])
+    if categories is None:
+        categories = ['gltn']
+    # TODO: keep pickle_paths in list
+    prediction_list = []
+    if revive == True:
+        vectorizer = revives_component(pickle_path_SA_v)
+        text_tfidf = vectorizer.transform(text)
+
+        for category in categories:
+            # revive correct classifier
+            if category  == 'gltn':
+                SA_clf = revives_component(pickle_path_SA_gltn)
+            elif category  == 'vgan':
+                SA_clf = revives_component(pickle_path_SA_vgan)
+            elif category  == 'kshr':
+                SA_clf = revives_component(pickle_path_SA_kshr)
+            elif category  == 'algy':
+                SA_clf = revives_component(pickle_path_SA_algy)
+            elif category  == 'pleo':
+                SA_clf = revives_component(pickle_path_SA_pleo)
+            else:
+                pass
+            prediction = SA_clf.predict(text_tfidf).tolist()
+            prediction = int(prediction[0])
+            # print "this is prediction %s and its type %r" % (prediction, type(prediction))
+            prediction_list.append((category, prediction))
+    return prediction_list
+
+
 def plot_sentiment_model_scores(scores_by_nfeats):
     """
     take the dictionary of scores returned by score_kfolds and generate plots
@@ -851,7 +959,7 @@ def check_toy_dataset():
 
 
 def train_classifier():
-    """
+    """SUPERCEDED by multilabel classifier
     Trains the classifier on the labeled yelp data.
 
     Tests the classifier pipeline on a "new doc".
@@ -874,21 +982,11 @@ def train_classifier():
 
     # TEST the classifier
     new_doc = ['I love gluten-free foods. This restaurant is the best.']
-    # new_doc_category_id = categorizes_review(new_doc,
-    #                                          count_vect,
-    #                                          tfidf_transformer,
-    #                                          clf)
-
-    # new_doc_category = get_category_name(new_doc_category_id)
     new_doc_category_id_pipeline = pipeline_clf.predict(new_doc)
     new_doc_category_pipeline = get_category_name(new_doc_category_id_pipeline)
 
     print
     print "-- Test document --"
-    print
-    # print "Using Vectorizer, Transformer, and Classifier:"
-    # for doc, category in zip(new_doc, predicted):
-    # print "%r => %s" % (new_doc[0], new_doc_category)
     print
     print "Using Pipeline:"
     print "%r => %s" % (new_doc[0], new_doc_category_pipeline)
@@ -901,99 +999,79 @@ def train_classifier():
     return
 
 
-# def random_forest_classifier():
-#     """loads the documents from random_forest directory for multilabel classification"""
-#     # LOAD THE TEST DATA
-#     container_path = './data/random_forest/'
-#     # loading incorrectly...
-#     documents = loads_yelp_reviews(container_path)
-#     X, y = bunch_to_np(documents)
-#     # TODO: update .... X not loading correctly.
-#     for i in range(X.shape[0]):
-#         split_x = X[i].split('|')
-#         print "this is split_x", split_x
-#         X[i] = '\ufeff' + split_x[4]
+def train_random_forest_classifier():
+    """loads the documents from random_forest directory for multilabel classification"""
+    container_path = './data/random_forest/'
+    print "... Loading data from %s ..." % container_path
 
+    documents = loads_yelp_reviews(container_path)
+    X, y = bunch_to_np(documents)
 
-#     rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
-#                                  stop_words='english',
-#                                  encoding='utf-8',
-#                                  decode_error='strict',
-#                                  ngram_range=(1, 1),
-#                                  preprocessor=PennTreebankPunkt())
+    print "... Creating binary category labels ..."
+    labels = ['allergy', 'gluten', 'kosher', 'paleo', 'unknown', 'vegan'] # --> [0, 1, 2, 3, 4, 5]
+    binary_labels = [[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]]
+    y_transform = []
+    for i, label in enumerate(y):
+        y_transform.append(binary_labels[label])
 
-#     X_tfidf = rf_vectorizer.fit_transform(X)
+    y_transform = np.array(y_transform)
 
-#     # Initialize a random forest with 100 trees
-#     forest = RandomForestClassifier(n_estimators = 100)
+    print "... Vectorizing text ..."
+    rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
+                                 stop_words='english',
+                                 encoding='utf-8',
+                                 decode_error='strict',
+                                 ngram_range=(1, 1),
+                                 preprocessor=PennTreebankPunkt())
 
-#     # fit the forest to the training set, using the tf-idf as features
-#     # and the category labels as the response variable
-#     forest = forest.fit(X_tfidf, y)
+    X_tfidf = rf_vectorizer.fit_transform(X)
 
-#     # # test the forest on the toy data set
-#     # documents_pd = loads_pdecks_reviews()
-#     # X_pd, y_pd = bunch_to_np(documents_pd)
+    # Initialize a random forest with 100 trees
+    forest_clf = OneVsRestClassifier(RandomForestClassifier(n_estimators = 100))
 
-#     # X_pd_tfidf = vectorizer.transform(X_pd)
+    # fit the forest to the training set, using the tf-idf as features
+    # and the category labels as the response variable
+    print "... Training the Random Forest classifier ..."
+    forest_clf = forest_clf.fit(X_tfidf, y_transform)
 
-#     # # transform toy dataset labels to 0 = gluten, 1 = unknown
-#     # # for i in range(y_pd.shape[0]):
-#     # #     if y_pd[i] in [0, 3, 4, 5]:
-#     # #         y_pd[i] = 0
-#     # #     else:
-#     # #         y_pd[i] = 1
+    print "... Training complete!"
+    print
 
-#     # inaccurate = 0
-#     # predicted_pd = []
-#     # for i in range(0, X_pd_tfidf.shape[0]):
-#     #     predicted = forest.predict(X_pd_tfidf[i])
-#     #     # print "predicted: %d, actual: %r" % (predicted, y_trans_pd[i])
-#     #     if y_pd[i] != predicted:
-#     #         inaccurate += 1
-#     #     i += 1
-#     #     predicted_pd.append(predicted)
-#     # print "-- Accuracy check of toy dataset --"
-#     # print "PERCENT INACCURATE: ", (inaccurate/(len(y_pd)))*100.0000
-#     # print "inaccurate", inaccurate
+    sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
 
-#     # for i in range(0, len(y_pd)):
-#     #     print "Index i: %s" % i
-#     #     print "Predicted: %s" % predicted_pd[i][0]
-#     #     print "Actual: %s" % str(int(y_pd[i]))
-#     #     print '-'*20
+    X_sample_tfidf = rf_vectorizer.transform([sample_text])
 
-#     sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
-#     # import pdb; pdb.set_trace()
-#     # X_sample = np.array(sample_text)
-#     X_sample_tfidf = rf_vectorizer.transform([sample_text])
+    sample_predict = forest_clf.predict(X_sample_tfidf)
+    print
+    print "-- Sample text prediction --"
+    print sample_text
+    print "Predicted categories: "
+    for predict_list in sample_predict:
+        for i, label in enumerate(predict_list):
+            if label == 1:
+                print labels[i]
+    print
 
-#     sample_predict = forest.predict(X_sample_tfidf)
-#     print "this is sample_predict", sample_predict
+    sample_text2 = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
+    X_sample_tfidf2 = rf_vectorizer.transform([sample_text2])
+    sample_predict2 = forest_clf.predict(X_sample_tfidf2)
+    print
+    print "-- Sample text prediction --"
+    print sample_text2
+    print "Predicted categories: "
+    for predict_list in sample_predict2:
+        for i, label in enumerate(predict_list):
+            if label == 1:
+                print labels[i]
+    print
 
-#     return forest
+    # PERSIST THE MODEL / COMPONENTS
+    # TODO: do I need to pickle the vectorizer used here??
+    items_to_pickle = [forest_clf]
+    pickling_paths = [pickle_path_rfc]
+    to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
 
-# # forest = random_forest_classifier()
-
-
-def to_persist(items_to_pickle=None, pickling_paths=None):
-    """
-    Takes a list of components to pickle and a list of paths for each item
-    to be pickled.
-    """
-    # todo: check pipeline case...
-    if items_to_pickle and pickling_paths and len(items_to_pickle) == len(pickling_paths):
-        for item, path in zip(items_to_pickle, pickling_paths):
-
-            decision = raw_input("Would you like to persist %s?\nPath: %s\n(Y) or (N) >>"  % (str(item), str(path)))
-            if decision.lower() == 'y':
-                persist_component(item, path)
-            else:
-                print '%s not pickled.' % (str(item))
-                print
-
-    print "Persistance complete."
-    return
+    return forest_clf
 
 
 def random_forest_training_set():
@@ -1024,19 +1102,21 @@ def random_forest_training_set():
 
 
 if __name__ == "__main__":
-    ## TRAIN AND PERSIST CLASSIFIER ##
-    to_train = raw_input("Train the classifier? Y or N >> ")
-    if to_train.lower() == 'y':
-        train_classifier()
 
-    ## CHECK PERFORMANCE OF PICKLED CLASSIFIER ON TOY DATA SET ##
-    else:
-        to_test = raw_input("Check the pipeline classifier on the toy data set? Y or N >>")
-        if to_test.lower() == 'y':
-            check_toy_dataset()
+    ## TRAIN SENTIMENT ANALYSIS CLASSIFIER
+    to_test = raw_input("Train the gluten-free sentiment analysis classifier? Y or N >>")
+    if to_test.lower() == 'y':
+        train_sentiment_classifier()
+
+    ## RANDOM FOREST MULTILABEL PROBLEM
+    print
+    to_test = raw_input("Train the random forest multilabel classifier? Y or N >>")
+    if to_test.lower() == 'y':
+        forest_clf = train_random_forest_classifier()
 
     ## TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS
-    to_test = raw_input("Check the sentiment analysis classifier? Y or N >>")
+    print
+    to_test = raw_input("Train the gluten-free sentiment analysis vectorizer? Y or N >>")
     if to_test.lower() == 'y':
         # LOAD DATASET
         data_choice = raw_input("Enter a dataset to classify: [P]decks, [Y]elp, [S]tars >> ")
@@ -1046,11 +1126,11 @@ if __name__ == "__main__":
 
         # FEATURE EXTRACTION
         if data_choice.lower() == 'y':
-            vectorizer, all_avg_sentiment_scores = train_sentiment_analysis(dataset='yelp')
+            vectorizer, all_avg_sentiment_scores = train_sentiment_vectorizer(dataset='yelp')
         if data_choice.lower() == 's':
-            vectorizer, all_avg_sentiment_scores = train_sentiment_analysis(dataset='stars')
+            vectorizer, all_avg_sentiment_scores = train_sentiment_vectorizer(dataset='stars')
         else:
-            vectorizer, all_avg_sentiment_scores = train_sentiment_analysis()
+            vectorizer, all_avg_sentiment_scores = train_sentiment_vectorizer()
 
         # PLOT RESULTS
         user_choice = ''
@@ -1063,92 +1143,27 @@ if __name__ == "__main__":
         # PERSIST THE VECTORIZER
         to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])
 
+
+
+    
     ## USE SENTIMENT ANALYSIS PROTOTYPE
+    print
     to_test = raw_input("Perform sentiment analysis? Y or N >>")
     if to_test.lower() == 'y':
         target = predict_sentiment(category='gltn')
 
-    ## RANDOM FOREST MULTILABEL PROBLEM
-    to_test = raw_input("Check the random forest multilabel classifier? Y or N >>")
-    if to_test.lower() == 'y':
-        container_path = './data/random_forest/'
-        # loading incorrectly...
-        documents = loads_yelp_reviews(container_path)
-        X, y = bunch_to_np(documents)
 
-        # ['allergy', 'gluten', 'kosher', 'paleo', 'unknown', 'vegan'] --> [0, 1, 2, 3, 4, 5]
-        binary_labels = [[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]]
-        y_transform = []
-        for i, label in enumerate(y):
-            y_transform.append(binary_labels[label])
+    ## SUPERCEDED CLASSIFIERS ##
+    ## TRAIN AND PERSIST CLASSIFIER ## SUPERCEDED -- USE RANDOM FORESTS
+    print
+    to_train = raw_input("Train the LinearSVC classifier for categorization? Y or N >> ")
+    if to_train.lower() == 'y':
+        train_classifier()
 
-        y_transform = np.array(y_transform)
+    ## CHECK PERFORMANCE OF PICKLED CLASSIFIER ON TOY DATA SET ## SUPERCEDED
+    else:
+        print
+        to_test = raw_input("Check the pipeline classifier on the toy data set? Y or N >>")
+        if to_test.lower() == 'y':
+            check_toy_dataset()
 
-        rf_vectorizer = TfidfVectorizer(strip_accents='unicode',
-                                     stop_words='english',
-                                     encoding='utf-8',
-                                     decode_error='strict',
-                                     ngram_range=(1, 1),
-                                     preprocessor=PennTreebankPunkt())
-
-        X_tfidf = rf_vectorizer.fit_transform(X)
-
-        # Initialize a random forest with 100 trees
-        forest_clf = OneVsRestClassifier(RandomForestClassifier(n_estimators = 100))
-
-        # fit the forest to the training set, using the tf-idf as features
-        # and the category labels as the response variable
-        forest_clf = forest_clf.fit(X_tfidf, y_transform)
-
-        sample_text = "From start to finish, the meal was perfection. My gluten-loving significant other and I both ordered the tasting menu, and our server assured me with confidence that they could make substitutions for a few of the items. They brought out some amuse bouche -- even GF versions for me(!); they gave me delicious GF bread (!!); and they even had tasty GF pasta that was close to the real thing. I never felt like I was missing out or that I was a burden. It was a relaxed affair, and I am so grateful to the entire staff's commitment to excellent service for all diners."
-        # import pdb; pdb.set_trace()
-        # X_sample = np.array(sample_text)
-        X_sample_tfidf = rf_vectorizer.transform([sample_text])
-
-        sample_predict = forest_clf.predict(X_sample_tfidf)
-        print "this is sample_predict", sample_predict
-
-        sample_text2 = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
-        X_sample_tfidf2 = rf_vectorizer.transform([sample_text2])
-        sample_predict2 = forest_clf.predict(X_sample_tfidf2)
-        print "this is sample_predict2", sample_predict2
-
-        # >>> documents.target_names
-        # ['allergy', 'gluten', 'kosher', 'paleo', 'unknown', 'vegan']
-        # >>> sample_text = 'I love gluten-free foods!'
-        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
-        # >>> sample_predict = forest.predict(X_sample_tfidf)
-        # >>> sample_predict
-        # array([1])
-        # >>> sample_text = 'I love kosher foods!'
-        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
-        # >>> sample_predict = forest.predict(X_sample_tfidf)
-        # >>> sample_predict
-        # array([4])
-        # >>> sample_text = 'I love paleo foods!'
-        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
-        # >>> sample_predict = forest.predict(X_sample_tfidf)
-        # >>> sample_predict
-        # array([4])
-        # >>> sample_text = 'I love vegan foods!'
-        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
-        # >>> sample_predict = forest.predict(X_sample_tfidf)
-        # >>> sample_predict
-        # array([5])
-        # CLEARLY, FROM BELOW, THE CLASSIFIER IS NOT WORKING AS MULTILABEL
-        # >>> sample_text = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
-        # >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
-        # >>> sample_predict = forest.predict(X_sample_tfidf)
-        # >>> sample_predict                                                      
-        # array([1])
-
-# THIS IS A WORKING EXAMPLE OF MULTILABEL
-# >>> sample_text = 'I love vegan and gluten-free foods vegan vegan gluten GF vegan'
-# >>> X_sample_tfidf = rf_vectorizer.transform([sample_text])
-# >>> sample_predict = forest_clf.predict(X_sample_tfidf)
-# >>> sample_predict
-# array([[0, 1, 0, 0, 0, 1]])
-
-
-
-# forest = random_forest_classifier()

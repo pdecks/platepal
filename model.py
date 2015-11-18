@@ -240,6 +240,15 @@ class ReviewCategory(db.Model):
     def __repr__(self):
         return "<ReviewCategory revcat_id=%s>" % (self.revcat_id)
 
+    def compare_sen_scores(self):
+        """
+        for a review in a category (a revcat), compare the review-level
+        sentiment score (revcats.sen_score) to the average of the
+        sentence-level sentiment scores
+        (sentcat.sen_score for sent_id where sentences.review_id == revcats.review_id
+        """
+        pass
+
 
 class BizSentiment(db.Model):
     """Calculation table for aggregate sentiment for a business-category pair."""

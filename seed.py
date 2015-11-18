@@ -377,6 +377,63 @@ def calc_avg_rating_per_cat():
             db.session.commit()
     return
 
+# TODO: UPDATE TO TAKE SEN SCORES instead of stars
+def calc_agg_sen_per_cat():
+    """Calculate aggregate sentiment score for business by category"""
+
+    # 1. find the businesses having more than one revcat (multiple reviews for a business)
+    # SELECT biz_id, COUNT(cat_code) as num_revcats FROM revcats GROUP BY biz_id HAVING COUNT(cat_code) > 1 ORDER BY COUNT(cat_code) DESC;
+
+    # 2. find the businesses with more than one cat_code (multiple categories within multiple reviews)
+    # SELECT biz_id, COUNT(DISTINCT cat_code) as num_cats FROM revcats GROUP BY biz_id HAVING COUNT(cat_code) > 1 ORDER BY COUNT(DISTINCT cat_code) DESC;
+    # --> SELECT biz_id as num_cats FROM revcats GROUP BY biz_id HAVING COUNT(cat_code) > 1 ORDER BY COUNT(DISTINCT cat_code) DESC;
+    # multiple_cat_biz = db.session.query(ReviewCategory.biz_id).group_by(ReviewCategory.biz_id).having(func.count(ReviewCategory.cat_code)>1).order_by(func.count(distinct(ReviewCategory.cat_code))).all()
+    # 3. for each of these biz_ids, select the cat codes
+
+    # query ReviewCategory for unique biz_ids
+        # revcat_biz = db.session.query(distinct(ReviewCategory.biz_id)).all()
+        # revcat_biz = db.session.query(distinct(ReviewCategory.biz_id), ReviewCategory.cat_code).order_by(ReviewCategory.cat_code).all()
+
+    # revcats = db.session.query(ReviewCategory.review_id, ReviewCategory.biz_id, ReviewCategory.cat_code).order_by(ReviewCategory.biz_id).all()
+    # unique_biz = set([revcat[1] for revcat in revcats])
+    # #for each biz_id with more than one review
+    # for biz in unique_biz:
+    #     biz_id = biz
+
+    #     # find distinct categories for biz in revcat
+    #     cats = set([revcat[2] for revcat in revcats if revcat[1] == biz_id])
+    #     # bizcats = db.session.query(distinct(ReviewCategory.cat_code)).filter(ReviewCategory.biz_id==biz_id).all()
+
+    #     # for a category
+    #     for cat in cats:
+    #         cat_code = cat
+    #         # find all reviews in the current category
+    #         revs = [revcat[0] for revcat in revcats if (revcat[1] == biz_id and revcat[2] == cat)]
+    #         # revs = db.session.query(ReviewCategory.review_id).filter(ReviewCategory.biz_id==biz_id, ReviewCategory.cat_code==cat_code).all()
+
+    #         # take average of stars for all of those reviews
+    #         sum_stars_by_cat = 0
+    #         # for each review in category, get num of stars from reviews table
+    #         num_revs = len(revs)
+    #         for rev in revs:
+    #             review_id = rev
+    #             stars = db.session.query(PlatePalReview.yelp_stars).filter(PlatePalReview.review_id==review_id).first()
+    #             # update sum
+    #             sum_stars_by_cat += stars[0]
+    #             average_stars_by_cat = (sum_stars_by_cat / num_revs) / 1.0
+
+    #         # update attribute
+    #         bizsen_cat = BizSentiment(biz_id=biz_id,
+    #                               cat_code=cat_code,
+    #                               avg_cat_review=average_stars_by_cat,
+    #                               num_revs=num_revs)
+
+    #         # update db
+    #         db.session.add(bizsen_cat)
+    #         db.session.commit()
+    return
+
+
 def seed_cities():
     """Add all cities in Biz table to Cities table"""
     # should be 95 cities

@@ -59,7 +59,6 @@ function initMap(){
 //          ...
 //         }
 
-
 function setMarkers(map) {
   console.log("setMarkers called");
   // Adds markers to the map.
@@ -74,11 +73,17 @@ function setMarkers(map) {
   $.getJSON(page, function(top5json) {
       console.log('in $.get top5json');
       console.log(top5json);
+
+      var keys = Object.keys(top5json);
+      console.log("this is keys");
+      console.log(keys);
       
-      var markers = [];
       // iterate over each item in the dictionary
       for (var cat in top5json) {
         var catCode = cat;
+        console.log("This is catCode");
+        console.log(cat);
+
         markers[catCode] = [];
 
         var resList = $("#results-list-"+cat);
@@ -106,11 +111,13 @@ function setMarkers(map) {
           // create an event handler to listen for marker clicks
           // opens an infoWindow on the marker when clicked
 
-          (function (marker, biz, cat) {
+          (function (marker, biz, catCode) {
             google.maps.event.addListener(marker, "click", function (e){
               //wrap the content inside an html div to set height and width of InfoWindow
               var infoWindowHTML;
-              if (cat !== 'unkn'){
+              console.log("this is cat");
+              console.log(catCode);
+              if (catCode !== 'unkn'){
                 infoWindowHTML ='<div id="info-window-content">'+
                 '<div id="bodyContent">'+
                 '<div class="info-window left">'+
@@ -118,7 +125,7 @@ function setMarkers(map) {
                 '</div>'+
                 '<div class="info-window right>' +
                 '<h3 class="info-window"><a class="info-window" href="/biz/'+biz.biz_id+'">'+ biz.name + '</a></h3></div>'+
-                '<div>Average '+ catNames[cat] + ' Score:<br> ' + biz.avg_cat_review + '</br></div>'+
+                '<div>Average '+ catNames[catCode] + ' Score: ' + biz.avg_cat_review + '</br></div>'+
                 '</div></div>';
               }
               else{
@@ -129,7 +136,6 @@ function setMarkers(map) {
                 '</div>'+
                 '<div class="info-window right>' +
                 '<h3 class="info-window"><a class="info-window" href="/biz/'+biz.biz_id+'">'+ biz.name + '</a></h3></div>'+
-                '<div>Average '+ catNames[cat] + '</br></div>'+
                 '</div></div>';
               }
 
@@ -137,7 +143,7 @@ function setMarkers(map) {
               // infoWindow.setPosition()
               infoWindow.open(map, marker);
             });
-          }) (marker, biz); // TODO: understand this
+          }) (marker, biz, catCode); // TODO: understand this
 
           markers[catCode].push(marker);
           console.log(markers);
@@ -149,11 +155,13 @@ function setMarkers(map) {
           // else {
           //   avg_review = biz.avg_cat_review;
           // }
-          if (cat !== 'unkn'){
+          if (catCode !== 'unkn'){
+            console.log('adding link to list for ' + catCode + ' business: ' + biz.name);
             resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br>PlatePal Score: " + biz.avg_cat_review + "</br></li>");
           }
           else{
-           resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br></li>");
+            console.log('adding link to list for ' + catCode + ' business: ' + biz.name);
+            resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br></li>");
           }
           console.log('appended to resList');
         } // end inner for loop over businesses in list by category

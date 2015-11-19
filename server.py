@@ -113,7 +113,7 @@ def display_all_reviews_in_city(state, city):
         if cat_code != 'unkn':
             city_biz_cat = city_biz.filter(BizSentiment.cat_code==cat_code).all()
         else:
-            city_biz_cat = city_biz.all()
+            city_biz_cat = city_biz.group_by(PlatePalBiz.biz_id).all()
 
         cat_list = []
         for biz, bizsen in city_biz_cat:

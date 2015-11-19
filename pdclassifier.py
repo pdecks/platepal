@@ -435,13 +435,25 @@ class PennTreebankPunkt(object):
         if use_flag == vectorizer, return the entire document as a string
         else, if use_flag == 'independent', return the lists of sentences and
         the original words along with the preprocessed doc as a string.
+
+        >>> preprocessor = PennTreebankPunkt('word2vec')
+        >>> text = "This is one sentence. Here is a second sentence."
+        >>> sentence_list = preprocessor(text)
+        >>> sentence_list
+        ['This is one sentence .', 'Here is a second sentence .']
+
+        >>> text = "Here are some more sentences. I'd rather not go, but I can't stay home. He'd often go there. Let's do it. Won't you go with us?"
+        >>> sentence_list = preprocessor(text)
+        >>> sentence_list
+        ['Here are some more sentences .', 'I had rather not go , but I can not stay home .', 'He had often go there .', "Let 's do it .", 'Will not you go with us ?']
         """
         # 1. tokenize into sentences
-        sentence_list = self.pst(doc)
+        raw_sentence_list = self.pst(doc)
 
         # 2. tokenize into words
         word_list = []
-        for sentence in sentence_list:
+
+        for sentence in raw_sentence_list:
             word_list.extend(self.ptt(sentence))
         # word_list = [word_list.extend(self.ptt(sentence)) for sentence in sentence_list]
 
@@ -459,8 +471,20 @@ class PennTreebankPunkt(object):
         # 4. rejoin words into single string
         preprocessed_doc = " ".join(word_list)
 
-        if self.use_flag == 'sentences':
+        if self.use_flag == 'word2vec':
+
+            sentence_list = []
+            for sentence in raw_sentence_list:
+                # tokenize into words
+                words = self.ptt(sentence)
+                # cleanup contractions
+                for i, word in enumerate(words):
+                    words[i] = self.check_contraction(word)
+                # append list of words to list of sentences
+                sentence_list.append(words)             
             return sentence_list
+        elif self.use_flag == 'sentences':
+            return raw_sentence_list
         else:
             return preprocessed_doc
 
@@ -471,11 +495,15 @@ class PennTreebankPunkt(object):
                             "n't": 'not',
                             "'ll": 'will',
                             "ca": 'can',
+                            "Ca": 'Can',
+                            "Gon": 'Going',
                             "gon": 'going',
                             "na": 'to',
                             "'re": 'are',
                             "'ve": 'have',
-                            "'d": 'had'
+                            "'d": 'had',
+                            "wo": 'will',
+                            "Wo": 'Will'
                             }
 
         if contraction_dict.get(word):
@@ -894,7 +922,33 @@ def plot_sentiment_model_scores(scores_by_nfeats):
 
     return mean_scores_by_kfolds
 
+
+## UNSUPERVISED LEARNING ##
+# First, to train Word2Vec it is better not to remove stop words because
+# the algorithm relies on the broader context of the sentence in order
+# to produce high-quality word vectors.
+from gensim.models import Word2Vec
+
+def clustering_study():
+    """using distributed word vectors created by the Word2Vec algorithm,
+    a neural network implementation published by Google in 2013.
+
+    Word2vec learns quickly relative to other models.
+    Word2Vec does not need labels in order to create meaningful representations.
+    """
+    documents = loads_yelp_reviews(container_path="./data/sentiment", categories=['gluten'])
+    X, y = bunch_to_np(documents, class_type='sentiment')
+    X = X.tolist()
+
+    preprocessor = PennTreebankPunkt()
+
+
 # TODO: frequency distributions
+
+
+
+
+
 
 def represents_int(s):
     """Helper function for checking if input string represents an int"""

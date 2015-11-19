@@ -440,12 +440,12 @@ class PennTreebankPunkt(object):
         >>> text = "This is one sentence. Here is a second sentence."
         >>> sentence_list = preprocessor(text)
         >>> sentence_list
-        ['This is one sentence .', 'Here is a second sentence .']
+        [['This', 'is', 'one', 'sentence', '.'], ['Here', 'is', 'a', 'second', 'sentence', '.']]
 
-        >>> text = "Here are some more sentences. I'd rather not go, but I can't stay home. He'd often go there. Let's do it. Won't you go with us?"
+        >>> text = "I'd rather not go, but I can't stay home. Won't you go with us?"
         >>> sentence_list = preprocessor(text)
         >>> sentence_list
-        ['Here are some more sentences .', 'I had rather not go , but I can not stay home .', 'He had often go there .', "Let 's do it .", 'Will not you go with us ?']
+        [['I', 'had', 'rather', 'not', 'go', ',', 'but', 'I', 'can', 'not', 'stay', 'home', '.'], ['Will', 'not', 'you', 'go', 'with', 'us', '?']]
         """
         # 1. tokenize into sentences
         raw_sentence_list = self.pst(doc)
@@ -522,6 +522,10 @@ def vectorize(X_docs, vocab=None):
     X_docs is a numpy array of documents to be vectorized.
 
     vocab is the vectorizer vocabulary, vectorizer.vocabulary_
+
+    The bytecode string is NOT in the vocabulary:
+    byte_code = '\ufeff'
+    byte_code in vect.vocabulary_.keys() --> False
 
     note on preprocessor:
     a callable that takes an entire document as input (as a single string),
@@ -927,7 +931,8 @@ def plot_sentiment_model_scores(scores_by_nfeats):
 # First, to train Word2Vec it is better not to remove stop words because
 # the algorithm relies on the broader context of the sentence in order
 # to produce high-quality word vectors.
-from gensim.models import Word2Vec
+from gensim.models import word2vec
+import logging
 
 def clustering_study():
     """using distributed word vectors created by the Word2Vec algorithm,
@@ -935,13 +940,57 @@ def clustering_study():
 
     Word2vec learns quickly relative to other models.
     Word2Vec does not need labels in order to create meaningful representations.
+
+    >>> model.doesnt_match("man woman child kitchen".split())
+    'kitchen'
+
+    >>> model.doesnt_match("gluten vegan celiac dairy".split())
+    'gluten'
+
+    >>> model.doesnt_match("gluten celiac free wheat".split())
+    'free'
+
+    >>> model.most_similar("gluten")
+    [(u'restaurants', 0.966518759727478), (u'except', 0.9627533555030823), (u'brunch', 0.9542723298072815), (u'their', 0.952192485332489), (u'seems', 0.9517408013343811), (u'prefer', 0.9516568183898926), (u'Indian', 0.9506375789642334), (u'Now', 0.9481799602508545), (u'ambiance', 0.9477816820144653), (u'high', 0.9476841688156128)]
     """
-    documents = loads_yelp_reviews(container_path="./data/sentiment", categories=['gluten'])
-    X, y = bunch_to_np(documents, class_type='sentiment')
-    X = X.tolist()
+    container_path = './data/random_forest/'
+    print "... Loading data from %s ..." % container_path
 
-    preprocessor = PennTreebankPunkt()
+    documents = loads_yelp_reviews(container_path)
 
+    preprocessor = PennTreebankPunkt('word2vec')
+
+    sentences = [] # initialize an empty list of sentences
+    print "Parsing sentences from labeled set"
+    for doc in documents.data:
+        sentences += preprocessor(doc)
+
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',\
+        level=logging.INFO)
+
+    # Set values for various parameters
+    num_features = 300    # Word vector dimensionality
+    min_word_count = 40   # Minimum word count
+    num_workers = 4       # Number of threads to run in parallel
+    context = 10          # Context window size
+    downsampling = 1e-3   # Downsample setting for frequent words
+
+    # Initialize and train the model (this will take some time)
+    print "Training model..."
+    model = word2vec.Word2Vec(sentences, workers=num_workers, \
+                size=num_features, min_count = min_word_count, \
+                window = context, sample = downsampling)
+
+    # If you don't plan to train the model any further, calling
+    # init_sims will make the model much more memory-efficient.
+    model.init_sims(replace=True)
+
+    # It can be helpful to create a meaningful model name and
+    # save the model for later use. You can load it later using Word2Vec.load()
+    model_name = "300features_40minwords_10context"
+    model.save(model_name)
+
+    return
 
 # TODO: frequency distributions
 

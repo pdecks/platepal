@@ -27,19 +27,28 @@ PlatePal: {{biz.name}}
 {% endblock %}
 
 {% block content %}
+<!--  cat_reviews[cat][i] = (review, user, revcats) -->
 <div id="biz-reviews">
+    {% for cat in cats %}
+        {% for review in cat_reviews[cat]%}
+        <article id="review{{review[0].review_id}}">
+            <h3> Yelp User ID: {{review[1].name}}</h3>
+            <h3> Yelp Stars: {{review[0].yelp_stars}}</h3>
+            {% for revcat in review[2] %}
+            <h4> {{revcat.cat_code}} Score: {{revcat.sen_score}}</h4> 
+            {% endfor %}
+            <p>{{review[0].text}}</p>
+        </article>
+        {% endfor %} <!-- inner loop -->
+    {% endfor %}
     <article>
-        <h3> Review Title</h3>
-        <p>Lorum Ipsum</p>
+            <h3> Review Title</h3>
+            <p>Lorum Ipsum</p>
+        </article>
+        <article>
+            <h3> Review Title</h3>
+            <p>Lorum Ipsum</p>
     </article>
-    <article>
-        <h3> Review Title</h3>
-        <p>Lorum Ipsum</p>
-    </article>
-    <article>
-        <h3> Review Title</h3>
-        <p>Lorum Ipsum</p>
-    </article>
-    
+        
 </div>
 {% endblock %}

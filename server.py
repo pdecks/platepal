@@ -273,7 +273,6 @@ def query_search(search_terms, search_loc):
     data_list_of_dicts = {}
     # query database for top 5 businesses for each category
     for cat_name in categories:
-    
         cat_code = categories[cat_name]
 
         # select distinct Biz.biz_id, Biz.name, Biz.city from Biz
@@ -309,10 +308,10 @@ def query_search(search_terms, search_loc):
     return jsonify(data_list_of_dicts)
 
 
-
 @app.route('/biz')
 def show_biz_general():
     return render_template('biz.html')
+
 
 @app.route('/biz/<biz_id>')
 def show_biz_details(biz_id):
@@ -342,7 +341,32 @@ def show_biz_details(biz_id):
             avg_cat_sen = 0
         sen_scores[cat] = avg_cat_sen
 
-    return render_template("biz.html", biz=biz, avg_star=avg_star, sen_scores=sen_scores, num_rev=num_rev)
+    # use subqueries to get reviews, user who wrote review, sen_score of review
+    # get all reviews for the business
+    reviews = PlatePalReview.query.filter(PlatePalReview.biz_id==biz_id).all()
+    cat_reviews = {}
+    for cat in CAT_CODES_ID:
+        cat_reviews[cat] = []
+    # get revcats
+    for review in reviews:
+        # query for revcats
+        review.revcat
+        if review.revcat != []:
+            cat_reviews[review.revcat[0].cat_code].append(review)
+
+    for cat in CAT_CODES_ID:
+        if cat_reviews[cat] != []:
+            for i, review in enumerate(cat_reviews[cat]):
+                # Query for User name
+                user = review.yelp_user
+                # Query for revcat
+                revcats = review.revcat
+                # note that revcats is a list (review, user, [revcat, revcat...])
+                cat_reviews[cat][i] = (review, user, revcats)
+
+    # biz_query = db.session.query(PlatePalReview, YelpUser, ReviewCategory).join(YelpUser).join(ReviewCategory).filter(PlatePalReview.biz_id==biz_id, ReviewCategory.cat_code==cat).all()
+
+    return render_template("biz.html", biz=biz, avg_star=avg_star, sen_scores=sen_scores, num_rev=num_rev, cat_reviews=cat_reviews, cats=CAT_CODES_ID)
 
 
 @app.route('/biz/<biz_id>/add-review', methods=['POST'])

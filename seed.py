@@ -465,6 +465,21 @@ def seed_city_distance():
     db.session.commit()
 
 
+def update_ppreview_cat():
+    """
+    Correct review.cat_code in PlatePalReview
+
+    Incorrectly defined in model.py when initially seeded tables.
+    Because a review can have multiple categories, RevCats was used to
+    store the categories for a review.
+
+    Review.cat_code can store a string with the cat codes, e.g.
+    'gltnvganpleo', which can be parsed 4 characters at a time to break
+    off the cat codes.
+    """
+    pass  # TODO
+
+
 ## Helper function for checking if input string represents an int
 def RepresentsInt(s):
     try:

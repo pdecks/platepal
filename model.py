@@ -62,7 +62,7 @@ class YelpUser(db.Model):
     # V2TODO: votes
 
     def __repr__(self):
-        return "<YelpUser user_id=%d name=%s>" % (self.user_id, self.name)
+        return "<YelpUser user_id=%s name=%s>" % (self.user_id, self.name)
 
 
 class YelpReview(db.Model):
@@ -161,8 +161,11 @@ class PlatePalReview(db.Model):
     user = db.relationship('PlatePalUser',
                           backref=db.backref('reviews', order_by=review_id))
 
+    yelp_user = db.relationship('YelpUser',
+                          backref=db.backref('ppreviews', order_by=review_id))
+
     def __repr__(self):
-        return "<PlatePalReview review_id=%s date=%s>" % (self.review_id, self.review_date)
+        return "<PlatePalReview review_id=%s biz_id=%s>" % (self.review_id, self.biz_id)
 
 
 class UserList(db.Model):

@@ -44,17 +44,6 @@ def index():
     return redirect('/CA/Palo%20Alto/city.html')
 
 
-@app.route('/<state>/<city>/city.html')
-def city_in_state_page(state, city):
-    """City Homepage"""
-
-    # get nearby cities list
-    nearby_miles = 50 # find cities within 50 miles of current city
-    nearby_cities = find_nearby_cities(city, state, nearby_miles)
-
-    return render_template('city.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, nearby_cities=nearby_cities)
-
-
 @app.route('/<state>/state.html')
 def display_all_biz_in_state(state):
     """State landing page."""
@@ -91,6 +80,17 @@ def get_all_biz_in_state(state):
     return jsonify(data_list_of_dicts)
 
 
+@app.route('/<state>/<city>/city.html')
+def city_in_state_page(state, city):
+    """City Homepage"""
+
+    # get nearby cities list
+    nearby_miles = 50 # find cities within 50 miles of current city
+    nearby_cities = find_nearby_cities(city, state, nearby_miles)
+
+    return render_template('city.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, nearby_cities=nearby_cities)
+
+
 # select distinct biz.biz_id, biz.name from biz join revcats on biz.biz_id = revcats.biz_id where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
 @app.route('/<state>/<city>/city.json')
 def display_all_reviews_in_city(state, city):
@@ -105,18 +105,19 @@ def display_all_reviews_in_city(state, city):
         cat_code = categories[cat_name]
 
         # select distinct Biz.biz_id, Biz.name, Biz.city from Biz
-        # join Revcats on biz.biz_id = revcats.biz_id
-        # where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
-        state_biz = db.session.query(PlatePalBiz).join(ReviewCategory).filter(PlatePalBiz.state==state)
+        # join Bizsentiments on biz.biz_id = bizsentiments.biz_id
+        # where BizSentiments.cat_code = 'gltn' and biz.state='CA' and biz.city='Palo Alto';
+        state_biz = db.session.query(PlatePalBiz, BizSentiment).join(BizSentiment).filter(PlatePalBiz.state==state)
         city_biz = state_biz.filter(PlatePalBiz.city==city)
 
         if cat_code != 'unkn':
-            city_biz_cat = city_biz.filter(ReviewCategory.cat_code==cat_code).all()
+            city_biz_cat = city_biz.filter(BizSentiment.cat_code==cat_code).all()
         else:
             city_biz_cat = city_biz.all()
 
         cat_list = []
-        for biz in city_biz_cat:
+        for biz, bizsen in city_biz_cat:
+
             biz_dict = {'biz_id': biz.biz_id,
                         'name': biz.name,
                         'address': biz.address,
@@ -125,7 +126,10 @@ def display_all_reviews_in_city(state, city):
                         'lat': biz.lat,
                         'lng': biz.lng,
                         'is_open': biz.is_open,
-                        'photo_url': biz.photo_url
+                        'photo_url': biz.photo_url,
+                        'avg_cat_review': bizsen.avg_cat_review,
+                        'agg_sen_score': bizsen.agg_sen_score,
+                        'num_revs': bizsen.num_revs
                         }
             # if biz_dict not in cat_list:
             cat_list.append(biz_dict)

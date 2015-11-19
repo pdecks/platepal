@@ -75,9 +75,11 @@ function setMarkers(map) {
       console.log('in $.get top5json');
       console.log(top5json);
       
+      var markers = [];
       // iterate over each item in the dictionary
       for (var cat in top5json) {
-        markers[cat] = new Array();
+        var catCode = cat;
+        markers[catCode] = [];
 
         var resList = $("#results-list-"+cat);
         // console.log('This is resList');
@@ -104,10 +106,12 @@ function setMarkers(map) {
           // create an event handler to listen for marker clicks
           // opens an infoWindow on the marker when clicked
 
-          (function (marker, biz) {
+          (function (marker, biz, cat) {
             google.maps.event.addListener(marker, "click", function (e){
               //wrap the content inside an html div to set height and width of InfoWindow
-              infoWindow.setContent('<div id="info-window-content">'+
+              var infoWindowHTML;
+              if (cat !== 'unkn'){
+                infoWindowHTML ='<div id="info-window-content">'+
                 '<div id="bodyContent">'+
                 '<div class="info-window left">'+
                 '<img class="info-window" src="'+ biz.photo_url+'">' +
@@ -115,13 +119,28 @@ function setMarkers(map) {
                 '<div class="info-window right>' +
                 '<h3 class="info-window"><a class="info-window" href="/biz/'+biz.biz_id+'">'+ biz.name + '</a></h3></div>'+
                 '<div>Average '+ catNames[cat] + ' Score:<br> ' + biz.avg_cat_review + '</br></div>'+
-                '</div></div>');
+                '</div></div>';
+              }
+              else{
+                infoWindowHTML ='<div id="info-window-content">'+
+                '<div id="bodyContent">'+
+                '<div class="info-window left">'+
+                '<img class="info-window" src="'+ biz.photo_url+'">' +
+                '</div>'+
+                '<div class="info-window right>' +
+                '<h3 class="info-window"><a class="info-window" href="/biz/'+biz.biz_id+'">'+ biz.name + '</a></h3></div>'+
+                '<div>Average '+ catNames[cat] + '</br></div>'+
+                '</div></div>';
+              }
+
+              infoWindow.setContent(infoWindowHTML);
               // infoWindow.setPosition()
               infoWindow.open(map, marker);
             });
           }) (marker, biz); // TODO: understand this
 
-          markers[cat].push(marker);
+          markers[catCode].push(marker);
+          console.log(markers);
 
           // var avg_review;
           // if (biz.avg_cat_review !== 'undefined'){
@@ -130,12 +149,18 @@ function setMarkers(map) {
           // else {
           //   avg_review = biz.avg_cat_review;
           // }
-          resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br>PlatePal Score: " + biz.avg_cat_review + "</br></li>");
+          if (cat !== 'unkn'){
+            resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br>PlatePal Score: " + biz.avg_cat_review + "</br></li>");
+          }
+          else{
+           resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br></li>");
+          }
           console.log('appended to resList');
         } // end inner for loop over businesses in list by category
-                
-      } // end outer for loop over categories
       
+      
+      } // end outer for loop over categories
+
   }); // end $.getJSON
 
 } // end setMarkers

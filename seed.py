@@ -244,6 +244,7 @@ def update_revcat_sen_score(cat='gltn'):
 
     return
 
+
 def seed_sentences():
     """
     For reviews in RevCats, split reviews into sentences and store
@@ -278,7 +279,7 @@ def seed_sentcats():
     Add results to SentCats -- Initial seeding version
     """
     # select all sentences from Sentences table
-    results = db.session.query(Sentence).offset(1710).all()
+    results = db.session.query(Sentence).offset(0).all()
     # for each sentence, categorize with classifier
     for sentence in results:
         sent_id = sentence.sent_id
@@ -377,7 +378,7 @@ def calc_avg_rating_per_cat():
             db.session.commit()
     return
 
-# TODO: UPDATE TO TAKE SEN SCORES instead of stars
+
 def calc_agg_sen_per_cat():
     """Calculate aggregate sentiment score for business by category"""
     # 1. List of PLATEPALBIZ: find the businesses with at least one revcat in cat_code = 'gltn'

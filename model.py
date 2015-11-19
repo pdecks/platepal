@@ -246,8 +246,47 @@ class ReviewCategory(db.Model):
         sentiment score (revcats.sen_score) to the average of the
         sentence-level sentiment scores
         (sentcat.sen_score for sent_id where sentences.review_id == revcats.review_id
+
+        >>> revcat = db.session.query(ReviewCategory).filter(ReviewCategory.revcat_id==245).first()
+        >>> revcat.compare_sen_scores()
+        sentcat.cat_code does not match revcat.cat_code
+        avg_sen_score not computed.
+        COMPARING REVIEW SENTIMENT TO SENTENCE SENTIMENT(S):
+        The review-category sentiment score is: 0.982730
+        The average sentence-category sentiment score is: 0.000000
+
+        >>> revcat = db.session.query(ReviewCategory).filter(ReviewCategory.revcat_id==114).first()
+        >>> revcat.compare_sen_scores()
+        computing avg_sen_score ...
+        COMPARING REVIEW SENTIMENT TO SENTENCE SENTIMENT(S):
+        The review-category sentiment score is: 0.979323
+        The average sentence-category sentiment score is: 0.984512
+
+        TODO: figure out why sentiment classifier is classifying differently for
+        reviews vs. sentences, as in this case (revcat_id=114), the review text is
+        a single sentence.
         """
-        pass
+        # query db for sentcat sen_scores where sentences.review_id == revcat.review_id
+        sentcats = db.session.query(SentenceCategory).join(Sentence).filter(Sentence.review_id==self.review_id, SentenceCategory.cat_code==self.cat_code).all()
+        # import pdb; pdb.set_trace()
+        tot_sen_score = 0
+        num_scores = 0
+        for sc in sentcats:
+            if sc.cat_code == self.cat_code:
+                num_scores += 1
+                tot_sen_score += sc.sen_score
+        if num_scores != 0:
+            print "computing avg_sen_score ..."
+            avg_sen_score = (tot_sen_score / num_scores) / 1.0
+        else:
+            print "sentcat.cat_code does not match revcat.cat_code"
+            print "avg_sen_score not computed."
+            avg_sen_score = 0.0
+
+        print "COMPARING REVIEW SENTIMENT TO SENTENCE SENTIMENT(S):"
+        print "The review-category sentiment score is: %f" % self.sen_score
+        print "The average sentence-category sentiment score is: %f" % avg_sen_score
+        return avg_sen_score
 
 
 class BizSentiment(db.Model):

@@ -221,6 +221,133 @@ def seed_revcat(cat_search, category):
                 db.session.commit()
     return
 
+def seed_vegan_revcat():
+    """Add more revcats by using like '%vegan%'"""
+    #  sqlite> select reviews.review_id, revcats.revcat_id, sentences.sent_id from reviews
+    # ...> LEFT JOIN revcats ON revcats.review_id = reviews.review_id
+    # ...> LEFT JOIN sentences on sentences.review_id = reviews.review_id
+    # ...> WHERE reviews.biz_id = 148 and reviews.text like '%vegan%';
+
+    # query db for all reviews containing the word 'vegan'
+    search_term = 'vegan'
+    reviews = db.session.query(PlatePalReview, ReviewCategory, Sentence, SentenceCategory)
+    reviews_joined = reviews.outerjoin(ReviewCategory).outerjoin(Sentence).outerjoin(SentenceCategory)
+    vegan_reviews = reviews_joined.filter(PlatePalReview.biz_id==148, PlatePalReview.text.like(('%'+search_term+'%')))
+
+    # instantiate preprocessor for splitting text into sentences
+    preprocessor = PennTreebankPunkt(use_flag="sentences")
+
+    for group in vegan_reviews:
+        review = group[0]
+        revcats = group[1]
+        sentences = group[2]
+        sentcats = group[3]
+
+        # check if review has revcats
+        if not revcats:
+            # get sentiment score of review
+            sen_score = get_sentiment(review.text)
+            # add review to revcat 'vgan'
+            revcat = ReviewCategory(review_id=review.review_id,
+                                    biz_id=review.biz_id,
+                                    cat_code='vgan',
+                                    sen_score=sen_score,
+                                    )
+            db.session.add(revcat)
+            db.session.commit()
+        else: # there are revcats
+            pass
+
+        # check if review has sentences
+        if not sentences:
+            # tokenize into sentences and add to sentences
+            sentence_list = preprocessor(review.text)
+            # add sentence to Sentences table
+            for sentence in sentence_list:
+                sent = Sentence(review_id=review.review_id,
+                                sent_text=sentence
+                                )
+                db.session.add(sent)
+                db.session.commit()
+                # add sentences containing 'vegan' to sentcats
+                if 'vegan' in sentence:
+                    sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence).one()
+                    if sent_id:
+                        # get sentiment score of sentence
+                        sen_score = get_sentiment(sentence)
+                        sentcat = SentenceCategory(sent_id=sent_id[0],
+                                                   cat_code='vgan',
+                                                   sen_score=sen_score)
+                        db.session.add(sentcat)
+                        db.session.commit()
+                else:
+                    pass
+        else: #there are sentences, so check if sentences containing 'vegan' have sentcats
+            if not sentcats:
+                # check if more than one sentence
+                if isinstance(type(sentences), list):
+                    for sentence in sentences:
+                        if 'vegan' in sentence.text:
+                            sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence).one()
+                            if sent_id:
+                                # get sentiment score of sentence
+                                sen_score = get_sentiment(sentence.sent_text)
+                                sentcat = SentenceCategory(sent_id=sent_id,
+                                                           cat_code='vgan',
+                                                           sen_score=sen_score)
+                                db.session.add(sentcat)
+                                db.session.commit()
+                else: # single sentence in sentences
+                    sentence = sentences
+                    if 'vegan' in sentence.sent_text:
+                        # get sentiment score of sentence
+                        sen_score = get_sentiment(sentence.sent_text)
+                        sentcat = SentenceCategory(sent_id=sentence.sent_id,
+                                                   cat_code='vgan',
+                                                   sen_score=sen_score)
+                        db.session.add(sentcat)
+                        db.session.commit()
+            else: # there are sencats
+                # check if sentiment score exists
+                if isinstance(type(sentcats), list):
+                    for sentcat in sentcats:
+                        sentence_text = db.session.query(Sentence.sent_text).filter(Sentence.sent_id==sentcat.sent_id).one()
+                        if 'vegan' in sentence_text:
+                            if not sentcat.sen_score:
+                                # get sentiment score of sentence
+                                sen_score = get_sentiment(sentence_text)
+                                sentcat.sen_score = sen_score
+                                db.session.add(sentcat)
+                                db.session.commit()
+                            elif sentcat.sen_score == 0:
+                                # get sentiment score of sentence
+                                sen_score = get_sentiment(sentence_text)
+                                sentcat.sen_score = sen_score
+                                db.session.add(sentcat)
+                                db.session.commit()
+                            else: # there is a non-zero sentiment score
+                                print "sentiment score exists for sentcat %d", sentcat.sentcat_id
+                else: #single sentcat
+                    sentcat = sentcats
+                    sentence_text = db.session.query(Sentence.sent_text).filter(Sentence.sent_id==sentcat.sent_id).one()
+                    if 'vegan' in sentence_text:
+                        if not sentcat.sen_score:
+                            # get sentiment score of sentence
+                            sen_score = get_sentiment(sentence.sent_text)
+                            sentcat.sen_score = sen_score
+                            db.session.add(sentcat)
+                            db.session.commit()
+                        elif sentcat.sen_score == 0:
+                            # get sentiment score of sentence
+                            sen_score = get_sentiment(sentence.sent_text)
+                            sentcat.sen_score = sen_score
+                            db.session.add(sentcat)
+                            db.session.commit()
+                        else: # there is a non-zero sentiment score
+                            print "sentiment score exists for sentcat %d", sentcat.sentcat_id
+    return
+
+
 def update_revcat_sen_score(cat='gltn'):
     """Update RevCat table with sen_scores"""
     # select all revcat entries where cat_code == category and return the review text
@@ -300,7 +427,7 @@ def seed_sentences():
         for review in results:
             # split reviews into sentences
             sentence_list = preprocessor(review.text)
-                # add sentence to Sentences table
+            # add sentence to Sentences table
             for sentence in sentence_list:
                 sent = Sentence(review_id=review.review_id,
                                 sent_text=sentence
@@ -573,6 +700,29 @@ def RepresentsInt(s):
     except ValueError:
         return False
 
+## helper function for calling text-processing API
+def get_sentiment(text):
+    """Call text-processing API and get sentiment of text
+    note API limits 80,000 characters per text, 1000 calls
+    per IP address
+    """
+    # check that text does not exceed API's character limit
+    url = "http://text-processing.com/api/sentiment/"
+    if len(text) < 80000:
+        # query text-processing API for sentiment score
+        payload = {'text': text}
+
+        # make API call
+        r = requests.post(url, data=payload)
+
+        # load JSON from API call
+        result = json.loads(r.text)
+
+        # pull sentiment score
+        sen_score = result['probability']['pos']
+
+        time.sleep(random.randint(0,5))
+    return sen_score
 
 if __name__ == "__main__":
     connect_to_db(app)

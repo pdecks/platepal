@@ -221,7 +221,7 @@ def seed_revcat(cat_search, category):
                 db.session.commit()
     return
 
-def seed_vegan_revcat():
+def seed_keyword_revcat(search_term, cat_code):
     """Add more revcats by using like '%vegan%'
 
     Tested on all reviews containing 'vegan' where reviews.biz_id=148, then
@@ -237,15 +237,16 @@ def seed_vegan_revcat():
     # 3946
 
     # query db for all reviews containing the word 'vegan'
-    search_term = 'vegan'
+    # search_term = 'vegan'
     reviews = db.session.query(PlatePalReview, ReviewCategory, Sentence, SentenceCategory)
     reviews_joined = reviews.outerjoin(ReviewCategory).outerjoin(Sentence).outerjoin(SentenceCategory)
-    vegan_reviews = reviews_joined.filter(PlatePalReview.biz_id!=148, PlatePalReview.review_id!=7617, PlatePalReview.text.like(('%'+search_term+'%')))
+    keyword_reviews = reviews_joined.filter(PlatePalReview.text.like(('%'+search_term+'%')))
+    # vegan_reviews = reviews_joined.filter(PlatePalReview.biz_id!=148, PlatePalReview.review_id!=7617, PlatePalReview.text.like(('%'+search_term+'%')))
 
     # instantiate preprocessor for splitting text into sentences
     preprocessor = PennTreebankPunkt(use_flag="sentences")
 
-    for group in vegan_reviews:
+    for group in keyword_reviews:
         review = group[0]
         revcats = group[1]
         sentences = group[2]
@@ -258,7 +259,7 @@ def seed_vegan_revcat():
             # add review to revcat 'vgan'
             revcat = ReviewCategory(review_id=review.review_id,
                                     biz_id=review.biz_id,
-                                    cat_code='vgan',
+                                    cat_code=cat_code,
                                     sen_score=sen_score,
                                     )
             db.session.add(revcat)
@@ -278,81 +279,87 @@ def seed_vegan_revcat():
                 db.session.add(sent)
                 db.session.commit()
                 # add sentences containing 'vegan' to sentcats
-                if 'vegan' in sentence:
+                if search_term in sentence:
                     sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence).one()
                     if sent_id:
                         # get sentiment score of sentence
                         sen_score = get_sentiment(sentence)
                         sentcat = SentenceCategory(sent_id=sent_id[0],
-                                                   cat_code='vgan',
+                                                   cat_code=cat_code,
                                                    sen_score=sen_score)
                         db.session.add(sentcat)
                         db.session.commit()
                 else:
                     pass
-        else: #there are sentences, so check if sentences containing 'vegan' have sentcats
+        else: #there are sentences, so check if sentences containing search_term have sentcats
             if not sentcats:
                 # check if more than one sentence
                 if isinstance(type(sentences), list):
                     for sentence in sentences:
-                        if 'vegan' in sentence.text:
+                        if search_term in sentence.text:
                             sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence).one()
                             if sent_id:
                                 # get sentiment score of sentence
                                 sen_score = get_sentiment(sentence.sent_text)
                                 sentcat = SentenceCategory(sent_id=sent_id,
-                                                           cat_code='vgan',
+                                                           cat_code=cat_code,
                                                            sen_score=sen_score)
                                 db.session.add(sentcat)
                                 db.session.commit()
                 else: # single sentence in sentences
                     sentence = sentences
-                    if 'vegan' in sentence.sent_text:
+                    if search_term in sentence.sent_text:
                         # get sentiment score of sentence
                         sen_score = get_sentiment(sentence.sent_text)
                         sentcat = SentenceCategory(sent_id=sentence.sent_id,
-                                                   cat_code='vgan',
+                                                   cat_code=cat_code,
                                                    sen_score=sen_score)
                         db.session.add(sentcat)
                         db.session.commit()
-            else: # there are sencats
+            else: # there are sencats ... make sure cat_code matches sencat.cat_code
                 # check if sentiment score exists
                 if isinstance(type(sentcats), list):
                     for sentcat in sentcats:
+                        if sentcat.cat_code == cat_code:
+                            sentence_text = db.session.query(Sentence.sent_text).filter(Sentence.sent_id==sentcat.sent_id).one()
+                            if search_term in sentence_text:
+                                if not sentcat.sen_score:
+                                    # get sentiment score of sentence
+                                    sen_score = get_sentiment(sentence_text)
+                                    sentcat.sen_score = sen_score
+                                    db.session.add(sentcat)
+                                    db.session.commit()
+                                elif sentcat.sen_score == 0:
+                                    # get sentiment score of sentence
+                                    sen_score = get_sentiment(sentence_text)
+                                    sentcat.sen_score = sen_score
+                                    db.session.add(sentcat)
+                                    db.session.commit()
+                                else: # there is a non-zero sentiment score
+                                    print "sentiment score exists for sentcat %d", sentcat.sentcat_id
+                        else: # sentcat.cat_code != cat_code
+                            pass
+                else: #single sentcat
+                    sentcat = sentcats
+                    if sentcat.cat_code == cat_code:
                         sentence_text = db.session.query(Sentence.sent_text).filter(Sentence.sent_id==sentcat.sent_id).one()
-                        if 'vegan' in sentence_text:
+                        if search_term in sentence_text:
                             if not sentcat.sen_score:
                                 # get sentiment score of sentence
-                                sen_score = get_sentiment(sentence_text)
+                                sen_score = get_sentiment(sentence.sent_text)
                                 sentcat.sen_score = sen_score
                                 db.session.add(sentcat)
                                 db.session.commit()
                             elif sentcat.sen_score == 0:
                                 # get sentiment score of sentence
-                                sen_score = get_sentiment(sentence_text)
+                                sen_score = get_sentiment(sentence.sent_text)
                                 sentcat.sen_score = sen_score
                                 db.session.add(sentcat)
                                 db.session.commit()
                             else: # there is a non-zero sentiment score
                                 print "sentiment score exists for sentcat %d", sentcat.sentcat_id
-                else: #single sentcat
-                    sentcat = sentcats
-                    sentence_text = db.session.query(Sentence.sent_text).filter(Sentence.sent_id==sentcat.sent_id).one()
-                    if 'vegan' in sentence_text:
-                        if not sentcat.sen_score:
-                            # get sentiment score of sentence
-                            sen_score = get_sentiment(sentence.sent_text)
-                            sentcat.sen_score = sen_score
-                            db.session.add(sentcat)
-                            db.session.commit()
-                        elif sentcat.sen_score == 0:
-                            # get sentiment score of sentence
-                            sen_score = get_sentiment(sentence.sent_text)
-                            sentcat.sen_score = sen_score
-                            db.session.add(sentcat)
-                            db.session.commit()
-                        else: # there is a non-zero sentiment score
-                            print "sentiment score exists for sentcat %d", sentcat.sentcat_id
+                    else: #sentcat.cat_code != cat_code
+                        pass
     return
 
 

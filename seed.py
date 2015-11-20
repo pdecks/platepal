@@ -1,6 +1,8 @@
 """Utility file to seed PlatePalBiz and PlatePalReview tables from equivalent Yelp tables."""
 import json
 import random
+import requests
+import time
 
 from model import CAT_CODES
 from model import YelpBiz, YelpUser, YelpReview
@@ -16,6 +18,7 @@ from pandas import DataFrame
 from datetime import datetime
 from sqlalchemy.sql import func
 from sqlalchemy import distinct
+from sqlalchemy.sql import not_
 
 from geopy.geocoders import Nominatim
 from geopy.distance import vincenty
@@ -244,6 +247,42 @@ def update_revcat_sen_score(cat='gltn'):
 
     return
 
+def replace_revcat_sen_score(cat='gltn'):
+    """Replace sen_scores in RevCat table with text-processing API scores"""
+    url = "http://text-processing.com/api/sentiment/"
+    # select all revcat entries where cat_code == category and return the review text
+    results = db.session.query(ReviewCategory.revcat_id, PlatePalReview.text).join(PlatePalReview)
+    results_by_cat = results.filter(ReviewCategory.cat_code==cat).all()
+    # for the list of revcats / review text
+    for result in results_by_cat:
+        revcat_id = result[0]
+        text = result[1]
+        # check that text does not exceed API's character limit
+        if len(text) < 80000:
+            # query text-processing API for sentiment score
+            payload = {'text': text}
+
+            # make API call
+            r = requests.post(url, data=payload)
+
+            # load JSON from API call
+            result = json.loads(r.text)
+
+            # pull sentiment score
+            sen_score = result['probability']['pos']
+
+            time.sleep(random.randint(0,10))
+        # update entry in db --> get entire entry from revcat by revcat_id
+        revcat = db.session.query(ReviewCategory).filter(ReviewCategory.revcat_id==revcat_id).one()
+        if revcat:
+            revcat.sen_score = sen_score
+            db.session.add(revcat)
+            db.session.commit()
+
+    print "... database updated!"
+
+    return
+
 
 def seed_sentences():
     """
@@ -315,8 +354,54 @@ def seed_sentcats():
     return
 
 
-def update_sentcat_sen_score():
-    pass
+def update_sentcat_score(cat_code, search_term):
+    """Replace hand-built sentiment score with text-processing API score"""
+    # checking progress of update_sentcat_score('vgan', 'vegan')
+    #  sqlite> select sentences.sent_text, sentcats.sentcat_id, sentcats.sen_score from sentences
+    # ...> left join sentcats on sentcats.sent_id = sentences.sent_id
+    # ...> where sentcats.cat_code = 'vgan'
+    # ...> limit 10;
+
+    url = "http://text-processing.com/api/sentiment/"
+
+    updated_cat_codes = ['gltn', 'algy']
+    # get all sentences containing search term
+    sentences = Sentence.query.filter(Sentence.sent_text.like('%'+search_term+'%')).all()
+
+    # get inverse sentences and set sen_score = 0
+    # ! check this ! sentences = SentenceCategory.query.outerjoin(Sentence).filter((not_(Sentence.sent_text.like('%gluten%'))) | (not_(Sentence.sent_text.like('%celiac%')))).all()
+    for sentence in sentences:
+        # query text-processing API for sentiment score
+        doc = sentence.sent_text
+        payload = {'text': doc}
+
+        # make API call
+        r = requests.post(url, data=payload)
+
+        # load JSON from API call
+        result = json.loads(r.text)
+
+        # pull sentiment score
+        sen_score = result['probability']['pos']
+
+        # check if sentence is in sentcat
+        result = SentenceCategory.query.filter(SentenceCategory.sent_id==sentence.sent_id).one()
+        if result:
+            # don't update gltn reviews again
+            if result.cat_code not in updated_cat_codes:
+                # update sen_score
+                result.sen_score = sen_score
+        else:
+            # add sentence to sentcat
+            sentcat = SentenceCategory(sent_id=sentence.sent_id,
+                                       cat_code=cat_code,
+                                       sen_score=sen_score)
+        # sentence.sen_score = 0
+        db.session.commit()
+
+        # wait 5 seconds before making the next call
+        time.sleep(random.randint(0,10))
+    return
 
 
 # MVP 3a. build class/method for avg rating per cat

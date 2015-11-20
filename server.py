@@ -16,6 +16,8 @@ from statecodes import STATE_CODES
 
 import re
 import os
+import requests
+import json
 
 # from geopy.geocoders import Nominatim
 
@@ -451,7 +453,24 @@ def find_nearby_cities(city, state, x_miles):
 
     return nearby_cities_list
 
+# TODO -- for adding a new review
+def get_sentiment_score():
+    url = "http://text-processing.com/api/sentiment/"
 
+    doc = "I like cheese."
+    payload = {'text': doc}
+
+    # make API call
+    r = requests.post(url, data=payload)
+
+    # load JSON from API call 
+    result = json.loads(r.text)
+
+    # pull sentiment score
+    sen_score = result['probability']['pos']
+
+    # store in database...
+    return
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point

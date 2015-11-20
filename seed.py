@@ -222,17 +222,25 @@ def seed_revcat(cat_search, category):
     return
 
 def seed_vegan_revcat():
-    """Add more revcats by using like '%vegan%'"""
+    """Add more revcats by using like '%vegan%'
+
+    Tested on all reviews containing 'vegan' where reviews.biz_id=148, then
+    reran for all reviews containing 'vegan' where reviews.biz_id != 148
+    """
     #  sqlite> select reviews.review_id, revcats.revcat_id, sentences.sent_id from reviews
     # ...> LEFT JOIN revcats ON revcats.review_id = reviews.review_id
     # ...> LEFT JOIN sentences on sentences.review_id = reviews.review_id
     # ...> WHERE reviews.biz_id = 148 and reviews.text like '%vegan%';
 
+    # sqlite> select count(*) from reviews where reviews.biz_id != 148 and reviews.text like '%vegan%';
+    # count(*)
+    # 3946
+
     # query db for all reviews containing the word 'vegan'
     search_term = 'vegan'
     reviews = db.session.query(PlatePalReview, ReviewCategory, Sentence, SentenceCategory)
     reviews_joined = reviews.outerjoin(ReviewCategory).outerjoin(Sentence).outerjoin(SentenceCategory)
-    vegan_reviews = reviews_joined.filter(PlatePalReview.biz_id==148, PlatePalReview.text.like(('%'+search_term+'%')))
+    vegan_reviews = reviews_joined.filter(PlatePalReview.biz_id!=148, PlatePalReview.review_id!=7617, PlatePalReview.text.like(('%'+search_term+'%')))
 
     # instantiate preprocessor for splitting text into sentences
     preprocessor = PennTreebankPunkt(use_flag="sentences")

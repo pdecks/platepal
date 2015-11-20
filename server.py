@@ -46,6 +46,12 @@ def index():
     return redirect('/CA/Palo%20Alto/city.html')
 
 
+@app.route('/analytics')
+def lab():
+    """Analytics page housing sentiment analysis info and D3"""
+    return render_template('/analytics.html')
+
+
 @app.route('/<state>/state.html')
 def display_all_biz_in_state(state):
     """State landing page."""

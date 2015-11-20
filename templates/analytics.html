@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}
+PlatePal: Analytics
+{% endblock%}
+
+{% block location %}
+<div class="analytics-outer">
+    <h2>Analytics: the ghost in the machine</h2>
+    <!-- end JINJA for loop here -->
+</div> <!-- citynav-outer -->
+{% endblock %}
+
+{% block content %}
+<div> 
+    <article>
+        Post about motivation behind site
+    </article>
+    <article>
+        Post about sentiment analysis and scikit learn-ing
+    </article>
+    <article>
+        Post about restaurant classifications --> d3 here!
+    </article>
+    <script type="text/javascript" src="/static/js/analytics.js"></script>
+
+</div> <!-- content block -->
+
+{% endblock %}
+
+{% block footer %}
+<h6><a href="/analytics">Analytics</a></h6>
+{% endblock%}

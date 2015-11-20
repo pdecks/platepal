@@ -278,17 +278,19 @@ def seed_keyword_revcat(search_term, cat_code):
                                 )
                 db.session.add(sent)
                 db.session.commit()
-                # add sentences containing 'vegan' to sentcats
+                # add sentences containing search_term to sentcats
                 if search_term in sentence:
-                    sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence).one()
+                    sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence, Sentence.review_id==review.review_id).all()
                     if sent_id:
-                        # get sentiment score of sentence
-                        sen_score = get_sentiment(sentence)
-                        sentcat = SentenceCategory(sent_id=sent_id[0],
-                                                   cat_code=cat_code,
-                                                   sen_score=sen_score)
-                        db.session.add(sentcat)
-                        db.session.commit()
+                        for sid in sent_id:
+                            # import pdb; pdb.set_trace()
+                            # get sentiment score of sentence
+                            sen_score = get_sentiment(sentence)
+                            sentcat = SentenceCategory(sent_id=sid[0],
+                                                       cat_code=cat_code,
+                                                       sen_score=sen_score)
+                            db.session.add(sentcat)
+                            db.session.commit()
                 else:
                     pass
         else: #there are sentences, so check if sentences containing search_term have sentcats
@@ -297,15 +299,17 @@ def seed_keyword_revcat(search_term, cat_code):
                 if isinstance(type(sentences), list):
                     for sentence in sentences:
                         if search_term in sentence.text:
-                            sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence).one()
+
+                            sent_id = db.session.query(Sentence.sent_id).filter(Sentence.sent_text==sentence, Sentence.review_id==review.review_id).all()
                             if sent_id:
-                                # get sentiment score of sentence
-                                sen_score = get_sentiment(sentence.sent_text)
-                                sentcat = SentenceCategory(sent_id=sent_id,
-                                                           cat_code=cat_code,
-                                                           sen_score=sen_score)
-                                db.session.add(sentcat)
-                                db.session.commit()
+                                for sid in sent_id:
+                                    # get sentiment score of sentence TODO fix
+                                    sen_score = get_sentiment(sentence.sent_text)
+                                    sentcat = SentenceCategory(sent_id=sid[0],
+                                                               cat_code=cat_code,
+                                                               sen_score=sen_score)
+                                    db.session.add(sentcat)
+                                    db.session.commit()
                 else: # single sentence in sentences
                     sentence = sentences
                     if search_term in sentence.sent_text:

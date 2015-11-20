@@ -61,6 +61,9 @@ pickle_path_SA_v = './classifiers/SentimentComponents/gltn_vectorizer/vectorizer
 pickle_path_SA_gltn = './classifiers/SentimentComponents/gltn_classifier/gltn_classifier.pkl'
 pickle_path_SANB_gltn = './classifiers/SentimentComponents/gltn_naivebayes/gltn_naivebayes.pkl'
 
+pickle_path_star_rdf = './classifiers/StarPrediction/rdf/rdf.pkl'
+pickle_path_star_v = './classifiers/StarPrediction/vectorizer/vectorizer.pkl'
+pickle_path_star_c = './classifiers/StarPrediction/classifier/classifier.pkl'
 #### LOAD DATA ###############################################################
 
 # directory containing toy data set: reviews by pdecks as .txt files
@@ -211,13 +214,17 @@ def score_kfolds(X, y, min_num_folds=2, max_num_folds=2, num_iter=1, atype=None,
     else:
         X_tfidf = X
 
-    clf = LinearSVC()
+    if atype == 'stars':
+        clf = LinearSVC()
+    else:
+        clf = LinearSVC()
 
     if num_feats:
         print "Number of features:", num_feats
         print
     print "Running score_kfolds with min_num_folds=%d, max_num_folds=%d, num_iter=%d" % (min_num_folds, max_num_folds, num_iter)
     print "..."
+    start = time.time()
     # randomly partition data set into 10 folds ignoring the classification variable
     # b/c we want to see how the classifier performs in this real-world situation
 
@@ -237,7 +244,7 @@ def score_kfolds(X, y, min_num_folds=2, max_num_folds=2, num_iter=1, atype=None,
         for i in range(1, n_fold + 1):
             k_dict[i] = []
             all_scores[i] = []
-
+        #
         for j in range(1, num_iter +1):
             k_fold = KFold(n=X_tfidf.shape[0], n_folds=n_fold, shuffle=True, random_state=random.randint(1,101))
             # print "iteration: %d ..." % j
@@ -253,16 +260,14 @@ def score_kfolds(X, y, min_num_folds=2, max_num_folds=2, num_iter=1, atype=None,
                 # print "Fold: {} | Score:  {:.4f}".format(i, score)
                 # k_fold_scores = np.append(k_fold_scores, score)
                 i += 1
-
+        #
         avg_scores[k] = k_dict
         all_avg_scores[k] = all_scores
-
+        #
         print "Iterations for fold %d complete." % k
-
-    print
-    print '-- K-Fold Cross Validation --------'
-    print '-- Mean Scores for {} Iterations --'.format(j)
-    print
+    #
+    print '\n-- K-Fold Cross Validation --------'
+    print '-- Mean Scores for {} Iterations --\n'.format(j)
     for k in range(min_num_folds, max_num_folds + 1):
       print '-- k = {} --'.format(k)
       for i in range(1, k+1):
@@ -271,13 +276,10 @@ def score_kfolds(X, y, min_num_folds=2, max_num_folds=2, num_iter=1, atype=None,
             print 'Fold: {} | Mean Accuracy Score: {}'.format(i, np.mean(np.matrix(all_avg_scores[k][i])[:, 0].A1))
             print 'Fold: {} | Mean Precision Score: {}'.format(i, np.mean(np.matrix(all_avg_scores[k][i])[:, 1].A1))
             print 'Fold: {} | Mean Recall Score: {}'.format(i, np.mean(np.matrix(all_avg_scores[k][i])[:, 2].A1))
-        else:
-            pass
-            # print 'Fold: {} | Mean Accuracy Score: {}'.format(i, all_avg_scores[k][i][num_iter - 1][0])
-            # print 'Fold: {} | Mean Precision Score: {}'.format(i, all_avg_scores[k][i][num_iter - 1][1])
-            # print 'Fold: {} | Mean Recall Score: {}'.format(i, all_avg_scores[k][i][num_iter - 1][2])
-    print
-
+    #
+    endtime = time.time()
+    elapsed = endtime - start
+    print "\nAnalysis completed in", elapsed
     return (avg_scores, all_avg_scores)
 
 
@@ -532,6 +534,7 @@ def vectorize(X_docs, vocab=None):
     and returns a possibly transformed version of the document, still as an
     entire string."""
 
+
     vectorizer = TfidfVectorizer(strip_accents='unicode',
                                  stop_words='english',
                                  encoding='utf-8',
@@ -546,8 +549,9 @@ def vectorize(X_docs, vocab=None):
                                      ngram_range=(1, 1),
                                      preprocessor=PennTreebankPunkt(),
                                      vocabulary=vocab)
-
+    print "\nTraining vectorizer ..."
     X = vectorizer.fit_transform(X_docs)
+    print "Training complete!"
     return vectorizer, vectorizer.get_feature_names(), X
 
 
@@ -571,6 +575,7 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
     Returns a list of the features as the words themselves in descending order
     of importance.
     """
+    print "\nDetermining best features using chi-square test ..."
     if not kBest:
         kBest = X_numerical.shape[1]
     ch2 = SelectKBest(chi2, kBest)
@@ -602,7 +607,7 @@ def sorted_features (feature_names, X_numerical, y, kBest=None):
     # for feature_pvalue in zip(np.asarray(train_vectorizer.get_feature_names())[top_ranked_features_indices],ch2.pvalues_[top_ranked_features_indices]):
     #     print feature_pvalue
     # # np.asarray(vectorizer.get_feature_names())[ch2.get_support()]
-
+    print "Feature ranking complete!"
     return top_ranked_feature_names
 
 
@@ -927,7 +932,7 @@ def plot_sentiment_model_scores(scores_by_nfeats):
     return mean_scores_by_kfolds
 
 
-## UNSUPERVISED LEARNING ##
+## WORD2VEC EXPERIMENT ##
 # First, to train Word2Vec it is better not to remove stop words because
 # the algorithm relies on the broader context of the sentence in order
 # to produce high-quality word vectors.
@@ -1052,7 +1057,7 @@ def clustering_study():
     num_clusters = word_vectors.shape[0] / 5
 
     # Initalize a k-means object and use it to extract centroids
-    kmeans_clustering = KMeans( n_clusters = num_clusters )
+    kmeans_clustering = KMeans(n_clusters=num_clusters)
     idx = kmeans_clustering.fit_predict( word_vectors )
 
     # Get the end time and print how long the process took
@@ -1117,6 +1122,8 @@ def clustering_study():
 
 
 # TODO: frequency distributions
+
+## HELPER FUNCTIONS FOR WORD2VEC ##
 def review_to_wordlist( review, remove_stopwords=False ):
     """
     converts a document to a sequence of words optionally
@@ -1139,7 +1146,7 @@ def create_bag_of_centroids( wordlist, word_centroid_map ):
     # Pre-allocate the bag of centroids vector (for speed)
     bag_of_centroids = np.zeros( num_centroids, dtype="float32" )
     # Loop over the words in the review. If the word is in the vocabulary,
-    # find which cluster it belongs to, and increment that cluster count 
+    # find which cluster it belongs to, and increment that cluster count
     # by one
     for word in wordlist:
         if word in word_centroid_map:
@@ -1194,7 +1201,143 @@ def getAvgFeatureVecs(reviews, model, num_features):
     return reviewFeatureVecs
 
 
+## STAR PREDICTION ##
+from yelpseed import *
 
+def load_all_yelp_reviews():
+    """Load from Yelp Academic JSON into pandas dataframe
+
+    udf = user data frame
+    bdf = business data frame
+    rdf = review data frame
+    """
+    # Import different types of data
+    print "Loading dataframes from Yelp JSON ..."
+    udf, bdf, rdf = gets_data_frames(YELP_JSON_FP)
+    print "Loading complete!"
+    return rdf
+
+def train_star_vectorizer(num_docs=25000):
+    rdf = load_all_yelp_reviews()
+
+    # convert pandas dataframe to np matrix
+    rdf_matrix = rdf.as_matrix()
+
+    # extract arrays from matrix for text and stars
+    # review text
+    # reviews = rdf_matrix[:,4]
+    reviews = rdf_matrix[0:num_docs,4]
+    X = np.copy(reviews)
+
+    # star ratings
+    # stars = rdf_matrix[:,3]
+    stars = rdf_matrix[0:num_docs,3]
+    y = np.copy(stars).tolist()
+
+    X_test = np.copy(rdf_matrix[num_docs:(num_docs+1000),4])
+    y_test = np.copy(rdf_matrix[num_docs:(num_docs+1000),3]).tolist()
+
+    decision = raw_input("Train the vectorizer? Y or N >> ")
+    if decision.lower() == 'y':
+        start = time.time() # Start time
+        vectorizer, feature_names, X_tfidf = vectorize(X)
+        endtime = time.time() # end time
+        elapsed = endtime - start
+        print "Vectorizer training took %f seconds" % elapsed
+        print "Vectorizer contains %d features" % len(feature_names)
+        print '\n'
+        # pickle vectorizer
+        decision = raw_input("Pickle the vectorizer? Y or N >> ")
+        if decision.lower() == 'y':
+            items_to_pickle = [vectorizer]
+            pickling_paths = [pickle_path_star_v]
+            to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
+    else:
+        decision = raw_input("Unpickle the vectorizer? Y or N >> ")
+        if decision.lower() == 'y':
+            print "unpickling vectorizer"
+            vectorizer = revives_component(pickle_path_star_v)
+            X_tfidf = vectorizer.transform(X)
+
+    # train and test classifier
+    decision = raw_input("Train the classifier? Y or N >> ")
+    if decision.lower() == 'y':
+        print "\nTraining the classifier ..."
+        clf = MultinomialNB()
+        # import pdb; pdb.set_trace()
+        clf = clf.fit(X_tfidf, y)
+        print "Training complete!\n"
+
+    # pickle vectorizer and rdf
+    decision = raw_input("Pickle the classifier? Y or N >> ")
+    if decision.lower() == 'y':
+        items_to_pickle = [clf]
+        pickling_paths = [pickle_path_star_c]
+        to_persist(items_to_pickle=items_to_pickle, pickling_paths=pickling_paths)
+
+    # predict
+    print "\nVectorizing X_test ..."
+    X_test_tfidf = vectorizer.transform(X_test)
+    print "Vectorization complete!\n"
+    print "\nPredicting X_test star ratings ..."
+    predict = clf.predict(X_test_tfidf)
+    print "Prediction complete!\n"
+    comparison = zip(predict, y_test)
+    inaccurate = 0
+    for i, val in enumerate(comparison):
+        print "Index %d, y2 %d, prediction, %d" % (i, val[1], val[0])
+        if val[0] != val[1]:
+            inaccurate += 1
+            print "-- index %d inaccurate --" % i
+        per_inaccurate = inaccurate * 1.0 / len(predict)
+    print "Proportion inaccurate: {:.2f}".format(per_inaccurate)
+    scores_by_nfeats = []
+    # min_num_folds, max_num_folds, num_iter = get_folds_and_iter()
+    # fold_avg_scores = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, atype='stars')
+
+    # # Extract best features using chi2 test
+    # bestK = int(math.floor(len(feature_names) / 2))
+    # sorted_feats = sorted_features(feature_names, X_tfidf, y, kBest=bestK)
+
+    # print "Top %d Features from Chi-square Test for Star Ratings Vectorizer:" % 10
+    # for feature in sorted_feats[0:10]:
+    #     print "feature: ", feature
+    # print len(sorted_feats)
+
+    # user_choice = raw_input("Would you like to evaluate the best features? Y or N >> ")
+    # while user_choice.lower() not in ['y', 'n']:
+    #     user_choice = raw_input("Would you like to evaluate the best features? Y or N >> ")
+    # if user_choice.lower() == 'y':
+    #     avg_score_nfeats = {}
+    #     scores_by_nfeats = {}
+    #     if len(feature_names) > 25000:
+    #         feats_list = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 20000, 25000]
+    #     else:
+    #         feats_list = [len(feature_names) / 10, len(feature_names) / 5, len(feature_names) / 2, len(feature_names)]
+
+    #     # Check other features and update vocabulary
+    #     for nfeats in feats_list:
+    #         k_vectorizer, feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
+    #         print
+    #         print "-"*20
+    #         print "Perforing Cross-Validation with %d Features" % nfeats
+    #         print "-"*20
+    #         avg_score_nfeats[nfeats], scores_by_nfeats[nfeats] = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, 'sentiment', nfeats)
+    #     print
+    #     print "Test successful"
+
+    # if user_choice.lower() == 'n':
+    #     nfeats = ''
+    #     while not represents_int(nfeats) or int(nfeats) > len(feature_names):
+    #         nfeats = raw_input("Enter the number of features to use for the vectorizer: 1-%r" % str(len(feature_names)))
+    #     nfeats = int(nfeats)
+    #     vectorizer, feature_names, X_tfidf = vectorize(X, sorted_feats[0:nfeats])
+    #     avg_score_nfeats, scores_by_nfeats = score_kfolds(X_tfidf, y, min_num_folds, max_num_folds, num_iter, 'sentiment', nfeats)
+
+    return (vectorizer, scores_by_nfeats)
+
+def train_star_classifier():
+    pass
 
 def represents_int(s):
     """Helper function for checking if input string represents an int"""
@@ -1481,19 +1624,49 @@ def random_forest_training_set():
 
 if __name__ == "__main__":
 
+    ## TEST STAR PREDICTION PROTOTYPE AND PLOT METRICS
+    print "\n --TEST STAR PREDICTION PROTOTYPE AND PLOT METRICS--\n"
+    to_test = raw_input("Train the star-prediction vectorizer? Y or N >>")
+    if to_test.lower() == 'y':
+        num_docs = int(raw_input("Enter the number of reviews to use for training: 1000 - 250000 >> "))
+        if (999 < num_docs) and (num_docs < 250001):
+            vectorizer, all_avg_sentiment_scores = train_star_vectorizer(num_docs)
+        else:
+            print "exiting ..."
+
+        # # PLOT RESULTS
+        # user_choice = ''
+        # while user_choice.lower() not in ['y', 'n']:
+        #     user_choice = raw_input("Would you like to plot the cross-validation results? Y or N >> ")
+
+        # if user_choice.lower() == 'y':
+        #     mean_scores_by_kfolds = plot_sentiment_model_scores(all_avg_sentiment_scores)
+
+        # # PERSIST THE VECTORIZER
+        # to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_star_v])
+
+
     ## TRAIN SENTIMENT ANALYSIS CLASSIFIER
+    print "\n--TRAIN STAR PREDICTION CLASSIFIER--"
+    to_test = raw_input("Train the star-prediction classifier? Y or N >>")
+    if to_test.lower() == 'y':
+        train_star_classifier()
+
+
+    ## TRAIN SENTIMENT ANALYSIS CLASSIFIER
+    print "\n--TRAIN SENTIMENT ANALYSIS CLASSIFIER--"
     to_test = raw_input("Train the gluten-free sentiment analysis classifier? Y or N >>")
     if to_test.lower() == 'y':
         train_sentiment_classifier()
 
     ## RANDOM FOREST MULTILABEL PROBLEM
-    print
+    print "\n--RANDOM FOREST MULTILABEL PROBLEM--"
     to_test = raw_input("Train the random forest multilabel classifier? Y or N >>")
     if to_test.lower() == 'y':
         forest_clf = train_random_forest_classifier()
 
     ## TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS
-    print
+    print "\n--TEST SENTIMENT ANALYSIS PROTOTYPE AND PLOT METRICS--"
     to_test = raw_input("Train the gluten-free sentiment analysis vectorizer? Y or N >>")
     if to_test.lower() == 'y':
         # LOAD DATASET
@@ -1522,7 +1695,7 @@ if __name__ == "__main__":
         to_persist(items_to_pickle=[vectorizer], pickling_paths=[pickle_path_SA_v])
 
     ## USE SENTIMENT ANALYSIS PROTOTYPE
-    print
+    print '\n--USE SENTIMENT ANALYSIS PROTOTYPE TO PREDICT BY SENTENCE--'
     to_test = raw_input("Perform sentiment analysis? Y or N >>")
     if to_test.lower() == 'y':
         text = raw_input("Enter a sentence to parse >> ")
@@ -1537,7 +1710,7 @@ if __name__ == "__main__":
 
     ## SUPERCEDED CLASSIFIERS ##
     ## TRAIN AND PERSIST CLASSIFIER ## SUPERCEDED -- USE RANDOM FORESTS
-    print
+    print '\n--SUPERCEDED CLASSIFIERS--'
     to_train = raw_input("Train the LinearSVC classifier for categorization? Y or N >> ")
     if to_train.lower() == 'y':
         train_classifier()

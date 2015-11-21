@@ -24,6 +24,7 @@ import json
 CAT_CODES_ID = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn']
 CAT_NAMES_ID = ['Gluten-Free', 'Vegan', 'Kosher', 'Allergies', 'Paleo', 'Feeling Lucky']
 CAT_DICT = {CAT_CODES_ID[n]: CAT_NAMES_ID[n] for n in range(len(CAT_CODES_ID))}
+CAT_IDICT = {CAT_NAMES_ID[n]: CAT_CODES_ID[n] for n in range(len(CAT_CODES_ID))}
 CAT_LISTS = [[CAT_CODES_ID[n], CAT_NAMES_ID[n]] for n in range(len(CAT_CODES_ID))]
 google_maps_key = os.environ['GOOGLE_MAPS_API_KEY']
 
@@ -452,6 +453,143 @@ def show_sunburst_basic():
     return render_template("sunburst.html")
 
 
+# from collections import defaultdict
+# def tree():
+#     """Helper function for generating tree-like JSON"""
+#     return defaultdict(tree)
+
+
+@app.route('/sunburst.json')
+def get_sunburst_data():
+    """Make a tree structure of JSON, like mbostock's flare.json
+
+    root = City -> Category -> Business -> Review -> Sentiment Score
+
+    >>> ctree = dict()
+    >>> ctree['name'] = 'Berkeley'
+    >>> ctree['children'] = []
+    >>> cattree = {}
+    >>> cattree['name'] = 'Gluten-Free'
+    >>> cattree['children'] = []
+    >>> ctree['children'].append(cattree)
+    >>> ctree
+    {'name': 'Berkeley', 'children': [{'name': 'Gluten-Free', 'children': []}]}
+    """
+    state = 'CA'
+    cities_list = ['Berkeley']
+
+    arc_size = 10000
+
+    for city in cities_list:
+        # get number of reviews in city by category (for sizing children)
+        QUERY = """
+        SELECT count(*), Revcats.cat_code from revcats
+        JOIN Biz on Biz.biz_id = Revcats.biz_id
+        WHERE Biz.city = :city and Biz.state = :state
+        GROUP BY Revcats.cat_code;
+        """
+        cursor = db.session.execute(QUERY, {'city': city, 'state': state})
+        revcounts = cursor.fetchall()
+
+        revcount_dict = {}
+        for revcount in revcounts:
+            revcount_dict[str(revcount[1])] = revcount[0]
+        total_reviews_in_city = sum(revcount_dict.values())
+
+        # make tree(s)
+        city_tree = dict()
+        city_tree['name'] = city
+        city_tree['children'] = []
+        for cat in revcount_dict.keys():
+            print "this is cat", cat
+            cat_tree = dict()
+            cat_tree['name'] = CAT_DICT[cat]
+            cat_tree['children'] = []
+            # query for businesses in category
+            QUERY = """
+            SELECT DISTINCT Biz.name, Biz.biz_id FROM Biz
+            INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
+            INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
+            WHERE Revcats.cat_code = :cat_code
+            AND Biz.city = 'Berkeley' AND Biz.state = 'CA';"""
+            cursor = db.session.execute(QUERY, {'cat_code': cat})
+            businesses = cursor.fetchall()
+
+            # proportional of all reviews in city in current category
+            cat_weight = (1.0 * revcount_dict[cat] ) / total_reviews_in_city
+
+            for business in businesses:
+                # handle accented characters
+                if u'\xe9' in business[0]:
+                    biz_name = business[0].replace(u'\xe9', u'e')
+                else:
+                    biz_name = business[0]
+                biz_id = business[1]
+                biz_tree = dict()
+                biz_tree['name'] = biz_name
+                biz_tree['size'] = 100
+                # biz_tree['children'] = []
+                # # TOO MANY REVIEWS TO SHOW THIS LAYER
+                # # query for reviews in catergory in business
+                # QUERY = """
+                # SELECT yelpUsers.name, Revcats.review_id, Revcats.sen_score, Revcats.revcat_id FROM Revcats
+                # INNER JOIN Reviews on Reviews.review_id = Revcats.review_id
+                # INNER JOIN yelpUsers on Reviews.yelp_user_id = yelpUsers.user_id
+                # WHERE Revcats.cat_code = :cat_code
+                # AND Revcats.biz_id = :biz_id"""
+                # cursor = db.session.execute(QUERY, {'biz_id': biz_id, 'cat_code': cat})
+                # reviews = cursor.fetchall()
+                # # get total sentiment score for calculating size
+                # biz_sen_total = 0
+                # for review in reviews:
+                #     # if review does not have sentiment, score it and add to db.
+                #     if not review[2]:
+                #         # query for review text
+                #         doc = PlatePalReview.query.filter(PlatePalReview.review_id==review[1]).one()
+                #         if doc:
+                #             sen_score = get_sentiment_score(doc)
+                #             revcat = ReviewCategory.query.filter(ReviewCategory.revcat_id==review[3]).one()
+                #             revcat.sen_score = sen_score
+                #             db.session.commit()
+                #     else:
+                #         revcat_sen = review[2]
+                #     # update total
+                #     biz_sen_total += revcat_sen
+                # # create review tree
+                # for review in reviews:
+                #     user_name = review[0]
+                #     if not review[2]:
+                #         # query for review sentiment in database (updated above)
+                #         revcat = ReviewCategory.query.filter(ReviewCategory.revcat_id==review[3]).one()
+                #         sen_score = revcat.sen_score
+                #     else:
+                #         sen_score = review[2]
+
+                #     rev_size = ( sen_score / biz_sen_total ) * cat_weight * arc_size
+                #     review_tree = {"name": user_name, "size": rev_size}
+                #     # add review to business children
+                #     biz_tree['children'].append(review_tree)
+                # add biz to category children
+                cat_tree['children'].append(biz_tree)
+            # add category to city children
+            city_tree['children'].append(cat_tree)
+
+            # # add trees for categories not in city
+            # set1 = set(CAT_DICT.keys())
+            # set2 = set(revcount_dict.keys())
+            # print set1
+            # print set2
+            # print set1.difference(set2)
+            # for item in set1.difference(set2):
+            #     print "this is cat in set difference", item
+            #     cat_tree = dict()
+            #     cat_tree['name'] = CAT_DICT[item]
+            #     cat_tree['size'] = arc_size / 100
+            #     city_tree['children'].append(cat_tree)
+
+    return jsonify(city_tree)
+
+
 @app.route('/analytics')
 def lab():
     """Analytics page housing sentiment analysis info and D3"""
@@ -461,33 +599,9 @@ def lab():
 
 @app.route('/analytics.json')
 def get_force_data():
-    #  sqlite> select DISTINCT biz.name, biz.city, revcats.cat_code
-    # ...> FROM biz
-    # ...> JOIN Reviews on Reviews.biz_id = biz.biz_id
-    # ...> JOIN Revcats on Revcats.review_id = reviews.review_id
-    # ...> WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Menlo Park', 'Stanford')
-    # ...> AND Biz.state = 'CA';
-
-    # Define NODES
-    #   // TODO: use JSON to get node
-    #  var nodes = [
-    #      {name: 'Meggie', advisor: 'Meggie'}, // 0
-    #      {name: 'Cynthia', advisor: 'Cynthia'}, // 1
+    """Generate JSON for Force Graph by region"""
 
     cities_list = ['Berkeley', 'Palo Alto', 'Stanford']
-    # cities_list = []
-    # QUERY = """
-    # SELECT DISTINCT Biz.city FROM Biz
-    # INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
-    # INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
-    # WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Stanford')
-    # AND Biz.state = 'CA';
-    # """
-    # cursor = db.session.execute(QUERY)
-    # cities = cursor.fetchall()
-    # for city in cities:
-    #     cities_list.append(city[0])
-    # print cities_list
 
     links = []
     nodes = []

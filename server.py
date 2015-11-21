@@ -438,6 +438,77 @@ def geocode_city_state(city, state):
 
     return jsonify({'lat': city_entry.lat, 'lng': city_entry.lng})
 
+@app.route('/analytics.json')
+def get_force_data():
+    #  sqlite> select DISTINCT biz.name, biz.city, revcats.cat_code
+    # ...> FROM biz
+    # ...> JOIN Reviews on Reviews.biz_id = biz.biz_id
+    # ...> JOIN Revcats on Revcats.review_id = reviews.review_id
+    # ...> WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Menlo Park', 'Stanford')
+    # ...> AND Biz.state = 'CA';
+
+    # Define NODES
+    #   // TODO: use JSON to get node
+    #  var nodes = [
+    #      {name: 'Meggie', advisor: 'Meggie'}, // 0
+    #      {name: 'Cynthia', advisor: 'Cynthia'}, // 1
+
+    cities_list = ['Berkeley', 'Menlo Park', 'Palo Alto', 'Stanford']
+
+    nodes = []
+    nodes_index = []
+    n_index = 0
+    # Add categories to nodes
+    for cat in CAT_NAMES_ID[:len(CAT_NAMES_ID)-1]:
+        nodes.append({'name': cat, 'parent': cat})
+        nodes_index.append({cat: n_index})
+        n_index += 1
+    # add cities to nodes
+    for city in cities_list:
+        nodes.append({'name': city, 'parent': city})
+        nodes_index.append({city: n_index})
+        n_index += 1
+
+    # Select businesses in cities list that have a category code (Inner Join)
+    QUERY = """
+    SELECT DISTINCT Biz.name, Biz.city, Biz.biz_id FROM Biz
+    JOIN Reviews on Reviews.biz_id = Biz.biz_id
+    JOIN Revcats on Revcats.review_id = Reviews.review_id
+    WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Menlo Park', 'Stanford')
+    AND Biz.state = 'CA';
+    """
+    cursor = db.session.execute(QUERY)
+    biz = cursor.fetchall()
+
+    for b in biz: # b[0] = name, b[1] = city, b[2] = biz_id
+        b_idict = {}
+        b_odict = {b[0]: b_idict}
+        nodes.append({'name': b[0], 'parent': b[1]})
+        
+        # append biz-city pair to index dictionary
+        b_idict[b[1]] = n_index
+        n_index += 1
+        
+        # get cat codes for that business
+        QUERY = """
+        SELECT Revcats.cat_code FROM Revcats
+        JOIN Reviews on Reviews.review_id = Revcats.review_id
+        JOIN Biz on Biz.biz_id = Reviews.biz_id
+        WHERE Biz.biz_id = :biz_id
+        """
+        cursor = db.session.execute(QUERY, {'biz_id': b[2]})
+        cats = cursor.fetchall()
+        # import pdb; pdb.set_trace()
+        for cat in cats:
+            cat_name = CAT_DICT[cat[0]]
+            nodes.append({'name': b[0], 'parent': cat_name})
+            b_idict[cat] = n_index
+            n_index += 1
+    nodes_index.append(b_odict)
+    # define LINKS
+    # link business to city
+    # link business to category
+    return jsonify(nodes)
 
 def find_nearby_cities(city, state, x_miles):
     """Given a city (city, state), return a list of cities within x miles."""
@@ -460,10 +531,9 @@ def find_nearby_cities(city, state, x_miles):
     return nearby_cities_list
 
 # TODO -- for adding a new review
-def get_sentiment_score():
+def get_sentiment_score(doc):
     url = "http://text-processing.com/api/sentiment/"
 
-    doc = "I like cheese."
     payload = {'text': doc}
 
     # make API call
@@ -476,7 +546,7 @@ def get_sentiment_score():
     sen_score = result['probability']['pos']
 
     # store in database...
-    return
+    return sen_score
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
@@ -489,3 +559,5 @@ if __name__ == "__main__":
     DebugToolbarExtension(app)
 
     app.run()
+
+    get_force_data()

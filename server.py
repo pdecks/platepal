@@ -455,17 +455,20 @@ def get_force_data():
 
     cities_list = ['Berkeley', 'Menlo Park', 'Palo Alto', 'Stanford']
 
+    links = []
     nodes = []
     nodes_index = {}
     n_index = 0
     # Add categories to nodes
     for cat in CAT_NAMES_ID[:len(CAT_NAMES_ID)-1]:
-        nodes.append({'name': cat, 'parent': cat})
+        # nodes.append({'name': cat, 'parent': cat})
+        nodes.append({'name': cat, 'group': 1})
         nodes_index[cat] = n_index
         n_index += 1
     # add cities to nodes
     for city in cities_list:
-        nodes.append({'name': city, 'parent': city})
+        # nodes.append({'name': city, 'parent': city})
+        nodes.append({'name': city, 'group': 2})
         nodes_index[city] = n_index
         n_index += 1
     print "this is nodes", nodes
@@ -486,12 +489,13 @@ def get_force_data():
             biz_name = place[0].replace(u'\xe9', u'e')
         else:
             biz_name = place[0]
-        nodes.append({'name': biz_name, 'parent': place[1]})
+        # nodes.append({'name': biz_name, 'parent': place[1]})
+        nodes.append({'name': biz_name, 'group': 3})
 
         # append biz-city pair to index dictionary
-        b_dict[place[1]] = n_index
-        n_index += 1
-
+        b_dict[biz_name] = [n_index, place[1]]
+        links.append({'source': nodes_index[place[1]], 'target': n_index, 'value': 1})
+        
         # get cat codes for that business
         QUERY = """
         SELECT DISTINCT Revcats.cat_code FROM Revcats
@@ -505,16 +509,23 @@ def get_force_data():
         for c in cats:
             cat_name = CAT_DICT[c[0]]
             nodes.append({'name': biz_name, 'parent': cat_name})
-            b_dict[c[0]] = n_index
-            n_index += 1
-            # print "in c in cats with c=", c
+            # b_dict[cat_name] = n_index
+            b_dict[biz_name].append(cat_name)
+            # n_index += 1
+            links.append({'source': nodes_index[cat_name], 'target': n_index, 'value': 1})
+        # keep track of nodex
         nodes_index[biz_name] = b_dict
-    # define LINKS
-    # link business to city
-    # link business to category
-
-    json_dict = {'nodes': nodes, 'index': nodes_index}
+        # make links
+        n_index += 1
+    # build outer dictionary
+    json_dict = {'nodes': nodes, 'links': links}
+    # import pdb; pdb.set_trace()
     return jsonify(json_dict)
+
+@app.route('/analytics.html')
+def show_analytics_page():
+    # return render_template("force-layout.html")
+    return render_template("force-mbostock.html")
 
 def find_nearby_cities(city, state, x_miles):
     """Given a city (city, state), return a list of cities within x miles."""

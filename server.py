@@ -433,11 +433,30 @@ def geocode_city_state(city, state):
     return jsonify({'lat': city_entry.lat, 'lng': city_entry.lng})
 
 
+
+@app.route('/sunburst')
+def show_zoomable_sunburst_labels():
+    """Analytics page housing sentiment analysis info and D3"""
+    return render_template("zoomable-sunburst-labels.html")
+
+
+@app.route('/sunburst-labels')
+def show_sunburst_labels():
+    """Analytics page housing sentiment analysis info and D3"""
+    return render_template("sunburst-labels.html")
+
+
+@app.route('/sunburst-basic')
+def show_sunburst_basic():
+    """Analytics page housing sentiment analysis info and D3"""
+    return render_template("sunburst.html")
+
+
 @app.route('/analytics')
 def lab():
     """Analytics page housing sentiment analysis info and D3"""
-    return render_template("force-mbostock.html")
-    # return render_template("collapsable-force.html")
+    # return render_template("force-mbostock.html")
+    return render_template("force-labeled.html")
 
 
 @app.route('/analytics.json')

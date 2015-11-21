@@ -1,0 +1,61 @@
+{
+ "name": "Berkeley",
+ "children": [
+  {
+   "name": "Gluten-Free",
+   "children": [
+    {"name": "GFBiz1",
+     "children": [
+        {"name": "GFB1Review1", "size": 3938},
+        {"name": "GFB1Review2", "size": 3812},
+        {"name": "GFB1Review3", "size": 6714}
+       ]
+      },
+    {"name": "GFBiz2",
+     "children": [
+      {"name": "GFB2Review1", "size": 3938},
+      {"name": "GFB2Review2", "size": 3812},
+      {"name": "GFB2Review3", "size": 6714},
+      {"name": "GFB2Review4", "size": 2000}
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Vegan",
+   "children": [
+    {"name": "VBiz1",
+     "children": [
+      {"name": "VB1Review1", "size": 3938},
+      {"name": "VB1Review2", "size": 3812},
+      {"name": "VB1Review3", "size": 6714}  
+     ]
+    },
+    {"name": "VBiz2",
+     "children": [
+      {"name": "VB2Review1", "size": 3938},
+      {"name": "VB2Review2", "size": 3812},
+      {"name": "VB2Review3", "size": 6714},
+      {"name": "VB2Review4", "size": 2000}
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Paleo",
+   "children": [
+    ],
+    "size": 5000
+  },
+  {
+   "name": "Kosher",
+   "children": [
+    ]
+  },
+  {
+   "name": "Allergy",
+   "children": [
+    ]
+  }
+ ]
+}

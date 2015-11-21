@@ -8,3 +8,11 @@ misc/
 data/
 *.db
 static/js/gmaps-filter.js
+static/js/ca-gmaps.js
+templates/ca.html
+templates/force-labeled.html
+templates/sunburst-labels.html
+templates/sunburst.html
+classifiers/StarPrediction/
+
+

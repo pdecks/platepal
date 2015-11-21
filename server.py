@@ -46,12 +46,6 @@ def index():
     return redirect('/CA/Palo%20Alto/city.html')
 
 
-@app.route('/analytics')
-def lab():
-    """Analytics page housing sentiment analysis info and D3"""
-    return render_template('/analytics.html')
-
-
 @app.route('/<state>/state.html')
 def display_all_biz_in_state(state):
     """State landing page."""
@@ -438,6 +432,14 @@ def geocode_city_state(city, state):
 
     return jsonify({'lat': city_entry.lat, 'lng': city_entry.lng})
 
+
+@app.route('/analytics')
+def lab():
+    """Analytics page housing sentiment analysis info and D3"""
+    return render_template("force-mbostock.html")
+    # return render_template("collapsable-force.html")
+
+
 @app.route('/analytics.json')
 def get_force_data():
     #  sqlite> select DISTINCT biz.name, biz.city, revcats.cat_code
@@ -453,7 +455,20 @@ def get_force_data():
     #      {name: 'Meggie', advisor: 'Meggie'}, // 0
     #      {name: 'Cynthia', advisor: 'Cynthia'}, // 1
 
-    cities_list = ['Berkeley', 'Menlo Park', 'Palo Alto', 'Stanford']
+    cities_list = ['Berkeley', 'Palo Alto', 'Stanford']
+    # cities_list = []
+    # QUERY = """
+    # SELECT DISTINCT Biz.city FROM Biz
+    # INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
+    # INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
+    # WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Stanford')
+    # AND Biz.state = 'CA';
+    # """
+    # cursor = db.session.execute(QUERY)
+    # cities = cursor.fetchall()
+    # for city in cities:
+    #     cities_list.append(city[0])
+    # print cities_list
 
     links = []
     nodes = []
@@ -462,13 +477,13 @@ def get_force_data():
     # Add categories to nodes
     for cat in CAT_NAMES_ID[:len(CAT_NAMES_ID)-1]:
         # nodes.append({'name': cat, 'parent': cat})
-        nodes.append({'name': cat, 'group': 1})
+        nodes.append({'name': cat, 'group': 1, 'value': 10})
         nodes_index[cat] = n_index
         n_index += 1
     # add cities to nodes
     for city in cities_list:
         # nodes.append({'name': city, 'parent': city})
-        nodes.append({'name': city, 'group': 2})
+        nodes.append({'name': city, 'group': 2, 'value': 15})
         nodes_index[city] = n_index
         n_index += 1
     print "this is nodes", nodes
@@ -476,9 +491,9 @@ def get_force_data():
     # Select businesses in cities list that have a category code (Inner Join)
     QUERY = """
     SELECT DISTINCT Biz.name, Biz.city, Biz.biz_id FROM Biz
-    JOIN Reviews on Reviews.biz_id = Biz.biz_id
-    JOIN Revcats on Revcats.review_id = Reviews.review_id
-    WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Menlo Park', 'Stanford')
+    INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
+    INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
+    WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Stanford')
     AND Biz.state = 'CA';
     """
     cursor = db.session.execute(QUERY)
@@ -490,17 +505,26 @@ def get_force_data():
         else:
             biz_name = place[0]
         # nodes.append({'name': biz_name, 'parent': place[1]})
-        nodes.append({'name': biz_name, 'group': 3})
+        nodes.append({'name': biz_name, 'group': 3, 'value': 5})
 
         # append biz-city pair to index dictionary
         b_dict[biz_name] = [n_index, place[1]]
         links.append({'source': nodes_index[place[1]], 'target': n_index, 'value': 1})
-        
+        if 'Stuffed Inn' in biz_name:
+            print '-'*20
+            print 'STUFFED INN'
+            print 'Nodes'
+            for node in nodes:
+                print node
+            print 'Links'
+            for link in links:
+                print link
+            print '-'*20
         # get cat codes for that business
         QUERY = """
         SELECT DISTINCT Revcats.cat_code FROM Revcats
-        JOIN Reviews on Reviews.review_id = Revcats.review_id
-        JOIN Biz on Biz.biz_id = Reviews.biz_id
+        INNER JOIN Reviews on Reviews.review_id = Revcats.review_id
+        INNER JOIN Biz on Biz.biz_id = Reviews.biz_id
         WHERE Biz.biz_id = :biz_id
         """
         cursor = db.session.execute(QUERY, {'biz_id': place[2]})
@@ -508,7 +532,6 @@ def get_force_data():
         # import pdb; pdb.set_trace()
         for c in cats:
             cat_name = CAT_DICT[c[0]]
-            nodes.append({'name': biz_name, 'parent': cat_name})
             # b_dict[cat_name] = n_index
             b_dict[biz_name].append(cat_name)
             # n_index += 1
@@ -522,10 +545,6 @@ def get_force_data():
     # import pdb; pdb.set_trace()
     return jsonify(json_dict)
 
-@app.route('/analytics.html')
-def show_analytics_page():
-    # return render_template("force-layout.html")
-    return render_template("force-mbostock.html")
 
 def find_nearby_cities(city, state, x_miles):
     """Given a city (city, state), return a list of cities within x miles."""

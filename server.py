@@ -456,19 +456,20 @@ def get_force_data():
     cities_list = ['Berkeley', 'Menlo Park', 'Palo Alto', 'Stanford']
 
     nodes = []
-    nodes_index = []
+    nodes_index = {}
     n_index = 0
     # Add categories to nodes
     for cat in CAT_NAMES_ID[:len(CAT_NAMES_ID)-1]:
         nodes.append({'name': cat, 'parent': cat})
-        nodes_index.append({cat: n_index})
+        nodes_index[cat] = n_index
         n_index += 1
     # add cities to nodes
     for city in cities_list:
         nodes.append({'name': city, 'parent': city})
-        nodes_index.append({city: n_index})
+        nodes_index[city] = n_index
         n_index += 1
-
+    print "this is nodes", nodes
+    print "this is nodes_index", nodes_index
     # Select businesses in cities list that have a category code (Inner Join)
     QUERY = """
     SELECT DISTINCT Biz.name, Biz.city, Biz.biz_id FROM Biz
@@ -479,35 +480,39 @@ def get_force_data():
     """
     cursor = db.session.execute(QUERY)
     biz = cursor.fetchall()
+    for place in biz: # place[0] = name, place[1] = city, place[2] = biz_id
+        b_dict = {}
+        if u'\xe9' in place[0]:
+            biz_name = place[0].replace(u'\xe9', u'e')
+        else:
+            biz_name = place[0]
+        nodes.append({'name': biz_name, 'parent': place[1]})
 
-    for b in biz: # b[0] = name, b[1] = city, b[2] = biz_id
-        b_idict = {}
-        b_odict = {b[0]: b_idict}
-        nodes.append({'name': b[0], 'parent': b[1]})
-        
         # append biz-city pair to index dictionary
-        b_idict[b[1]] = n_index
+        b_dict[place[1]] = n_index
         n_index += 1
-        
+
         # get cat codes for that business
         QUERY = """
-        SELECT Revcats.cat_code FROM Revcats
+        SELECT DISTINCT Revcats.cat_code FROM Revcats
         JOIN Reviews on Reviews.review_id = Revcats.review_id
         JOIN Biz on Biz.biz_id = Reviews.biz_id
         WHERE Biz.biz_id = :biz_id
         """
-        cursor = db.session.execute(QUERY, {'biz_id': b[2]})
+        cursor = db.session.execute(QUERY, {'biz_id': place[2]})
         cats = cursor.fetchall()
         # import pdb; pdb.set_trace()
-        for cat in cats:
-            cat_name = CAT_DICT[cat[0]]
-            nodes.append({'name': b[0], 'parent': cat_name})
-            b_idict[cat] = n_index
+        for c in cats:
+            cat_name = CAT_DICT[c[0]]
+            nodes.append({'name': biz_name, 'parent': cat_name})
+            b_dict[c[0]] = n_index
             n_index += 1
-    nodes_index.append(b_odict)
+            # print "in c in cats with c=", c
+        nodes_index[biz_name] = b_dict
     # define LINKS
     # link business to city
     # link business to category
+    import pdb; pdb.set_trace()
     return jsonify(nodes)
 
 def find_nearby_cities(city, state, x_miles):

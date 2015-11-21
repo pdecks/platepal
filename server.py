@@ -512,8 +512,9 @@ def get_force_data():
     # define LINKS
     # link business to city
     # link business to category
-    import pdb; pdb.set_trace()
-    return jsonify(nodes)
+
+    json_dict = {'nodes': nodes, 'index': nodes_index}
+    return jsonify(json_dict)
 
 def find_nearby_cities(city, state, x_miles):
     """Given a city (city, state), return a list of cities within x miles."""

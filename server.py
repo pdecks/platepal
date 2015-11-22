@@ -435,10 +435,17 @@ def geocode_city_state(city, state):
 
 
 
-@app.route('/sunburst')
-def show_zoomable_sunburst_labels():
+@app.route('/<city>/sunburst')
+def show_zoomable_sunburst_labels(city="Berkeley"):
     """Analytics page housing sentiment analysis info and D3"""
-    return render_template("zoomable-sunburst-labels.html")
+    return render_template("zoomable-sunburst-labels.html", city=city)
+
+@app.route('/sunburst-form', methods=['GET'])
+def update_zoomable_sunburst_labels():
+    """Analytics page housing sentiment analysis info and D3"""
+    city = request.args.get("cityname")
+    return redirect("/" + city + "/sunburst")
+
 
 
 @app.route('/sunburst-labels')
@@ -459,24 +466,18 @@ def show_sunburst_basic():
 #     return defaultdict(tree)
 
 
-@app.route('/sunburst.json')
-def get_sunburst_data():
+@app.route('/<selected_city>/sunburst.json', methods=['GET', 'POST'])
+def get_sunburst_data(selected_city):
     """Make a tree structure of JSON, like mbostock's flare.json
 
     root = City -> Category -> Business -> Review -> Sentiment Score
-
-    >>> ctree = dict()
-    >>> ctree['name'] = 'Berkeley'
-    >>> ctree['children'] = []
-    >>> cattree = {}
-    >>> cattree['name'] = 'Gluten-Free'
-    >>> cattree['children'] = []
-    >>> ctree['children'].append(cattree)
-    >>> ctree
-    {'name': 'Berkeley', 'children': [{'name': 'Gluten-Free', 'children': []}]}
     """
+    print "IN SUNBURST.JSON"
+    # selected_city = request.form.get('cityname')
     state = 'CA'
-    cities_list = ['Berkeley']
+    cities_list = [selected_city]
+    print cities_list
+    # cities_list = ['Berkeley']
 
     arc_size = 10000
 
@@ -511,8 +512,8 @@ def get_sunburst_data():
             INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
             INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
             WHERE Revcats.cat_code = :cat_code
-            AND Biz.city = 'Berkeley' AND Biz.state = 'CA';"""
-            cursor = db.session.execute(QUERY, {'cat_code': cat})
+            AND Biz.city = :city AND Biz.state = 'CA';"""
+            cursor = db.session.execute(QUERY, {'cat_code': cat, 'city': city})
             businesses = cursor.fetchall()
 
             # proportional of all reviews in city in current category
@@ -528,8 +529,9 @@ def get_sunburst_data():
                 biz_tree = dict()
                 biz_tree['name'] = biz_name
                 biz_tree['size'] = 100
-                # biz_tree['children'] = []
+                
                 # # TOO MANY REVIEWS TO SHOW THIS LAYER
+                # biz_tree['children'] = []
                 # # query for reviews in catergory in business
                 # QUERY = """
                 # SELECT yelpUsers.name, Revcats.review_id, Revcats.sen_score, Revcats.revcat_id FROM Revcats
@@ -586,7 +588,7 @@ def get_sunburst_data():
             #     cat_tree['name'] = CAT_DICT[item]
             #     cat_tree['size'] = arc_size / 100
             #     city_tree['children'].append(cat_tree)
-
+    print "this is city_tree['name']", city_tree['name']
     return jsonify(city_tree)
 
 
@@ -720,7 +722,7 @@ def get_sentiment_score(doc):
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
     # that we invoke the DebugToolbarExtension
-    app.debug = True
+    app.debug = False
 
     connect_to_db(app)
 

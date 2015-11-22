@@ -12,7 +12,9 @@ static/js/ca-gmaps.js
 templates/ca.html
 templates/force-labeled.html
 templates/sunburst-labels.html
+templates/zoomable-sunburst-labels-ajax.html
 templates/sunburst.html
 classifiers/StarPrediction/
+plots/
 
 

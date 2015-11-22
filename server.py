@@ -592,7 +592,7 @@ def get_sunburst_data(selected_state, selected_city):
             # add category to city children
             city_tree['children'].append(cat_tree)
 
-            # # add trees for categories not in city
+            # add trees for categories not in city --> this was showing results twice ...
             # set1 = set(CAT_DICT.keys())
             # set2 = set(revcount_dict.keys())
             # print set1

@@ -68,10 +68,8 @@ PlatePal: Analytics
 <div> 
 
     <article>
-        Post about motivation behind site
-    </article>
-    <article>
-        Post about sentiment analysis and scikit learn-ing
+        <h3>Project Motivation</h3>
+        <br>
     </article>
     <div id="area1">
         Post about regional relationships (city --> restaurant --> category)
@@ -187,12 +185,10 @@ PlatePal: Analytics
           }
         });
 
-        </script>
-
-    <div id="area2">
-        Post about city tree map (city --> cats --> restaurant --> sentiment)
-
-      <form action="/sunburst-form">
+    </script>
+    <div id="treemap">
+      Post about city tree map (city --> cats --> restaurant --> sentiment)
+        <form action="/sunburst-form">
           <select name="statename" id="selectstate">
             <option hidden=""></option>
             {% for place in states %}
@@ -207,6 +203,8 @@ PlatePal: Analytics
           </select>
           <input type="submit" value="Update">
       </form>
+    </div>
+    <div id="area2">
     </div>
     <script>
     $("#selectstate").change(function () {
@@ -310,36 +308,34 @@ PlatePal: Analytics
       return (x2(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
     }
 
-    // $("#selectcity").on('change', function(evt){
-    //   // get the link's id
+    $("#selectcity").on('change', function(evt){
+      // get the link's id
 
-    //   jsonRoute = $("#selectcity").val() + "/sunburst.json";
-    //   console.log("this is jsonRoute")
-    //   console.log(jsonRoute)
-    //   updateSunburst(jsonRoute)
-    // });
+      jsonRoute = ('/CA/' + $("#selectcity").val() + "/sunburst.json");
+      $("div#area2").remove()
+      $("<div id='area2'></div>").insertAfter("#treemap")
+      updateSunburst(jsonRoute)
+    });
 
 
     // update d3
     function updateSunburst(jsonRoute){
       d3.select("svg2").remove();
 
-      // canvas !! moved inside for AJAX
-      svg2 = d3.select("#area2").append("svg")
-        .attr("width", width)
-        .attr("height", height)
-       .append("g")
-        .attr("transform", "translate(" + width2 / 2 + "," + (height2 / 2 ) + ")");
+      var svg2 = d3.select("#area2").append("svg")
+          .attr("width", width2)
+          .attr("height", height2)
+        .append("g")
+          .attr("transform", "translate(" + width2 / 2 + "," + (height2 / 2 ) + ")");
 
-      partition = d3.layout.partition()
-        .value(function(d) { return d.size; });
+      var partition = d3.layout.partition()
+          .value(function(d) { return d.size; });
 
-      arc = d3.svg.arc()
-        .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x))); })
-        .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x + d.dx))); })
-        .innerRadius(function(d) { return Math.max(0, y2(d.y)); })
-        .outerRadius(function(d) { return Math.max(0, y2(d.y + d.dy)); });
-      // end of what was moved inside !!
+      var arc = d3.svg.arc()
+          .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x))); })
+          .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x + d.dx))); })
+          .innerRadius(function(d) { return Math.max(0, y2(d.y)); })
+          .outerRadius(function(d) { return Math.max(0, y2(d.y + d.dy)); });
 
       d3.json(jsonRoute, function(error, root) {
         if (error) throw error;
@@ -379,11 +375,102 @@ PlatePal: Analytics
                 }
             });
         } // end click(d)
-    }); // end d3.json
-    }
+      }); // end d3.json
+    } // end updateSunburst
 
     </script>
+    <article id="ML">
+        <h2>Post about sentiment analysis and scikit learn-ing</h2>
+        <h3>Wrangling Data </h3>
+          <p> ... trying to label unlabeled data. Note that now for 'vgan' sentences
+            I have them labeled with the sentiment score from the API calls. </p>
 
+          <p> ... not having enough data in a category. 'Gltn' is much smaller
+          compared to 'vgan' </p>
+          <h4>Author's Reviews<h4>
+
+          <h4>Yelp Academic Dataset</h4>
+
+
+        <h3>Text Classification </h3>
+          <h4>Preprocessing </h4>
+        
+          <h4>Extracting Features </h4>
+            <h5>Vectorizer Vocabulary</h5>
+
+            <h5>Bag of Words</h5>
+            <h5>Word2Vec</h5>
+            <h5>KFolds</h5>
+              <h6>Author's Reviews: Classification</h6>
+              <p>
+                <img src="/static/img/k2_toyset.png"><br>
+                Author Reviews, K=2
+              </p>
+              <p>
+                <img src="/static/img/k3_toyset.png"><br>
+                Author Reviews, K=3
+              </p>
+              <p>
+                <img src="/static/img/k4_toyset.png"><br>
+                Author Reviews, K=4
+              </p>
+              <p>
+                <img src="/static/img/k4-10_toyset_subplots.png"><br>
+                Author Reviews, K=4-10
+              </p>
+              <h6>Yelp Academic Dataset: Classification</h6>
+              <p>
+                <img src="/static/img/k2-10_yelpgltn_onePlot.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/k2-10_yelpgltn_subplots.png"><br>
+                ???
+              </p>
+              <h6>Yelp Academic Dataset: Sentiment</h6>
+              <p>
+                <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/sentiment_gltn_k2-10_onePlot.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/sentiment_gltn_k2-10_subPlots.png"><br>
+                ???
+              </p>
+              
+              
+
+
+          <h4>Picking a Classifier </h4>
+            <h5>MultinomialNB vs. LinearSVC </h5>
+          <h4>Sentiment Analysis</h4>
+              <h5>Categorization</h5>
+              <p> categorizing reviews into one of five categories.
+              </p>
+              <h5>Single-label classifier </h5>
+              <p> each review could only have one category,
+               each sentence could only have one category</p>
+              
+
+              <h5>Multilabel Classifier </h5>
+                <h6>One vs. Rest</h6>
+                <h6>KMeans Clustering</h6>
+
+              <h5>Classifying as "good" or "bad"
+            
+              
+            
+        <h3> Sentiment Analysis with Python</h3>
+          <p>link to lightning talk slides </h3>
+    </article>
+    
 
 </div> <!-- content block -->
 

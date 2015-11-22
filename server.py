@@ -476,6 +476,7 @@ def show_sunburst_basic():
     return render_template("sunburst.html")
 
 
+# TODO: implement better treemap
 # from collections import defaultdict
 # def tree():
 #     """Helper function for generating tree-like JSON"""
@@ -546,7 +547,7 @@ def get_sunburst_data(selected_state, selected_city):
                 biz_tree['name'] = biz_name
                 biz_tree['size'] = 100
 
-                # # TOO MANY REVIEWS TO SHOW THIS LAYER
+                # # TODO: TOO MANY REVIEWS TO SHOW THIS LAYER
                 # biz_tree['children'] = []
                 # # query for reviews in catergory in business
                 # QUERY = """
@@ -628,11 +629,20 @@ def lab():
     return render_template("analytics.html", state='CA', city='Berkeley', states=states, cities=cities)
 
 
-@app.route('/force.json')
-def get_force_data():
+@app.route('/<region>/force.json')
+def get_force_data(region):
     """Generate JSON for Force Graph by region"""
+    # region = 'socal'
+    if region == 'norcal':
+        cities_list = ['Berkeley', 'Palo Alto', 'Stanford']
+    else:
+        cities_list = ['Claremont', 'Los Angeles', 'Pasadena']
 
-    cities_list = ['Berkeley', 'Palo Alto', 'Stanford']
+    cities_str = "("
+    for place in cities_list:
+        cities_str += place + ', '
+    cities_str = cities_str.rstrip(',')
+    cities_str += ')'
 
     links = []
     nodes = []
@@ -653,13 +663,22 @@ def get_force_data():
     print "this is nodes", nodes
     print "this is nodes_index", nodes_index
     # Select businesses in cities list that have a category code (Inner Join)
-    QUERY = """
-    SELECT DISTINCT Biz.name, Biz.city, Biz.biz_id FROM Biz
-    INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
-    INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
-    WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Stanford')
-    AND Biz.state = 'CA';
-    """
+    if region == 'norcal':
+        QUERY = """
+        SELECT DISTINCT Biz.name, Biz.city, Biz.biz_id FROM Biz
+        INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
+        INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
+        WHERE Biz.city in ('Berkeley', 'Palo Alto', 'Stanford')
+        AND Biz.state = 'CA';
+        """
+    else: 
+        QUERY = """
+        SELECT DISTINCT Biz.name, Biz.city, Biz.biz_id FROM Biz
+        INNER JOIN Reviews on Reviews.biz_id = Biz.biz_id
+        INNER JOIN Revcats on Revcats.review_id = Reviews.review_id
+        WHERE Biz.city in ('Claremont', 'Los Angeles', 'Pasadena')
+        AND Biz.state = 'CA';
+        """
     cursor = db.session.execute(QUERY)
     biz = cursor.fetchall()
     for place in biz: # place[0] = name, place[1] = city, place[2] = biz_id
@@ -706,7 +725,7 @@ def get_force_data():
         n_index += 1
     # build outer dictionary
     json_dict = {'nodes': nodes, 'links': links}
-    # import pdb; pdb.set_trace()
+    
     return jsonify(json_dict)
 
 

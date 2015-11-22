@@ -71,8 +71,20 @@ PlatePal: Analytics
         <h3>Project Motivation</h3>
         <br>
     </article>
-    <div id="area1">
+    <div id="forceregion">   
         Post about regional relationships (city --> restaurant --> category)
+        <!-- <form action="/sunburst-form"> -->
+        <form>
+          <select name="region" id="selectregion">
+            <option hidden=""></option>
+            <option value="norcal">Bay Area</option>
+            <option value="socal">Los Angeles Metro</option>
+          </select>
+          
+      </form>
+    </div>
+    <div id="area1">
+
     </div>
         <script>
 
@@ -96,7 +108,9 @@ PlatePal: Analytics
             .y(function(d) { return d.y; })
             .clipExtent([[0, 0], [width1, height1]]);
 
-        d3.json("/force.json", function(error, json) {
+
+
+        d3.json("/norcal/force.json", function(error, json) {
           if (error) throw error;
 
           force
@@ -158,6 +172,8 @@ PlatePal: Analytics
           json.links.forEach(function (d) {
               linkedByIndex[d.source.index + "," + d.target.index] = 1;
           });
+
+     
           //This function looks up whether a pair are neighbours
           function neighboring(a, b) {
               return linkedByIndex[a.index + "," + b.index];
@@ -183,7 +199,131 @@ PlatePal: Analytics
                   toggle = 0;
               }
           }
-        });
+     }); // end d3.json
+
+    $("#selectregion").on('change', function(evt){
+      // get the link's id
+
+      forcejsonRoute = ('/' + $("#selectregion").val() + "/force.json");
+      // forcejsonRoute = '/force.json'
+      $("div#area1").remove()
+      $("<div id='area1'></div>").insertAfter("#forceregion")
+      updateForce(forcejsonRoute)
+    });
+
+    // update d3
+    function updateForce(forcejsonRoute){
+      d3.select("svg1").remove();
+
+        var svg1 = d3.select("#area1").append("svg")
+            .attr("width", width1)
+            .attr("height", height1);
+
+        var force = d3.layout.force()
+            .gravity(0.1)
+            .charge(-120)
+            .linkDistance(30)
+            .size([width1, height1]);
+
+        var voronoi = d3.geom.voronoi()
+            .x(function(d) { return d.x; })
+            .y(function(d) { return d.y; })
+            .clipExtent([[0, 0], [width1, height1]]);
+
+        console.log(forcejsonRoute);
+
+        d3.json(forcejsonRoute, function(error, json) {
+          if (error) throw error;
+
+          force
+              .nodes(json.nodes)
+              .links(json.links)
+              .start();
+
+          var link = svg1.selectAll(".link")
+              .data(json.links)
+            .enter().append("line")
+              .attr("class", "link");
+
+          var node = svg1.selectAll(".node")
+              .data(json.nodes)
+              .enter().append("g")
+              .attr("class", "node")
+              .attr("r", function(d) { console.log(d.value); return d.value; })
+              .style("fill", function(d) { return color(d.group); })
+              .call(force.drag)
+              .on('dblclick', connectedNodes);
+
+          var circle = node.append("circle")
+              .attr("r", function(d) { console.log(d.value); return d.value; });
+
+          var label = node.append("text")
+              .attr("dy", ".35em")
+              .text(function(d) { return d.name; });
+
+          var cell = node.append("path")
+              .attr("class", "cell");
+
+          force.on("tick", function() {
+            cell
+                .data(voronoi(json.nodes))
+                .attr("d", function(d) { return d.length ? "M" + d.join("L") : null; });
+
+            link
+                .attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+            circle
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+
+            label
+                .attr("x", function(d) { return d.x + 8; })
+                .attr("y", function(d) { return d.y; });
+          });
+
+          //Toggle stores whether the highlighting is on
+          var toggle = 0;
+          //Create an array logging what is connected to what
+          var linkedByIndex = {};
+          for (i = 0; i < json.nodes.length; i++) {
+              linkedByIndex[i + "," + i] = 1;
+          };
+          json.links.forEach(function (d) {
+              linkedByIndex[d.source.index + "," + d.target.index] = 1;
+          });
+
+     
+          //This function looks up whether a pair are neighbours
+          function neighboring(a, b) {
+              return linkedByIndex[a.index + "," + b.index];
+          }
+          function connectedNodes() {
+              if (toggle == 0) {
+                  //Reduce the opacity of all but the neighbouring nodes
+                  d = d3.select(this).node().__data__;
+                  console.log("in connectedNodes");
+                  console.log(d);
+                  node.style("opacity", function (o) {
+                      return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
+                  });
+                  link.style("opacity", function (o) {
+                      return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
+                  });
+                  //Reduce the op
+                  toggle = 1;
+              } else {
+                  //Put them back to opacity=1
+                  node.style("opacity", 1);
+                  link.style("opacity", 1);
+                  toggle = 0;
+              }
+          }
+     }); // end d3.json
+
+} // end update force d3
 
     </script>
     <div id="treemap">
@@ -201,7 +341,7 @@ PlatePal: Analytics
             <option value="{{town[0]}}">{{town[0]}}</option>
             {% endfor %}
           </select>
-          <input type="submit" value="Update">
+          
       </form>
     </div>
     <div id="area2">

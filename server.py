@@ -449,8 +449,11 @@ def show_zoomable_sunburst_labels(state="CA", city="Berkeley"):
     # SELECT DISTINCT city from Cities;
     # """
     # cities = db.session.execute(QUERY).fetchall()
-    cities = [['Berkeley'],['Claremont'], ['La Jolla'],['Los Angeles'], ['Palo Alto'], ['Pasadena'], ['San Diego'], ['San Luis Obispo']]
-    return render_template("zoomable-sunburst-labels.html", state=state, city=city, states=states, cities=cities)
+    cities = [['Berkeley'],['Claremont'], ['La Jolla'],['Los Angeles'],
+              ['Palo Alto'], ['Pasadena'], ['San Diego'], ['San Luis Obispo']]
+    return render_template("zoomable-sunburst-labels.html",
+                           state=state, city=city,
+                           states=states, cities=cities)
 
 @app.route('/sunburst-form', methods=['GET'])
 def update_zoomable_sunburst_labels():
@@ -542,7 +545,7 @@ def get_sunburst_data(selected_state, selected_city):
                 biz_tree = dict()
                 biz_tree['name'] = biz_name
                 biz_tree['size'] = 100
-                
+
                 # # TOO MANY REVIEWS TO SHOW THIS LAYER
                 # biz_tree['children'] = []
                 # # query for reviews in catergory in business
@@ -608,11 +611,24 @@ def get_sunburst_data(selected_state, selected_city):
 @app.route('/analytics')
 def lab():
     """Analytics page housing sentiment analysis info and D3"""
-    # return render_template("force-mbostock.html")
-    return render_template("force-labeled.html")
+    # return render_template("force-labeled.html")
+        # QUERY = """
+    # SELECT DISTINCT state from Cities;
+    # """
+    # states = db.session.execute(QUERY).fetchall()
+    # states = sorted(states)
+    states = [['CA']]
+
+    # QUERY = """
+    # SELECT DISTINCT city from Cities;
+    # """
+    # cities = db.session.execute(QUERY).fetchall()
+    cities = [['Berkeley'],['Claremont'], ['La Jolla'],['Los Angeles'],
+              ['Palo Alto'], ['Pasadena'], ['San Diego'], ['San Luis Obispo']]
+    return render_template("analytics.html", state='CA', city='Berkeley', states=states, cities=cities)
 
 
-@app.route('/analytics.json')
+@app.route('/force.json')
 def get_force_data():
     """Generate JSON for Force Graph by region"""
 
@@ -735,7 +751,7 @@ def get_sentiment_score(doc):
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
     # that we invoke the DebugToolbarExtension
-    app.debug = False
+    app.debug = True
 
     connect_to_db(app)
 

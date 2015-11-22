@@ -5,454 +5,385 @@ PlatePal: Analytics
 {% endblock%}
 
 {% block head %}
-<style>
 
-        .node {
-            fill: #ccc;
-            stroke-width: 2px;
-        }
-
-        .link {
-            stroke: #777;
-            stroke-width: 2px;
-        }
-
-        text {
-            fill: #000;
-            font: 10px sans-serif;
-            pointer-events: none;
-        }
-
-</style>
 {% endblock %}
 
 {% block location %}
 <div class="analytics-outer">
     <h2>Analytics: the ghost in the machine</h2>
     <!-- end JINJA for loop here -->
-</div> <!-- citynav-outer -->
+</div> 
 {% endblock %}
 
 {% block content %}
+<style>
+
+#area1 .link {
+  stroke: #777;
+  stroke-opacity: 0.3;
+  stroke-width: 1.5px;
+}
+
+#area1 .node circle {
+  /*fill: #ccc;*/
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+#area1 .node text {
+  display: none;
+  font: 10px sans-serif;
+}
+
+#area1 .node:hover circle {
+  fill: #000;
+}
+
+#area1 .node:hover text {
+  display: inline;
+}
+
+#area1 .cell {
+  fill: none;
+  pointer-events: all;
+}
+</style>
+
+<style>
+#area2 path {
+  stroke: #fff;
+  fill-rule: evenodd;
+}
+#area2 text {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+</style>
+
+<!-- <div id="area1"></div> -->
+<!-- <div id="area2"></div> -->
 <script src='http://d3js.org/d3.v3.min.js'></script>
-<script>
+<body>
 
-    // Define the dimensions of the visualization. We're using
-    // a size that's convenient for displaying the graphic on
-    // http://jsDataV.is
-
-    var width = 800;
-    var height = 600;
-
-    // Define the data for the example. In general, a force layout
-    // requires two data arrays. The first array, here named `nodes`,
-    // contains the object that are the focal point of the visualization.
-    // The second array, called `links` below, identifies all the links
-    // between the nodes. (The more mathematical term is "edges.")
-
-    // For the simplest possible example we only define two nodes. As
-    // far as D3 is concerned, nodes are arbitrary objects. Normally the
-    // objects wouldn't be initialized with `x` and `y` properties like
-    // we're doing below. When those properties are present, they tell
-    // D3 where to place the nodes before the force layout starts its
-    // magic. More typically, they're left out of the nodes and D3 picks
-    // random locations for each node. We're defining them here so we can
-    // get a consistent application of the layout which lets us see the
-    // effects of different properties.
-
-    // var nodes = [
-    //     {name: 'Meggie'},
-    //     {name: 'Cynthia'},
-    //     {name: 'Joel'},
-    //     {name: 'Katie'},
-    //     {name: 'Kristen'},
-    //     {name: 'Heather'},
-    
-    //     {name: 'Rachelle'},
-    //     {name: 'Jo'},
-    //     {name: 'Alena'},
-    //     {name: 'Alexandra'},
-    //     {name: 'Angela'},
-    //     {name: 'Ariana'},
-    //     {name: 'Dana'},
-    //     {name: 'Emily'},
-    //     {name: 'Judy'},
-    //     {name: 'Julie'},
-    //     {name: 'Kat'},
-    //     {name: 'Keirra'},
-    //     {name: 'Kristine'},
-    //     {name: 'Leslie'},
-    //     {name: 'Lindsay'},
-    //     {name: 'Mish'},
-    //     {name: 'Natalie'},
-    //     {name: 'Nicole'},
-    //     {name: 'Nuvi'},
-    //     {name: 'Pam'},
-    //     {name: 'Becca'},
-    //     {name: 'Sadie'},
-    //     {name: 'Sarah'},
-    //     {name: 'Shabnam'},
-    //     {name: 'Stella'},
-    //     {name: 'Theresa'},
-    //     {name: 'Tiffany'},
-    //     {name: 'Vi'},
-    //     {name: 'Viola'}
-    // ];
-    var nodes = $.getJSON('/analytics.json')
-    var nodes = [
-        {name: 'Meggie', advisor: 'Meggie'}, // 0
-        {name: 'Cynthia', advisor: 'Cynthia'}, // 1
-        {name: 'Joel', advisor: 'Joel'}, // 2
-        {name: 'Katie', advisor: 'Katie'},  // 3
-        {name: 'Kristen', advisor: 'Kristen'}, // 4
-        {name: 'Heather', advisor: 'Heather'}, // 5
-
-        {name: 'Rachelle', advisor: 'Meggie'}, // 6
-        {name: 'Jo', advisor: 'Joel'}, // 7
-        {name: 'Alena', advisor: 'Cynthia'},  // 8
-        {name: 'Alexandra', advisor: 'Heather'},  // 9
-        {name: 'Angela', advisor: 'Meggie'},  // 10
-        {name: 'Ariana', advisor: 'Katie'},
-        {name: 'Dana', advisor: 'Heather'},
-        {name: 'Emily', advisor: 'Meggie'},
-        {name: 'Judy', advisor: 'Kristen'},
-        {name: 'Julie', advisor: 'Heather'},
-        {name: 'Kat', advisor: 'Cynthia'},
-        {name: 'Keirra', advisor: 'Joel'},
-        {name: 'Kristine', advisor: 'Kristen'},
-        {name: 'Leslie', advisor: 'Kristen'},
-        {name: 'Lindsay', advisor: 'Katie'},
-        {name: 'Mish', advisor: 'Kristen'},
-        {name: 'Natalie', advisor: 'Joel'},
-        {name: 'Nicole', advisor: 'Cynthia'},
-        {name: 'Nuvi', advisor: 'Heather'},
-        {name: 'Pam', advisor: 'Kristen'},
-        {name: 'Becca', advisor: 'Heather'},
-        {name: 'Sadie', advisor: 'Joel'},
-        {name: 'Sarah', advisor: 'Cynthia'},
-        {name: 'Shabnam', advisor: 'Meggie'},
-        {name: 'Stella', advisor: 'Meggie'},
-        {name: 'Theresa', advisor: 'Katie'},
-        {name: 'Tiffany', advisor: 'Katie'},
-        {name: 'Vi', advisor: 'Katie'},
-        {name: 'Viola', advisor: 'Cynthia'}
-    ];
-
-    // The `links` array contains objects with a `source` and a `target`
-    // property. The values of those properties are the indices in
-    // the `nodes` array of the two endpoints of the link.
-
-    var links = [
-       {source: 0, target: 10}, // Meggie to Angela
-       {source: 0, target: 13},
-       {source: 0, target: 30},
-       {source: 0, target: 6},
-       {source: 0, target: 29},
-       {source: 2, target: 27},
-       {source: 2, target: 7},
-       {source: 2, target: 22},
-       {source: 2, target: 17},
-       {source: 1, target: 8},
-       {source: 1, target: 16},
-       {source: 1, target: 23},
-       {source: 1, target: 34},
-       {source: 1, target: 28},
-       {source: 4, target: 14},
-       {source: 4, target: 18},
-       {source: 4, target: 21},
-       {source: 4, target: 25},
-       {source: 4, target: 19},
-       {source: 5, target: 9},
-       {source: 5, target: 12},
-       {source: 5, target: 15},
-       {source: 5, target: 24},
-       {source: 5, target: 26},
-       {source: 3, target: 11},
-       {source: 3, target: 32},
-       {source: 3, target: 31},
-       {source: 3, target: 33},
-       {source: 3, target: 20}
-    ];
-
-    // Here's were the code begins. We start off by creating an SVG
-    // container to hold the visualization. We only need to specify
-    // the dimensions for this container.
-
-    var svg = d3.select('body').append('svg')
-                .attr('width', width)
-                .attr('height', height);
-
-    // Now we create a force layout object and define its properties.
-    // Those include the dimensions of the visualization and the arrays
-    // of nodes and links.
-
-    var force = d3.layout.force()
-                  .size([width, height])
-                  .nodes(nodes)
-                  .links(links);
-
-    // There's one more property of the layout we need to define,
-    // its `linkDistance`. That's generally a configurable value and,
-    // for a first example, we'd normally leave it at its default.
-    // Unfortunately, the default value results in a visualization
-    // that's not especially clear. This parameter defines the
-    // distance (normally in pixels) that we'd like to have between
-    // nodes that are connected. (It is, thus, the length we'd
-    // like our links to have.)
-
-    force.linkDistance(width / 2);
-
-    // Next we'll add the nodes and links to the visualization.
-    // Note that we're just sticking them into the SVG container
-    // at this point. We start with the links. The order here is
-    // important because we want the nodes to appear "on top of"
-    // the links. SVG doesn't really have a convenient equivalent
-    // to HTML's `z-index`; instead it relies on the order of the
-    // elements in the markup. By adding the nodes _after_ the
-    // links we ensure that nodes appear on top of links.
-
-    // Links are pretty simple. They're just SVG lines, and
-    // we're not even going to specify their coordinates. (We'll
-    // let the force layout take care of that.) Without any
-    // coordinates, the lines won't even be visible, but the
-    // markup will be sitting inside the SVG container ready
-    // and waiting for the force layout.
-
-    var link = svg.selectAll('.link')
-                  .data(links)
-                  .enter().append('line')
-                  .attr('class', 'link');
-
-    // Now it's the nodes turn. Each node is drawn as a circle.
-
-    var node = svg.selectAll('.node')
-                  .data(nodes)
-                  .enter().append('g')
-                  .attr('class', 'node');
-
-    var color = d3.scale.category20();
-
-    node.append("circle")
-        .attr("r", 15)
-        .style("fill", function (d) { return color(d.advisor); });
-
-    // add the text
-
-    node.append("text").text(function (d) { return d.name; });
-
-    // We're about to tell the force layout to start its
-    // calculations. We do, however, want to know when those
-    // calculations are complete, so before we kick things off
-    // we'll define a function that we want the layout to call
-    // once the calculations are done.
-
-    force.on('end', function () {
-
-        // When this function executes, the force layout
-        // calculations have concluded. The layout will
-        // have set various properties in our nodes and
-        // links objects that we can use to position them
-        // within the SVG container.
-
-        // First let's reposition the nodes. As the force
-        // layout runs it updates the `x` and `y` properties
-        // that define where the node should be centered.
-        // To move the node, we set the appropriate SVG
-        // attributes to their new values. We also have to
-        // give the node a non-zero radius so that it's visible
-        // in the container.
-
-        // node.attr('x', function(d) { return d.x; })
-        //     .attr('y', function(d) { return d.y; });
-
-        node.attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
-
-        // We also need to update positions of the links.
-        // For those elements, the force layout sets the
-        // `source` and `target` properties, specifying
-        // `x` and `y` values in each case.
-
-        link.attr('x1', function (d) { return d.source.x; })
-            .attr('y1', function (d) { return d.source.y; })
-            .attr('x2', function (d) { return d.target.x; })
-            .attr('y2', function (d) { return d.target.y; });
-
-    });
-
-    // Okay, everything is set up now so it's time to turn
-    // things over to the force layout. Here we go.
-
-    force.start();
-
-    // By the time you've read this far in the code, the force
-    // layout has undoubtedly finished its work. Unless something
-    // went horribly wrong, you should see two light grey circles
-    // connected by a single dark grey line. If you have a screen
-    // ruler (such as [xScope](http://xscopeapp.com) handy, measure
-    // the distance between the centers of the two circles. It
-    // should be somewhere close to the `linkDistance` parameter we
-    // set way up in the beginning (480 pixels). That, in the most
-    // basic of all nutshells, is what a force layout does. We
-    // tell it how far apart we want connected nodes to be, and
-    // the layout keeps moving the nodes around until they get
-    // reasonably close to that value.
-
-    // Of course, there's quite a bit more than that going on
-    // under the hood.
-
-</script>
-</body>
-</html>
-
-
-
-<script src="//d3js.org/d3.v3.min.js"></script>
 <div> 
+
     <article>
         Post about motivation behind site
     </article>
     <article>
         Post about sentiment analysis and scikit learn-ing
     </article>
-    <article id="restaurantd3">
-        <style>
-
-        .node circle {
-          cursor: pointer;
-          stroke: #3182bd;
-          stroke-width: 1.5px;
-        }
-
-        .node text {
-          font: 10px sans-serif;
-          pointer-events: none;
-          text-anchor: middle;
-        }
-
-        line.link {
-          fill: none;
-          stroke: #9ecae1;
-          stroke-width: 1.5px;
-        }
-
-        </style>
-
-
+    <div id="area1">
+        Post about regional relationships (city --> restaurant --> category)
+    </div>
         <script>
 
-        var width = 960,
-            height = 500,
-            root;
+        var width1 = 960,
+            height1 = 500
+
+        var color = d3.scale.category20();
+
+        var svg1 = d3.select("#area1").append("svg")
+            .attr("width", width1)
+            .attr("height", height1);
 
         var force = d3.layout.force()
-            .linkDistance(80)
+            .gravity(0.1)
             .charge(-120)
-            .gravity(.05)
-            .size([width, height])
-            .on("tick", tick);
+            .linkDistance(30)
+            .size([width1, height1]);
 
-        var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height);
+        var voronoi = d3.geom.voronoi()
+            .x(function(d) { return d.x; })
+            .y(function(d) { return d.y; })
+            .clipExtent([[0, 0], [width1, height1]]);
 
-        var link = svg.selectAll(".link"),
-            node = svg.selectAll(".node");
-
-        d3.json("graph.json", function(error, json) {
+        d3.json("/force.json", function(error, json) {
           if (error) throw error;
 
-          root = json;
-          update();
-        });
-
-        function update() {
-          var nodes = flatten(root),
-              links = d3.layout.tree().links(nodes);
-
-          // Restart the force layout.
           force
-              .nodes(nodes)
-              .links(links)
+              .nodes(json.nodes)
+              .links(json.links)
               .start();
 
-          // Update links.
-          link = link.data(links, function(d) { return d.target.id; });
-
-          link.exit().remove();
-
-          link.enter().insert("line", ".node")
+          var link = svg1.selectAll(".link")
+              .data(json.links)
+            .enter().append("line")
               .attr("class", "link");
 
-          // Update nodes.
-          node = node.data(nodes, function(d) { return d.id; });
-
-          node.exit().remove();
-
-          var nodeEnter = node.enter().append("g")
+          var node = svg1.selectAll(".node")
+              .data(json.nodes)
+              .enter().append("g")
               .attr("class", "node")
-              .on("click", click)
-              .call(force.drag);
+              .attr("r", function(d) { console.log(d.value); return d.value; })
+              .style("fill", function(d) { return color(d.group); })
+              .call(force.drag)
+              .on('dblclick', connectedNodes);
 
-          nodeEnter.append("circle")
-              .attr("r", function(d) { return Math.sqrt(d.size) / 10 || 4.5; });
+          var circle = node.append("circle")
+              .attr("r", function(d) { console.log(d.value); return d.value; });
 
-          nodeEnter.append("text")
+          var label = node.append("text")
               .attr("dy", ".35em")
               .text(function(d) { return d.name; });
 
-          node.select("circle")
-              .style("fill", color);
-        }
+          var cell = node.append("path")
+              .attr("class", "cell");
 
-        function tick() {
-          link.attr("x1", function(d) { return d.source.x; })
-              .attr("y1", function(d) { return d.source.y; })
-              .attr("x2", function(d) { return d.target.x; })
-              .attr("y2", function(d) { return d.target.y; });
+          force.on("tick", function() {
+            cell
+                .data(voronoi(json.nodes))
+                .attr("d", function(d) { return d.length ? "M" + d.join("L") : null; });
 
-          node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-        }
+            link
+                .attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
 
-        function color(d) {
-          return d._children ? "#3182bd" // collapsed package
-              : d.children ? "#c6dbef" // expanded package
-              : "#fd8d3c"; // leaf node
-        }
+            circle
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
 
-        // Toggle children on click.
-        function click(d) {
-          if (d3.event.defaultPrevented) return; // ignore drag
-          if (d.children) {
-            d._children = d.children;
-            d.children = null;
-          } else {
-            d.children = d._children;
-            d._children = null;
+            label
+                .attr("x", function(d) { return d.x + 8; })
+                .attr("y", function(d) { return d.y; });
+          });
+
+          //Toggle stores whether the highlighting is on
+          var toggle = 0;
+          //Create an array logging what is connected to what
+          var linkedByIndex = {};
+          for (i = 0; i < json.nodes.length; i++) {
+              linkedByIndex[i + "," + i] = 1;
+          };
+          json.links.forEach(function (d) {
+              linkedByIndex[d.source.index + "," + d.target.index] = 1;
+          });
+          //This function looks up whether a pair are neighbours
+          function neighboring(a, b) {
+              return linkedByIndex[a.index + "," + b.index];
           }
-          update();
-        }
-
-        // Returns a list of all nodes under the root.
-        function flatten(root) {
-          var nodes = [], i = 0;
-
-          function recurse(node) {
-            if (node.children) node.children.forEach(recurse);
-            if (!node.id) node.id = ++i;
-            nodes.push(node);
+          function connectedNodes() {
+              if (toggle == 0) {
+                  //Reduce the opacity of all but the neighbouring nodes
+                  d = d3.select(this).node().__data__;
+                  console.log("in connectedNodes");
+                  console.log(d);
+                  node.style("opacity", function (o) {
+                      return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
+                  });
+                  link.style("opacity", function (o) {
+                      return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
+                  });
+                  //Reduce the op
+                  toggle = 1;
+              } else {
+                  //Put them back to opacity=1
+                  node.style("opacity", 1);
+                  link.style("opacity", 1);
+                  toggle = 0;
+              }
           }
-
-          recurse(root);
-          return nodes;
-        }
+        });
 
         </script>
 
-        Post about restaurant classifications --> d3 here!
-    </article>
-    <script type="text/javascript" src="/static/js/analytics.js"></script>
+    <div id="area2">
+        Post about city tree map (city --> cats --> restaurant --> sentiment)
+
+      <form action="/sunburst-form">
+          <select name="statename" id="selectstate">
+            <option hidden=""></option>
+            {% for place in states %}
+            <option value="{{place[0]}}">{{place[0]}}</option>
+            {% endfor %}
+          </select>
+          <select name="cityname" id="selectcity" disabled>
+            <option hidden=""></option>
+            {% for town in cities %}
+            <option value="{{town[0]}}">{{town[0]}}</option>
+            {% endfor %}
+          </select>
+          <input type="submit" value="Update">
+      </form>
+    </div>
+    <script>
+    $("#selectstate").change(function () {
+       if ($("#selectstate").val() == 0) {
+         $('#selectcity').attr('disabled', 'disabled');
+         } else {
+           $('#selectcity').removeAttr('disabled');
+         }
+    }).trigger("change");
+
+    var width2 = 960,
+        height2 = 700,
+        radius = Math.min(width2, height2) / 2;
+
+    var x2 = d3.scale.linear()
+        .range([0, 2 * Math.PI]);
+
+    var y2 = d3.scale.linear()
+        .range([0, radius]);
+
+    var color = d3.scale.category20c();
+
+    // canvas
+    var svg2 = d3.select("#area2").append("svg")
+        .attr("width", width2)
+        .attr("height", height2)
+      .append("g")
+        .attr("transform", "translate(" + width2 / 2 + "," + (height2 / 2 ) + ")");
+
+    var partition = d3.layout.partition()
+        .value(function(d) { return d.size; });
+
+    var arc = d3.svg.arc()
+        .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x))); })
+        .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x + d.dx))); })
+        .innerRadius(function(d) { return Math.max(0, y2(d.y)); })
+        .outerRadius(function(d) { return Math.max(0, y2(d.y + d.dy)); });
+
+    var state = $("#selectstate").val()
+    var city = $("#selectcity").val()
+    var jsonRoute = "/{{state}}/{{city}}/sunburst.json";
+
+
+    d3.json(jsonRoute, function(error, root) {
+      if (error) throw error;
+
+      var g2 = svg2.selectAll("g")
+          .data(partition.nodes(root))
+        .enter().append("g");
+      
+      var path = g2.append("path")
+        .attr("d", arc)
+        .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
+        .on("click", click);
+      
+      var text = g2.append("text")
+        .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
+        .attr("x", function(d) { return y2(d.y); })
+        .attr("dx", "6") // margin
+        .attr("dy", ".35em") // vertical-align
+        .text(function(d) { return d.name; });
+      
+      function click(d) {
+        // fade out all text elements
+        text.transition().attr("opacity", 0);
+        path.transition()
+          .duration(750)
+          .attrTween("d", arcTween(d))
+          .each("end", function(e, i) {
+              // check if the animated element's data e lies within the visible angle span given in d
+              if (e.x >= d.x && e.x < (d.x + d.dx)) {
+                // get a selection of the associated text element
+                var arcText = d3.select(this.parentNode).select("text");
+                // fade in the text element and recalculate positions
+                arcText.transition().duration(750)
+                  .attr("opacity", 1)
+                  .attr("transform", function() { return "rotate(" + computeTextRotation(e) + ")" })
+                  .attr("x", function(d) { return y2(d.y); });
+              }
+          });
+      } // end click(d)
+    }); // end d3.json
+
+
+
+    d3.select(self.frameElement).style("height", height2 + "px");
+
+    // Interpolate the scales!
+    function arcTween(d) {
+      var xd = d3.interpolate(x2.domain(), [d.x, d.x + d.dx]),
+          yd = d3.interpolate(y2.domain(), [d.y, 1]),
+          yr = d3.interpolate(y2.range(), [d.y ? 20 : 0, radius]);
+      return function(d, i) {
+        return i
+            ? function(t) { return arc(d); }
+            : function(t) { x2.domain(xd(t)); y2.domain(yd(t)).range(yr(t)); return arc(d); };
+      };
+    }
+
+    function computeTextRotation(d) {
+      return (x2(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
+    }
+
+    // $("#selectcity").on('change', function(evt){
+    //   // get the link's id
+
+    //   jsonRoute = $("#selectcity").val() + "/sunburst.json";
+    //   console.log("this is jsonRoute")
+    //   console.log(jsonRoute)
+    //   updateSunburst(jsonRoute)
+    // });
+
+
+    // update d3
+    function updateSunburst(jsonRoute){
+      d3.select("svg2").remove();
+
+      // canvas !! moved inside for AJAX
+      svg2 = d3.select("#area2").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+       .append("g")
+        .attr("transform", "translate(" + width2 / 2 + "," + (height2 / 2 ) + ")");
+
+      partition = d3.layout.partition()
+        .value(function(d) { return d.size; });
+
+      arc = d3.svg.arc()
+        .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x))); })
+        .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x2(d.x + d.dx))); })
+        .innerRadius(function(d) { return Math.max(0, y2(d.y)); })
+        .outerRadius(function(d) { return Math.max(0, y2(d.y + d.dy)); });
+      // end of what was moved inside !!
+
+      d3.json(jsonRoute, function(error, root) {
+        if (error) throw error;
+
+        var g2 = svg2.selectAll("g")
+            .data(partition.nodes(root))
+          .enter().append("g");
+        
+        var path = g2.append("path")
+          .attr("d", arc)
+          .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
+          .on("click", click);
+        
+        var text = g2.append("text")
+          .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
+          .attr("x", function(d) { return y2(d.y); })
+          .attr("dx", "6") // margin
+          .attr("dy", ".35em") // vertical-align
+          .text(function(d) { return d.name; });
+        
+        function click(d) {
+          // fade out all text elements
+          text.transition().attr("opacity", 0);
+          path.transition()
+            .duration(750)
+            .attrTween("d", arcTween(d))
+            .each("end", function(e, i) {
+                // check if the animated element's data e lies within the visible angle span given in d
+                if (e.x >= d.x && e.x < (d.x + d.dx)) {
+                  // get a selection of the associated text element
+                  var arcText = d3.select(this.parentNode).select("text");
+                  // fade in the text element and recalculate positions
+                  arcText.transition().duration(750)
+                    .attr("opacity", 1)
+                    .attr("transform", function() { return "rotate(" + computeTextRotation(e) + ")" })
+                    .attr("x", function(d) { return y2(d.y); });
+                }
+            });
+        } // end click(d)
+    }); // end d3.json
+    }
+
+    </script>
+
 
 </div> <!-- content block -->
 
@@ -464,5 +395,5 @@ PlatePal: Analytics
 
 
 
-<body>
-
+</body>
+</html>

@@ -7,7 +7,8 @@ PlatePal: {{city}} Results
 {% block location %}
 <div class="citynav-outer">
     <div class="citynav left">
-        <a href="/{{state}}/{{city}}/city.html">{{city}}</a> <!-- TODO: Replace with Jinja  -->
+        <a href="/state.html#{{state}}-list">{{state}}</a> >> 
+        <a href="/{{state}}/{{city}}/city.html">{{city}}</a>
     </div>
     <div class="citynav right">
         {% if nearby_cities is not none %}

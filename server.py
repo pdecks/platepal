@@ -10,6 +10,8 @@ from model import Category, ReviewCategory, BizSentiment
 from model import City, CityDistance
 from model import connect_to_db, db
 
+from collections import defaultdict
+from collections import OrderedDict
 from sqlalchemy import distinct
 from model import CAT_CODES
 from statecodes import STATE_CODES
@@ -47,6 +49,29 @@ def index():
     return redirect('/CA/Palo%20Alto/city.html')
 
 
+@app.route('/state.html')
+def display_states():
+    """Displays all cities with reviews in PlatePal categories by state."""
+    # query db for cities by state
+    QUERY="""
+        SELECT DISTINCT Biz.city, Biz.state from Biz
+        INNER JOIN Reviews on reviews.biz_id = Biz.biz_id
+        INNER JOIN revcats on revcats.review_id = reviews.review_id
+        WHERE revcats.cat_code in ('gltn', 'vgan', 'pleo', 'kshr', 'algy')
+        ORDER BY Biz.state;"""
+
+    results = db.session.execute(QUERY).fetchall()
+
+    # create a dictionary where state abbrev = keys and values
+    # are a list of cities in the state
+    locations = defaultdict(list)
+    for result in results:
+        locations[result[1]].append(result[0])
+    ord_locations = OrderedDict(locations)
+    print ord_locations.keys()
+
+    return render_template('state.html', locations=ord_locations)
+
 @app.route('/<state>/state.html')
 def display_all_biz_in_state(state):
     """State landing page."""
@@ -58,7 +83,7 @@ def display_all_biz_in_state(state):
     state_all_cities = db.session.query(PlatePalBiz.city).join(PlatePalReview).filter(PlatePalBiz.state==state)
     state_cities = state_all_cities.group_by(PlatePalBiz.city).all()
     print "this is state_cities", state_cities
-    return render_template('state.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], state_cities=state_cities)
+    return render_template('state-old.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], state_cities=state_cities)
 
 
 @app.route('/<state>/state.json')

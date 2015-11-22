@@ -14,21 +14,29 @@ text {
 <script src="https://code.jquery.com/jquery.js"></script>
 
 <form action="/sunburst-form">
-  Select a City:
-    <select name="cityname" id="selectcity">
+    <select name="statename" id="selectstate">
       <option hidden=""></option>
-      <option value="Berkeley">Berkeley</option>
-      <option value="Palo Alto">Palo Alto</option>
-      <option value="Los Angeles">Los Angeles</option>
-      <option value="San Luis Obispo">San Luis Obispo</option>
-      <option value="Claremont">Claremont</option>
-      <option value="La Jolla">La Jolla</option>
-      <option value="Westwood">Westwood</option>
+      {% for place in states %}
+      <option value="{{place[0]}}">{{place[0]}}</option>
+      {% endfor %}
+    </select>
+    <select name="cityname" id="selectcity" disabled>
+      <option hidden=""></option>
+      {% for town in cities %}
+      <option value="{{town[0]}}">{{town[0]}}</option>
+      {% endfor %}
     </select>
     <input type="submit" value="Update">
 </form>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
+$("#selectstate").change(function () {
+   if ($("#selectstate").val() == 0) {
+     $('#selectcity').attr('disabled', 'disabled');
+     } else {
+       $('#selectcity').removeAttr('disabled');
+     }
+}).trigger("change");
 
 var width = 960,
     height = 700,
@@ -58,8 +66,9 @@ var arc = d3.svg.arc()
     .innerRadius(function(d) { return Math.max(0, y(d.y)); })
     .outerRadius(function(d) { return Math.max(0, y(d.y + d.dy)); });
 
-
-var jsonRoute = "/{{city}}/sunburst.json";
+var state = $("#selectstate").val()
+var city = $("#selectcity").val()
+var jsonRoute = "/{{state}}/{{city}}/sunburst.json";
 
 
 d3.json(jsonRoute, function(error, root) {

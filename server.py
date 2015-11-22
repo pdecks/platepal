@@ -435,16 +435,29 @@ def geocode_city_state(city, state):
 
 
 
-@app.route('/<city>/sunburst')
-def show_zoomable_sunburst_labels(city="Berkeley"):
+@app.route('/<state>/<city>/sunburst')
+def show_zoomable_sunburst_labels(state="CA", city="Berkeley"):
     """Analytics page housing sentiment analysis info and D3"""
-    return render_template("zoomable-sunburst-labels.html", city=city)
+    # QUERY = """
+    # SELECT DISTINCT state from Cities;
+    # """
+    # states = db.session.execute(QUERY).fetchall()
+    # states = sorted(states)
+    states = [['CA']]
+
+    # QUERY = """
+    # SELECT DISTINCT city from Cities;
+    # """
+    # cities = db.session.execute(QUERY).fetchall()
+    cities = [['Berkeley'],['Claremont'], ['La Jolla'],['Los Angeles'], ['Palo Alto'], ['Pasadena'], ['San Diego'], ['San Luis Obispo']]
+    return render_template("zoomable-sunburst-labels.html", state=state, city=city, states=states, cities=cities)
 
 @app.route('/sunburst-form', methods=['GET'])
 def update_zoomable_sunburst_labels():
     """Analytics page housing sentiment analysis info and D3"""
     city = request.args.get("cityname")
-    return redirect("/" + city + "/sunburst")
+    state = request.args.get("statename")
+    return redirect("/" + state + "/" + city + "/sunburst")
 
 
 
@@ -466,15 +479,15 @@ def show_sunburst_basic():
 #     return defaultdict(tree)
 
 
-@app.route('/<selected_city>/sunburst.json', methods=['GET', 'POST'])
-def get_sunburst_data(selected_city):
+@app.route('/<selected_state>/<selected_city>/sunburst.json', methods=['GET', 'POST'])
+def get_sunburst_data(selected_state, selected_city):
     """Make a tree structure of JSON, like mbostock's flare.json
 
     root = City -> Category -> Business -> Review -> Sentiment Score
     """
     print "IN SUNBURST.JSON"
     # selected_city = request.form.get('cityname')
-    state = 'CA'
+    state = selected_state
     cities_list = [selected_city]
     print cities_list
     # cities_list = ['Berkeley']

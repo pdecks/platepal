@@ -1,4 +1,5 @@
 // define arrays for the markers by category
+console.log("in state-gmaps.js");
 var markers = new Array();
 
 var catCodes = ['gltn', 'vgan', 'kshr', 'algy', 'pleo', 'unkn'];
@@ -20,7 +21,7 @@ function initMap(){
   // define map
   var map = new google.maps.Map(document.getElementById('map'),{
       center: myLatLng,
-      zoom: 14,
+      zoom: 7,
   });
   
   // page = "/popular-biz.json";

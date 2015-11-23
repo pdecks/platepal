@@ -90,9 +90,12 @@ function setMarkers(map) {
   searchString = searchInfo[0];  // string separated by %20
   searchTerms = searchInfo[1];  // array of search terms
 
-  console.log(searchTerms);
+  console.log(searchInfo);
+  console.log(searchString);
+  console.log(locationArray);
   
-  var searchPage='/search/'+searchString+"/"+locationArray.join(", ") + '/search.json';
+  var searchPage='/'+searchString+"/"+ locationArray[0]+'/'+locationArray[1]+'/search.json';
+  console.log(searchPage);
 
   $.getJSON(searchPage, function(top5json) {
       console.log('in $.get top5json');

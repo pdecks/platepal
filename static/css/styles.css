@@ -4,7 +4,7 @@
 }
 
 
-
+/*
 div.nav-outer, div.citynav-outer {
     height: 40px;
     width: 100%;
@@ -12,7 +12,7 @@ div.nav-outer, div.citynav-outer {
     padding-left: 5%;
 
 }
-
+*/
 
 div.info-window{
     display: inline-block;
@@ -37,9 +37,9 @@ img.info-window {
     border: 1px solid black;
 }
 
-div.searchnav-outer {
+/*div.searchnav-outer {
     padding-left: 5%;
-}
+}*/
 div.biznav-outer {
     height: 125px;
     width: 100%;
@@ -66,16 +66,16 @@ img#biz-photo {
     display: inline-block;
  
 }
-div.nav-outer {
+/*div.nav-outer {
     border-bottom: 2px solid black;
     background-color: gray;
-}
+}*/
 
 div.citynav-outer {
     background-color: #EAEAEA;
     /*padding-left: 5%;*/
 }
-div.nav, div.citynav, div.biznav {
+div.citynav, div.biznav {
     display: inline-block;
     /*height: 50px;*/
     padding: 5px 0px;
@@ -92,11 +92,11 @@ div#searchbar {
     /*margin-right: 10%;*/
 }
 
-div#loyalty{
+/*div#loyalty{
     width: 30%;
     text-align: right;
     
-}
+}*/
 
 div.left{
     width: 20%;
@@ -110,6 +110,7 @@ div.right{
 
 div.info-window.right{
     text-align: left;
+    padding-left: 10%;
 }
 /*div.biznav.right{
     width: 40%;
@@ -122,9 +123,6 @@ div.citynav, div.biznav {
    vertical-align: top;
 }
 
-div.info-window.right{
-    padding-left: 10%;
-}
 
 div.biznav.left {
     width: 30%;
@@ -188,6 +186,7 @@ div#map {
     display: inline-block;
     vertical-align: top;
 }
+
 div.results{
     padding-left: 10px;
     vertical-align: top;

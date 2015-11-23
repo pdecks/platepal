@@ -31,6 +31,32 @@ from pdclassifier import PennTreebankPunkt
 # filepaths to Yelp JSON
 YELP_JSON_FP = 'data/yelp/yelp_academic_dataset.json'
 
+def get_scatter_data():
+    QUERY="""
+    SELECT revcat_id, revcats.review_id, reviews.review_date, revcats.sen_score, reviews.yelp_stars
+    FROM revcats
+    JOIN reviews on reviews.review_id = revcats.review_id
+    WHERE reviews.biz_id = 2171
+    ORDER BY reviews.review_date"""
+
+    sen_scores_by_date = db.session.execute(QUERY).fetchall()
+
+    # calculate months from date
+    date_format = "%Y-%m-%d"
+
+    zero_date = sen_scores_by_date[0][2]
+    zero_date = datetime.strptime(zero_date, date_format)
+    # import pdb; pdb.set_trace()
+    with open("./static/csv/scatterplot.csv", "w") as record_file:
+        record_file.write("reviewDate,timeDelta,sentimentScore,stars\n")
+        for entry in sen_scores_by_date:
+            entry_date = datetime.strptime(entry[2], date_format)    
+            delta = entry_date - zero_date
+            entry_days = delta.days
+            record_file.write(entry[2] +","+ str(entry_days) +","+str(entry[3])+","+ str(entry[4])+"\n")
+    record_file.close()
+    return
+
 def gets_data_frames(file_path, target_cat_list=[u'Restaurants']):
     """
     Returns pandas DataFrames containing JSON entries for biz and reviews.
@@ -393,6 +419,7 @@ def update_revcat_sen_score(cat='gltn'):
 
     return
 
+
 def replace_revcat_sen_score(cat='gltn'):
     """Replace sen_scores in RevCat table with text-processing API scores"""
     url = "http://text-processing.com/api/sentiment/"
@@ -428,6 +455,45 @@ def replace_revcat_sen_score(cat='gltn'):
     print "... database updated!"
 
     return
+
+
+def get_revcat_sen_score(cat='vgan'):
+    """Replace 'NULL' sen_scores in RevCat table with text-processing API scores"""
+    url = "http://text-processing.com/api/sentiment/"
+    # select all revcat entries where cat_code == category and return the review text
+    revcat_ids = [301,  304, 305, 310, 329, 333, 340, 345]
+    results = db.session.query(ReviewCategory.revcat_id, PlatePalReview.text).join(PlatePalReview)
+    results_by_cat = results.filter(ReviewCategory.cat_code==cat, ReviewCategory.sen_score==None).all()
+    # for the list of revcats / review text
+    for result in results_by_cat:
+        revcat_id = result[0]
+        text = result[1]
+        # check that text does not exceed API's character limit
+        if len(text) < 80000:
+            # query text-processing API for sentiment score
+            payload = {'text': text}
+
+            # make API call
+            r = requests.post(url, data=payload)
+
+            # load JSON from API call
+            result = json.loads(r.text)
+
+            # pull sentiment score
+            sen_score = result['probability']['pos']
+
+            time.sleep(random.randint(0,5))
+        # update entry in db --> get entire entry from revcat by revcat_id
+        revcat = db.session.query(ReviewCategory).filter(ReviewCategory.revcat_id==revcat_id).one()
+        if revcat:
+            revcat.sen_score = sen_score
+            db.session.add(revcat)
+            db.session.commit()
+
+    print "... database updated!"
+
+    return
+
 
 
 def seed_sentences():
@@ -600,9 +666,9 @@ def calc_avg_rating_per_cat():
 
             # update attribute
             bizsen_cat = BizSentiment(biz_id=biz_id,
-                                  cat_code=cat_code,
-                                  avg_cat_review=average_stars_by_cat,
-                                  num_revs=num_revs)
+                                      cat_code=cat_code,
+                                      avg_cat_review=average_stars_by_cat,
+                                      num_revs=num_revs)
 
             # update db
             db.session.add(bizsen_cat)
@@ -610,7 +676,7 @@ def calc_avg_rating_per_cat():
     return
 
 
-def calc_agg_sen_per_cat():
+def calc_agg_sen_per_cat(cat='vgan'):
     """Calculate aggregate sentiment score for business by category"""
     # 1. List of PLATEPALBIZ: find the businesses with at least one revcat in cat_code = 'gltn'
     # 2. List of REVCATS for Biz: for that business, find all of its reviews in the category
@@ -623,7 +689,6 @@ def calc_agg_sen_per_cat():
     # 4. Update database
 
     # query ReviewCategory for unique biz_ids (215 for 'gltn' 11/18/2015)
-    cat = 'gltn'
     revcat_biz = db.session.query(ReviewCategory).filter(ReviewCategory.cat_code==cat).group_by(ReviewCategory.biz_id).all()
     for revcat in revcat_biz:
         biz = revcat.biz
@@ -635,16 +700,23 @@ def calc_agg_sen_per_cat():
         num_scores = 0
         # calculate average
         for entry in biz_revcats:
-            if entry.cat_code == 'gltn':
+            if entry.cat_code == cat:
                 num_scores += 1
                 total_sen_score += entry.sen_score
 
-        agg_sen_score = (total_sen_score / num_scores) / 1.0
+        agg_sen_score = ( 1.0 * total_sen_score / num_scores)
         # store average in db BizSentiments
         # query and update...
         print "\nUpdating bizsentiments table for biz_id=%d ...\n" % biz.biz_id
         bizsent = BizSentiment.query.filter(BizSentiment.biz_id==biz.biz_id, BizSentiment.cat_code==cat).first()
-        bizsent.agg_sen_score = agg_sen_score
+        if bizsent:
+            bizsent.agg_sen_score = agg_sen_score
+        else:
+            bizsent = BizSentiment(biz_id=biz.biz_id,
+                                   cat_code=cat,
+                                   agg_sen_score=agg_sen_score
+                                   )
+            db.session.add(bizsent)
         print "\n... database updated.\n"
 
         db.session.commit()
@@ -698,36 +770,36 @@ def seed_city_distance():
     return
 
 
-def seed_citydistcat():
-    """Populate CityDistCat table with cities with at least one review in PP categories."""
-    # query db for cities by state
-    QUERY="""
-        SELECT DISTINCT Biz.city, Biz.state from Biz
-        INNER JOIN Reviews on reviews.biz_id = Biz.biz_id
-        INNER JOIN revcats on revcats.review_id = reviews.review_id
-        WHERE revcats.cat_code in ('gltn', 'vgan', 'pleo', 'kshr', 'algy')
-        ORDER BY Biz.state;"""
+# def seed_citydistcat():
+#     """Populate CityDistCat table with cities with at least one review in PP categories."""
+#     # query db for cities by state
+#     QUERY="""
+#         SELECT DISTINCT Biz.city, Biz.state from Biz
+#         INNER JOIN Reviews on reviews.biz_id = Biz.biz_id
+#         INNER JOIN revcats on revcats.review_id = reviews.review_id
+#         WHERE revcats.cat_code in ('gltn', 'vgan', 'pleo', 'kshr', 'algy')
+#         ORDER BY Biz.state;"""
 
-    results = db.session.execute(QUERY).fetchall()
+#     results = db.session.execute(QUERY).fetchall()
 
-    # create a dictionary where state abbrev = keys and values
-    # are a list of cities in the state
-    cities_with_cats = set()
-    for result in results:
-        cities_with_cats.add((result[0], result[1]))
+#     # create a dictionary where state abbrev = keys and values
+#     # are a list of cities in the state
+#     cities_with_cats = set()
+#     for result in results:
+#         cities_with_cats.add((result[0], result[1]))
 
-    import pdb; pdb.set_trace()
-    for city in cities_with_cats:
-        print city
-        city_distances = db.session.query(CityDistance).join(City).filter(City.city==city[0], City.state==city[1]).all()
+#     import pdb; pdb.set_trace()
+#     for city in cities_with_cats:
+#         print city
+#         city_distances = db.session.query(CityDistance).join(City).filter(City.city==city[0], City.state==city[1]).all()
 
-    for cdist in city_distances:
-        citycat = CityDistCat(city1_id=cdist.city1_id,
-                              city2_id=cdist.city2_id,
-                              miles=cdist.miles)
-        db.session.add(citycat)
-    db.session.commit()
-    return
+#     for cdist in city_distances:
+#         citycat = CityDistCat(city1_id=cdist.city1_id,
+#                               city2_id=cdist.city2_id,
+#                               miles=cdist.miles)
+#         db.session.add(citycat)
+#     db.session.commit()
+#     return
 
 
 def update_ppreview_cat():

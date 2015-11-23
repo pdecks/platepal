@@ -157,7 +157,10 @@ function setMarkers(map) {
           // }
           if (catCode !== 'unkn'){
             console.log('adding link to list for ' + catCode + ' business: ' + biz.name);
-            resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br>PlatePal Score: " + biz.avg_cat_review + "</br></li>");
+            if (biz.avg_cat_review === null){
+              biz.avg_cat_review = 'N/A';
+            }
+            resList.append("<li><a href='/biz/"+biz.biz_id+"'>" + biz.name + "</a><br>Average Stars in Category: " + biz.avg_cat_review + "</br>PlatePal Score: " + Math.round(biz.agg_sen_score*100)/100 + "</br></li>");
           }
           else{
             console.log('adding link to list for ' + catCode + ' business: ' + biz.name);

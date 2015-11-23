@@ -15,6 +15,7 @@ from collections import OrderedDict
 from sqlalchemy import distinct
 from model import CAT_CODES
 from statecodes import STATE_CODES
+from datetime import datetime
 
 import re
 import os
@@ -784,6 +785,40 @@ def find_nearby_cities(city, state, x_miles):
 
     return nearby_cities_list
 
+
+# @app.route('/scatterplot.tsv')
+def get_scatter_data():
+    QUERY="""
+    SELECT revcat_id, revcats.review_id, reviews.review_date, revcats.sen_score, reviews.yelp_stars
+    FROM revcats
+    JOIN reviews on reviews.review_id = revcats.review_id
+    WHERE reviews.biz_id = 2171
+    ORDER BY reviews.review_date"""
+
+    sen_scores_by_date = db.session.execute(QUERY).fetchall()
+
+    # calculate months from date
+    date_format = "%Y-%m-%d"
+
+    zero_date = sen_scores_by_date[0][2]
+    zero_date = datetime.strptime(zero_date, date_format)
+    # import pdb; pdb.set_trace()
+    with open("./static/tsv/scatterplot.tsv", "w") as record_file:
+        record_file.write("reviewDate  timeDelta  sentimentScore  stars\n")
+        for entry in sen_scores_by_date:
+            entry_date = datetime.strptime(entry[2], date_format)    
+            delta = entry_date - zero_date
+            entry_months = delta.days
+            record_file.write(entry[2] +"  "+str(entry[3])+"  "+ str(entry[4])+"\n")
+    record_file.close()
+    return
+
+
+@app.route('/scatterplot')
+def show_scatter_plot():
+    return render_template("scatterplot.html")
+
+
 # TODO -- for adding a new review
 def get_sentiment_score(doc):
     url = "http://text-processing.com/api/sentiment/"
@@ -814,4 +849,5 @@ if __name__ == "__main__":
 
     app.run()
 
-    get_force_data()
+    get_scatter_data()
+    # get_force_data()

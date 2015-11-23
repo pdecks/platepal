@@ -5,20 +5,27 @@ PlatePal: {{city}} Results
 {% endblock%}
 
 {% block location %}
-<div class="citynav-outer">
-    <div class="citynav left">
-        <a href="/state.html#{{state}}-list">{{state}}</a> >> 
-        <a href="/{{state}}/{{city}}/city.html">{{city}}</a>
+<div class="row" id="citynav-outer">
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-left">
+       
+        <ol class="breadcrumb">
+          <li><a href="/state.html#{{state}}-list">{{state}}</a></li>
+          <li class="active">{{city}}</li>
+        </ol>
     </div>
-    <div class="citynav right">
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-right">
+        <ol class="breadcrumb">
         {% if nearby_cities is not none %}
         {% for city in nearby_cities %}
-        <a href="/{{city[1]}}/{{city[0]}}/city.html">{{city[0]}}</a> 
+        <li><a href="/{{city[1]}}/{{city[0]}}/city.html">{{city[0]}}</a></li>
         {% endfor %}
         {% endif %}
-    </div> 
+        </ol>
+    
+    </div>
+    <!-- <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" id="citynav right">
 
-    <!-- end JINJA for loop here -->
+    </div>  -->
 </div> <!-- citynav-outer -->
 {% endblock %}
 

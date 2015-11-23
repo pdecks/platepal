@@ -3,7 +3,32 @@
     width: 80%;
 }
 
+/* for getting search bar fields to appear inline*/
+.navbar-form .input-group>.form-control {
+    width: auto;
+}
 
+div#citynav-left.col-lg-6.col-md-6.col-sm-6.col-xs-6{
+    padding: 0;
+}
+div#citynav-right.col-lg-6.col-md-6.col-sm-6.col-xs-6{
+    padding-right: 10%;
+    list-style: none;
+    background-color: #f5f5f5;
+    text-align: right;
+}
+
+.navbar{
+    margin-bottom: 0px;
+}
+ol.breadcrumb{
+    border-radius: 0;
+    margin-bottom:0px;
+}
+
+div#citynav-right ol{
+    margin-bottom: 0px;
+}
 /*
 div.nav-outer, div.citynav-outer {
     height: 40px;

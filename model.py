@@ -414,11 +414,27 @@ class CityDistance(db.Model):
 
     distance_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     city1_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
-    city2_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
+    city2_id = db.Column(db.Integer, nullable=False)
     miles = db.Column(db.Float(Precision=64), nullable=False) # distance in miles
 
     def __repr__(self):
         return "<CityDistance target-city=%s nearby-city=%s>" % (self.city1_id, self.city2_id)
+
+
+class CityDistCat(db.Model):
+    """Same as CityDistance, but only cities with reviews in at least one Plate Pal category"""
+
+    __tablename__ = "citycats"
+
+    distance_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    city1_id = db.Column(db.Integer, db.ForeignKey('cities.city_id'))
+    city2_id = db.Column(db.Integer, nullable=False)
+    miles = db.Column(db.Float(Precision=64), nullable=False) # distance in miles
+
+    def __repr__(self):
+        return "<CityDistCat target-city=%s nearby-city=%s>" % (self.city1_id, self.city2_id)
+
+
 
 
 

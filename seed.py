@@ -10,7 +10,7 @@ from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
 from model import Sentence, SentenceCategory
-from model import City, CityDistance
+from model import City, CityDistance, CityDistCat
 from model import connect_to_db, db
 
 from server import app
@@ -671,6 +671,7 @@ def seed_cities():
                         lng=location.longitude)
         db.session.add(new_city)
     db.session.commit()
+    return
 
 
 def seed_city_distance():
@@ -694,6 +695,39 @@ def seed_city_distance():
                                                  miles=miles)
                 db.session.add(new_city_distance)
     db.session.commit()
+    return
+
+
+def seed_citydistcat():
+    """Populate CityDistCat table with cities with at least one review in PP categories."""
+    # query db for cities by state
+    QUERY="""
+        SELECT DISTINCT Biz.city, Biz.state from Biz
+        INNER JOIN Reviews on reviews.biz_id = Biz.biz_id
+        INNER JOIN revcats on revcats.review_id = reviews.review_id
+        WHERE revcats.cat_code in ('gltn', 'vgan', 'pleo', 'kshr', 'algy')
+        ORDER BY Biz.state;"""
+
+    results = db.session.execute(QUERY).fetchall()
+
+    # create a dictionary where state abbrev = keys and values
+    # are a list of cities in the state
+    cities_with_cats = set()
+    for result in results:
+        cities_with_cats.add((result[0], result[1]))
+
+    import pdb; pdb.set_trace()
+    for city in cities_with_cats:
+        print city
+        city_distances = db.session.query(CityDistance).join(City).filter(City.city==city[0], City.state==city[1]).all()
+
+    for cdist in city_distances:
+        citycat = CityDistCat(city1_id=cdist.city1_id,
+                              city2_id=cdist.city2_id,
+                              miles=cdist.miles)
+        db.session.add(citycat)
+    db.session.commit()
+    return
 
 
 def update_ppreview_cat():

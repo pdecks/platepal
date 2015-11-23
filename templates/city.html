@@ -13,7 +13,7 @@ PlatePal: {{city}} Results
     <div class="citynav right">
         {% if nearby_cities is not none %}
         {% for city in nearby_cities %}
-        <a href="/{{state}}/{{city[0]}}/city.html">{{city[0]}}</a> 
+        <a href="/{{city[1]}}/{{city[0]}}/city.html">{{city[0]}}</a> 
         {% endfor %}
         {% endif %}
     </div> 

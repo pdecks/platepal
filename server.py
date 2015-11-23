@@ -7,7 +7,7 @@ from model import YelpBiz, YelpUser, YelpReview
 from model import PlatePalBiz, PlatePalUser, PlatePalReview
 from model import UserList, ListEntry
 from model import Category, ReviewCategory, BizSentiment
-from model import City, CityDistance
+from model import City, CityDistance, CityDistCat
 from model import connect_to_db, db
 
 from collections import defaultdict
@@ -67,10 +67,8 @@ def display_states():
     locations = defaultdict(list)
     for result in results:
         locations[result[1]].append(result[0])
-    ord_locations = OrderedDict(locations)
-    print ord_locations.keys()
-
-    return render_template('state.html', locations=ord_locations)
+    print locations
+    return render_template('state.html', locations=locations)
 
 @app.route('/<state>/state.html')
 def display_all_biz_in_state(state):
@@ -115,6 +113,7 @@ def city_in_state_page(state, city):
     # get nearby cities list
     nearby_miles = 50 # find cities within 50 miles of current city
     nearby_cities = find_nearby_cities(city, state, nearby_miles)
+    print "tHIS IS nearby_cities", nearby_cities
 
     return render_template('city.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, nearby_cities=nearby_cities)
 
@@ -767,8 +766,19 @@ def find_nearby_cities(city, state, x_miles):
         nearby_cities_list = []
         # lookup city names for nearby cities
         for nearby_city in nearby_cities:
-            nearby_name = db.session.query(City.city).filter(City.city_id==nearby_city[0]).first()
-            nearby_cities_list.append(nearby_name)
+            nearby_name = db.session.query(City.city, City.state).filter(City.city_id==nearby_city[0]).first()
+
+            print "this is nearby_name[0]", nearby_name[0]
+            # check if city has any reviews in revcats
+            QUERY="""
+            SELECT * from Revcats
+            JOIN Reviews on Reviews.review_id = Revcats.review_id
+            JOIN Biz on Biz.biz_id = Reviews.biz_id
+            WHERE Biz.city = :city
+            """
+            revcats = db.session.execute(QUERY, {'city': nearby_name[0]}).fetchall()
+            if revcats:
+                nearby_cities_list.append(nearby_name)
     else:
         nearby_cities_list = []
 

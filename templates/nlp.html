@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}
+PlatePal: Analytics
+{% endblock%}
+
+{% block head %}
+
+{% endblock %}
+
+{% block location %}
+<div class="analytics-outer">
+    <h2>Analytics: the ghost in the machine</h2>
+    <h3>Data visualization with D3 can be found <a href="/analytics">here</a></h3>
+</div> 
+{% endblock %}
+
+{% block content %}
+<style>
+
+</style>
+
+<!-- <div id="area1"></div> -->
+<!-- <div id="area2"></div> -->
+<script src='http://d3js.org/d3.v3.min.js'></script>
+<body>
+
+<div> 
+    <article id="ML">
+        <h2>Post about sentiment analysis and scikit learn-ing</h2>
+        <h3>Wrangling Data </h3>
+          <p> ... trying to label unlabeled data. Note that now for 'vgan' sentences
+            I have them labeled with the sentiment score from the API calls. </p>
+
+          <p> ... not having enough data in a category. 'Gltn' is much smaller
+          compared to 'vgan' </p>
+          <h4>Author's Reviews<h4>
+
+          <h4>Yelp Academic Dataset</h4>
+
+
+        <h3>Text Classification </h3>
+          <h4>Preprocessing </h4>
+        
+          <h4>Extracting Features </h4>
+            <h5>Vectorizer Vocabulary</h5>
+
+            <h5>Bag of Words</h5>
+            <h5>Word2Vec</h5>
+            <h5>KFolds</h5>
+              <h6>Author's Reviews: Classification</h6>
+              <p>
+                <img src="/static/img/k2_toyset.png"><br>
+                Author Reviews, K=2
+              </p>
+              <p>
+                <img src="/static/img/k3_toyset.png"><br>
+                Author Reviews, K=3
+              </p>
+              <p>
+                <img src="/static/img/k4_toyset.png"><br>
+                Author Reviews, K=4
+              </p>
+              <p>
+                <img src="/static/img/k4-10_toyset_subplots.png"><br>
+                Author Reviews, K=4-10
+              </p>
+              <h6>Yelp Academic Dataset: Classification</h6>
+              <p>
+                <img src="/static/img/k2-10_yelpgltn_onePlot.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/k2-10_yelpgltn_subplots.png"><br>
+                ???
+              </p>
+              <h6>Yelp Academic Dataset: Sentiment</h6>
+              <p>
+                <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/sentiment_gltn_k2-10_onePlot.png"><br>
+                ???
+              </p>
+              <p>
+                <img src="/static/img/sentiment_gltn_k2-10_subPlots.png"><br>
+                ???
+              </p>
+              
+              
+
+
+          <h4>Picking a Classifier </h4>
+            <h5>MultinomialNB vs. LinearSVC </h5>
+          <h4>Sentiment Analysis</h4>
+              <h5>Categorization</h5>
+              <p> categorizing reviews into one of five categories.
+              </p>
+              <h5>Single-label classifier </h5>
+              <p> each review could only have one category,
+               each sentence could only have one category</p>
+              
+
+              <h5>Multilabel Classifier </h5>
+                <h6>One vs. Rest</h6>
+                <h6>KMeans Clustering</h6>
+
+              <h5>Classifying as "good" or "bad"
+            
+              
+            
+        <h3> Sentiment Analysis with Python</h3>
+          <p>link to lightning talk slides </h3>
+    </article>
+</div> <!-- content block -->
+
+{% endblock %}
+
+{% block footer %}
+
+{% endblock%}
+
+
+
+</body>
+</html>

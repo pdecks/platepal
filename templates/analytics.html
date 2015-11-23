@@ -11,6 +11,7 @@ PlatePal: Analytics
 {% block location %}
 <div class="analytics-outer">
     <h2>Analytics: the ghost in the machine</h2>
+    <h3>Details on classifier and sentiment analysis models can be found <a href="/nlp">here</a></h3>
     <!-- end JINJA for loop here -->
 </div> 
 {% endblock %}
@@ -519,105 +520,129 @@ PlatePal: Analytics
     } // end updateSunburst
 
     </script>
-    <article id="ML">
-        <h2>Post about sentiment analysis and scikit learn-ing</h2>
-        <h3>Wrangling Data </h3>
-          <p> ... trying to label unlabeled data. Note that now for 'vgan' sentences
-            I have them labeled with the sentiment score from the API calls. </p>
+    <div id="area3">
+      <h2>Scatter plot of Sentiment Score over Time (in days) for Native Foods Cafe (Los Angeles)</h2>
+      <!-- <img src="/static/img/scatterplot2171.png"> -->
+    </div>
+    <style>
 
-          <p> ... not having enough data in a category. 'Gltn' is much smaller
-          compared to 'vgan' </p>
-          <h4>Author's Reviews<h4>
+    #area3 {
+      font: 10px sans-serif;
+    }
 
-          <h4>Yelp Academic Dataset</h4>
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
 
+    .dot {
+      stroke: #000;
+    }
 
-        <h3>Text Classification </h3>
-          <h4>Preprocessing </h4>
-        
-          <h4>Extracting Features </h4>
-            <h5>Vectorizer Vocabulary</h5>
+    </style>
+    <script>
 
-            <h5>Bag of Words</h5>
-            <h5>Word2Vec</h5>
-            <h5>KFolds</h5>
-              <h6>Author's Reviews: Classification</h6>
-              <p>
-                <img src="/static/img/k2_toyset.png"><br>
-                Author Reviews, K=2
-              </p>
-              <p>
-                <img src="/static/img/k3_toyset.png"><br>
-                Author Reviews, K=3
-              </p>
-              <p>
-                <img src="/static/img/k4_toyset.png"><br>
-                Author Reviews, K=4
-              </p>
-              <p>
-                <img src="/static/img/k4-10_toyset_subplots.png"><br>
-                Author Reviews, K=4-10
-              </p>
-              <h6>Yelp Academic Dataset: Classification</h6>
-              <p>
-                <img src="/static/img/k2-10_yelpgltn_onePlot.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/k2-10_yelpgltn_subplots.png"><br>
-                ???
-              </p>
-              <h6>Yelp Academic Dataset: Sentiment</h6>
-              <p>
-                <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/sentiment_gltn_k2-10_onePlot.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/sentiment_gltn_k2-10_subPlots.png"><br>
-                ???
-              </p>
-              
-              
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    // var color = d3.scale.category10();
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    var svg3 = d3.select("#area3").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv("/static/csv/scatterplot.csv", function(error, data) {
+      if (error) throw error;
 
 
-          <h4>Picking a Classifier </h4>
-            <h5>MultinomialNB vs. LinearSVC </h5>
-          <h4>Sentiment Analysis</h4>
-              <h5>Categorization</h5>
-              <p> categorizing reviews into one of five categories.
-              </p>
-              <h5>Single-label classifier </h5>
-              <p> each review could only have one category,
-               each sentence could only have one category</p>
-              
+      data.forEach(function(d) {
+        d.timeDelta = d.timeDelta
+        d.sentimentScore = d.sentimentScore;
+      });
 
-              <h5>Multilabel Classifier </h5>
-                <h6>One vs. Rest</h6>
-                <h6>KMeans Clustering</h6>
+      x.domain(d3.extent(data, function(d) { return d.timeDelta; })).nice();
+      y.domain(d3.extent(data, function(d) { return d.sentimentScore; })).nice();
 
-              <h5>Classifying as "good" or "bad"
-            
-              
-            
-        <h3> Sentiment Analysis with Python</h3>
-          <p>link to lightning talk slides </h3>
-    </article>
-    
+      svg3.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("x", width)
+          .attr("y", -6)
+          .style("text-anchor", "end")
+          .text("Time (days from first review in database)");
+
+      svg3.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Sentiment Score")
+
+      svg3.selectAll(".dot")
+          .data(data)
+        .enter().append("circle")
+          .attr("class", "dot")
+          .attr("r", 3.5)
+          .attr("cx", function(d) { return x(d.timeDelta); })
+          .attr("cy", function(d) { return y(d.sentimentScore); })
+          .style("fill", function(d) { return color(d.stars); });
+
+      // var legend3 = svg3.selectAll(".legend")
+      //     .data(color.domain())
+      //   .enter().append("g")
+      //     .attr("class", "legend")
+      //     .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+      // legend3.append("rect")
+      //     .attr("x", width - 18)
+      //     .attr("width", 18)
+      //     .attr("height", 18)
+      //     .style("fill", color);
+
+      // legend3.append("text")
+      //     .attr("x", width - 24)
+      //     .attr("y", 9)
+      //     .attr("dy", ".35em")
+      //     .style("text-anchor", "end")
+      //     .text(function(d) { return d; });
+
+    });
+
+    </script>
+
 
 </div> <!-- content block -->
 
 {% endblock %}
 
 {% block footer %}
-<h6><a href="/analytics">Analytics</a></h6>
+
 {% endblock%}
 
 

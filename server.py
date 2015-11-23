@@ -635,8 +635,8 @@ def get_sunburst_data(selected_state, selected_city):
 
 
 @app.route('/analytics')
-def lab():
-    """Analytics page housing sentiment analysis info and D3"""
+def display_analytics():
+    """Analytics page housing D3"""
     # return render_template("force-labeled.html")
         # QUERY = """
     # SELECT DISTINCT state from Cities;
@@ -652,6 +652,13 @@ def lab():
     cities = [['Berkeley'],['Claremont'], ['La Jolla'],['Los Angeles'],
               ['Palo Alto'], ['Pasadena'], ['San Diego'], ['San Luis Obispo']]
     return render_template("analytics.html", state='CA', city='Berkeley', states=states, cities=cities)
+
+
+@app.route('/nlp')
+def display_nlp():
+    """Information about my sentiment analysis"""
+    return render_template("nlp.html")
+
 
 
 @app.route('/<region>/force.json')
@@ -786,7 +793,7 @@ def find_nearby_cities(city, state, x_miles):
     return nearby_cities_list
 
 
-# @app.route('/scatterplot.tsv')
+@app.route('/scatterplot.csv')
 def get_scatter_data():
     QUERY="""
     SELECT revcat_id, revcats.review_id, reviews.review_date, revcats.sen_score, reviews.yelp_stars

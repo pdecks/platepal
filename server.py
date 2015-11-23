@@ -757,7 +757,7 @@ def get_force_data(region):
         n_index += 1
     # build outer dictionary
     json_dict = {'nodes': nodes, 'links': links}
-    
+
     return jsonify(json_dict)
 
 

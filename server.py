@@ -68,7 +68,11 @@ def display_states():
     locations = defaultdict(list)
     for result in results:
         locations[result[1]].append(result[0])
-    print locations
+    # order the lists in the dictionary
+    for key in locations.keys():
+        locations[key] = sorted(locations[key])
+    # order the keys in the dictionary with an OrderedDict
+    locations = OrderedDict(sorted(locations.items()))
     return render_template('state.html', locations=locations)
 
 @app.route('/<state>/state.html')

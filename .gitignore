@@ -16,5 +16,6 @@ templates/zoomable-sunburst-labels-ajax.html
 templates/sunburst.html
 classifiers/StarPrediction/
 plots/
-
-
+templates/state-old.html
+static/tsv/
+static/js/generateColors.js

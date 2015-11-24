@@ -7,23 +7,36 @@ PlatePal: Locations
 {% block location %}
 <div class="statenav-outer">
     <div class="statenav left">
-        <a href="/state.html">States with Category Ratings</a> <!-- TODO: Replace with Jinja  -->
+       
     </div>
     <div class="statenav right">
     </div> 
 </div> 
+
+<div class="row" id="statenav-outer">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" id="statenav-left">
+       
+        <ol class="breadcrumb">
+          <li class="active">States with Category Ratings</li>
+        </ol>
+    </div>
+</div> <!-- statenav-outer -->
 {% endblock %}
 
 {% block content %}
-<div> 
-    {% for state in locations.keys() %}
-    <div id="{{state}}-list">
-    <h2>{{state}}</h2>
-    <ul>
-        {% for city in locations[state]%}
-        <li><a href="/{{state}}/{{city}}/city.html">{{city}}</a></li>
-        {% endfor %}
-    </ul>
+<div class="row" id="state-lists"> 
+    {% for state, cities in locations.items() %}
+    <div class="col-lg-2 col-md-3 col-mg-offset-1 col-sm-4 col-xs-6 state-list" id="{{state}}-list" style="height:500px;">
+        <div class="list-group">
+            <h2 class="state-list">{{state}}</h2>
+            <ul class="list-group">
+                {% for city in cities%}
+                <li><a href="/{{state}}/{{city}}/city.html" class="list-group-item">{{city}}
+                <i class="glyphicon glyphicon-chevron-right"> </i></a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
     {% endfor %}
 </div> <!-- content block -->

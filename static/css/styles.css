@@ -1,6 +1,21 @@
-#map {
+/*#map {
     height: 500px;
     width: 80%;
+}*/
+
+.map_container{
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* Ratio 16:9 ( 100%/16*9 = 56.25% ) */
+}
+.map_container .map_canvas{
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
 }
 
 /* for getting search bar fields to appear inline*/
@@ -35,7 +50,7 @@ div#statenav-left.col-lg-12.col-md-12.col-sm-12.col-xs-12{
 }
 
 div#state-lists div{
-    /*height: 600px;*/
+    height: 100%;
 }
 /*
 div.nav-outer, div.citynav-outer {
@@ -191,6 +206,10 @@ div.citynav, div.biznav {
    vertical-align: top;
 }
 
+div#map-row {
+    margin-top: 40px;
+}
+
 
 div.biznav.left {
     width: 30%;
@@ -208,10 +227,14 @@ div#map-title {
 }
 div#results-list{
     display: inline-block;
-    background-color: #EAEAEA;
+/*    background-color: #EAEAEA;*/
     padding: 0px;
     vertical-align: top;
     width: 30%;
+}
+
+div#results-list h3{
+    margin-top: 0px;
 }
 
 div#mapnav {

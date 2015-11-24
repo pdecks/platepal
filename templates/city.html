@@ -30,15 +30,10 @@ PlatePal: {{city}} Results
 {% endblock %}
 
 {% block content %}
-<div> 
-    <div id="map-title">
-        <!-- <h3>Palo Alto</h3> -->
-    </div>
-    
-    
-    <div id="results">
+<div class="row" id="map-row"> 
 
-        <div id="mapnav">
+        <!-- TODO: make this a collapsable nav? -->
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" id="mapnav">
         {% for cat in cat_list %}
             <div class="map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
             <a href="#filter-results" class="map-nav" data-cat-id={{cat[0]}} id="{{cat[0]}}-map-filter">{{cat[1]}}</a>
@@ -46,13 +41,16 @@ PlatePal: {{city}} Results
         {% endfor %}
         </div> <!-- mapnav -->
 
-        <div id="map"></div>
-        <!-- the totally not secret google_maps_key -->
+        <div class="map_container" id="map">
+            <div id="map_canvas" class="map_canvas"></div>
         <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap">
         </script>
 
+        </div>
+        <!-- the totally not secret google_maps_key -->
+        
 
-        <div id="results-list">
+        <div class="col-lg-3 col-md-3 col-sm-6 col-xs-6" id="results-list">
             <!-- corresponds to active tab on map-nav -->
             <div class="results" id="results-gltn">
                 <h3>Gluten-Free</h3> <!--todo: jinja -->
@@ -85,10 +83,10 @@ PlatePal: {{city}} Results
             </div>
         </div> <!-- #results-list -->
 
-    </div> <!-- #results -->
+
     <script type="text/javascript" src="/static/js/city-gmaps.js"></script>
 
-</div> <!-- content block -->
+</div> <!-- map-row -->
 
 {% endblock %}
 

@@ -6,14 +6,14 @@ PlatePal: {{city}} Results
 
 {% block location %}
 <div class="row" id="citynav-outer">
-    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-left">
+    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-3" id="citynav-left">
        
         <ol class="breadcrumb">
           <li><a href="/state.html#{{state}}-list">{{state}}</a></li>
           <li class="active">{{city}}</li>
         </ol>
     </div>
-    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-right">
+    <div class="col-lg-6 col-md-6 col-sm-9 col-xs-9" id="citynav-right">
         <ol class="breadcrumb">
         {% if nearby_cities is not none %}
         {% for city in nearby_cities %}
@@ -32,22 +32,27 @@ PlatePal: {{city}} Results
 {% block content %}
 <div class="row" id="map-row"> 
 
-        <!-- TODO: make this a collapsable nav? -->
-        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" id="mapnav">
+    <!-- TODO: make this a collapsable nav? -->
+        
+    <div class="map_container" id="map">
+        <div id="mapnav">
         {% for cat in cat_list %}
+        {% if cat == 'gltn' %}
+            <div class="active map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
+        {% else %}
             <div class="map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
+        {% endif %}
             <a href="#filter-results" class="map-nav" data-cat-id={{cat[0]}} id="{{cat[0]}}-map-filter">{{cat[1]}}</a>
             </div>
         {% endfor %}
         </div> <!-- mapnav -->
 
-        <div class="map_container" id="map">
-            <div id="map_canvas" class="map_canvas"></div>
+        <div id="map_canvas" class="map_canvas"></div>
         <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap">
         </script>
 
-        </div>
-        <!-- the totally not secret google_maps_key -->
+    </div>
+    <!-- the totally not secret google_maps_key -->
         
 
         <div class="col-lg-3 col-md-3 col-sm-6 col-xs-6" id="results-list">

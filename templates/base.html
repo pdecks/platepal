@@ -24,7 +24,7 @@
         <a class="navbar-brand" rel="home" href="/" title="PlatePal - Homepage">PlatePal</a>
     </div>
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <div class="col-sm-3 col-md-4">
+        <div class="col-sm-2 col-md-3">
         <ul class="nav navbar-nav">
             {% if not "user_id" in session %}
             <li><a href='/login-form'>Sign Up</a></li>
@@ -45,8 +45,8 @@
               </ul>
             </li>
         </ul>
-    </div>
-        <div class="col-sm-4 col-md-6 pull-right">
+        </div>
+        <div class="col-sm-7 col-md-7 pull-right">
             <form class="navbar-form" role="search" action="/search" method="GET">
                 <div class="input-group">
                     <input type="text" class="form-control" name="srch-terms" id="srch-terms" placeholder="tacos" style="display:inline-block;">
@@ -56,9 +56,11 @@
                     </div>
                 </div>
             </form>
-        </div>        
+        </div>       
     </div> <!--collapse-->
-
+    <div class="col-md-1 col-lg-1">
+    </div> 
+    
 </nav>
 
 <div class="container-fluid">   
@@ -69,15 +71,19 @@ City information goes here.
 {% block content %}
 Content goes here.
 {% endblock %}
+
 </div>
-<footer>
-    <a href='/'>Home</a>
-    <h6><a href="/analytics">Analytics</a></h6>
-    <h6><a href="/nlp">NLP</a></h6>
+
+ <div class="footer">
+    <a href='/'>Home</a> |
+    <a href="/analytics">Analytics</a> |
+    <a href="/nlp">NLP</a>
     {% block footer %}
     {% endblock %}
-    PlatePal 2015.
-</footer>
+   <p>Copyright (c) 2015</p>
+ </div>
+
+   
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 </body>
 </html>

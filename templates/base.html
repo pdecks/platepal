@@ -15,25 +15,39 @@
 <body>
 <nav class="navbar navbar-default" role="navigation">
     <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" rel="home" href="/" title="PlatePal - Homepage">PlatePal</a>
-    </div>
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <div class="col-sm-2 col-md-3">
         <ul class="nav navbar-nav">
-            {% if not "user_id" in session %}
+            <li class="dropdown">
+                <a class="navbar-brand dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" rel="home" href="/" title="PlatePal - Homepage">PlatePal<span class="caret"></span></a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                    {% if not "user_id" in session %}
+                    <li><a href='/login-form'>Sign Up</a></li>
+                    <li><a href='/login-form'>Login</a></li>
+                    {% else %}
+                    {# if logged in, show profile page link #}
+                    <li><a href="/profile/{{ session['user_id'] }}">Profile</a></li>
+                    <li><a href='/logout'>Logout</a></li>
+                    {% endif %}
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <div class="collapse navbar-collapse" id="navbar-collapse">
+        <div class="col-sm-2 col-md-2">
+        <ul class="nav navbar-nav">
+<!--             {% if not "user_id" in session %}
             <li><a href='/login-form'>Sign Up</a></li>
             <li><a href='/login-form'>Login</a></li>
             {% else %}
             {# if logged in, show profile page link #}
             <li><a href="/profile/{{ session['user_id'] }}">Profile</a></li>
             <li><a href='/logout'>Logout</a></li>
-            {% endif %}
+            {% endif %} -->
             <li class="dropdown" style="position:relative;">
               <a href='/analytics' class="dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                 Labs
@@ -46,7 +60,7 @@
             </li>
         </ul>
         </div>
-        <div class="col-sm-7 col-md-7 pull-right">
+        <div class="col-sm-8 col-md-8 col-lg-8 pull-right">
             <form class="navbar-form" role="search" action="/search" method="GET">
                 <div class="input-group">
                     <input type="text" class="form-control" name="srch-terms" id="srch-terms" placeholder="tacos" style="display:inline-block;">
@@ -60,13 +74,14 @@
     </div> <!--collapse-->
     <div class="col-md-1 col-lg-1">
     </div> 
-    
-</nav>
 
-<div class="container-fluid">   
 {% block location %}
 City information goes here.
 {% endblock %}
+</nav>
+
+<div class="container-fluid">   
+
 
 {% block content %}
 Content goes here.

@@ -23,7 +23,8 @@
         </button>
         <ul class="nav navbar-nav">
             <li class="dropdown">
-                <a class="navbar-brand dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" rel="home" href="/" title="PlatePal - Homepage">PlatePal<span class="caret"></span></a>
+                <a href="/" class="navbar-brand" id="brandLink1" style="padding-right:5px;">PlatePal</a>
+                <a class="navbar-brand dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" rel="home" href="/" title="PlatePal - Homepage"><span class="caret"></span></a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
                     {% if not "user_id" in session %}
                     <li><a href='/login-form'>Sign Up</a></li>

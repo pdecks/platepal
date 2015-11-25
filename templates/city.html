@@ -64,18 +64,7 @@ PlatePal: {{city}} Results
     <!-- TODO: make this a collapsable nav? -->
         
     <div class="map_container" id="map">
-<!--         <div id="mapnav">
-        {% for cat in cat_list %}
-        {% if cat == 'gltn' %}
-            <div class="active map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
-        {% else %}
-            <div class="map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
-        {% endif %}
-            <a href="#filter-results" class="map-nav" data-cat-id={{cat[0]}} id="{{cat[0]}}-map-filter">{{cat[1]}}</a>
-            </div>
-        {% endfor %}
-        </div> <!-- mapnav -->
- -->
+
         <div id="map_canvas" class="map_canvas"></div>
         <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_key}}&signed_in=true&callback=initMap">
         </script>

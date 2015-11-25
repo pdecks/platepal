@@ -25,8 +25,16 @@ div.navbar-header{
 
 a.navbar.brand{
     padding-left: 10px;
+    padding-right: 0;
 }
 
+#brandLink1{
+    padding-right: 5px;
+}
+
+a#dropdownMenu2{
+    padding-left: 0;
+}
 form.navbar-form{
     padding-left: 60%;
 }

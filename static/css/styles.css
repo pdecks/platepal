@@ -91,6 +91,11 @@ div#citynav-right.col-lg-6.col-md-6.col-sm-6.col-xs-6, div#searchnav-right{
     text-align: right;
 }
 
+div#d3graphs {
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
 .navbar{
     margin-bottom: 0px;
 }

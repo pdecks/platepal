@@ -9,11 +9,45 @@ PlatePal: Analytics
 {% endblock %}
 
 {% block location %}
-<div class="analytics-outer">
+<nav class="navbar navbar-default" role="navigation">
+<!-- <div class="row" id="citynav-outer"> -->
+    <!-- <div class="navbar-header"> -->
+    <div >
+        <button type="button" class="citynav navbar-toggle" data-toggle="collapse" data-target="#citynav-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-left">
+            <ol class="breadcrumb">
+              <li><a href="/analytics#forceregion">Regional</a></li>
+              <li><a href="/analytics#treemap">Local</a></li>
+              <li><a href="/analytics#area3">Business</a></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="collapse navbar-collapse" id="citynav-collapse">
+        <!-- <div class="collapse navbar-collapse" id="citynav-collapse-2"> -->
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 citynav-right" >
+            <ol class="breadcrumb nearby">
+
+            <li><a href="/"></a></li>
+            
+            </ol>
+        </div>
+    </div>
+    <!-- <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" id="citynav right">
+
+    </div>  -->
+</nav> <!-- citynav-outer -->
+
+
+<!-- <div class="analytics-outer">
     <h2>Analytics: the ghost in the machine</h2>
     <h3>Details on classifier and sentiment analysis models can be found <a href="/nlp">here</a></h3>
-    <!-- end JINJA for loop here -->
-</div> 
+</div>  -->
 {% endblock %}
 
 {% block content %}
@@ -66,7 +100,7 @@ PlatePal: Analytics
 <script src='http://d3js.org/d3.v3.min.js'></script>
 <body>
 
-<div> 
+<div id="d3graphs"> 
 
     <article>
         <h3>Project Motivation</h3>

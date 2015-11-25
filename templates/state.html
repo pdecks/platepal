@@ -16,7 +16,7 @@ PlatePal: Locations
 <div class="row" id="statenav-outer">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" id="statenav-left">
        
-        <ol class="breadcrumb">
+        <ol class="breadcrumb" id="state-breadcrumb">
           <li class="active">States with Category Ratings</li>
         </ol>
     </div>
@@ -26,7 +26,7 @@ PlatePal: Locations
 {% block content %}
 <div class="row" id="state-lists"> 
     {% for state, cities in locations.items() %}
-    <div class="col-lg-2 col-md-3 col-mg-offset-1 col-sm-4 col-xs-6 state-list" id="{{state}}-list">
+    <div class="col-lg-2 col-md-3 col-mg-offset-1 col-sm-4 col-xs-6 state-list" id="{{state}}-list" style="height:550px;">
         <div class="list-group">
             <h2 class="state-list">{{state}}</h2>
             <ul class="list-group">

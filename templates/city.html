@@ -15,7 +15,7 @@ PlatePal: {{city}} Results
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
-        <div class="col-lg-6 col-md-6 col-sm-3 col-xs-3" id="citynav-left">
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-left">
             <ol class="breadcrumb">
               <li><a href="/state.html#{{state}}-list">{{state}}</a></li>
               <li class="active">{{city}}</li>
@@ -25,7 +25,7 @@ PlatePal: {{city}} Results
 
     <div class="collapse navbar-collapse" id="citynav-collapse">
         <!-- <div class="collapse navbar-collapse" id="citynav-collapse-2"> -->
-        <div class="col-lg-6 col-md-6 col-sm-9 col-xs-9 citynav-right" >
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 citynav-right" >
             <ol class="breadcrumb nearby">
             {% if nearby_cities is not none %}
             {% for city in nearby_cities %}
@@ -45,6 +45,7 @@ PlatePal: {{city}} Results
 <div class="row" id="map-tabs">
     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
     </div>
+
         <div class="col-sm-8 col-md-8 col-lg-8" id="mapnav">
         {% for cat in cat_list %}
         {% if cat == 'gltn' %}

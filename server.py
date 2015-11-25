@@ -120,7 +120,10 @@ def city_in_state_page(state, city):
     nearby_cities = find_nearby_cities(city, state, nearby_miles)
     print "tHIS IS nearby_cities", nearby_cities
 
-    return render_template('city.html', google_maps_key=google_maps_key, cat_list=CAT_LISTS, state=state, state_name=STATE_CODES[state], city=city, nearby_cities=nearby_cities)
+    return render_template('city.html', google_maps_key=google_maps_key,
+                           cat_list=CAT_LISTS, state=state,
+                           state_name=STATE_CODES[state],
+                           city=city, nearby_cities=nearby_cities)
 
 
 # select distinct biz.biz_id, biz.name from biz join revcats on biz.biz_id = revcats.biz_id where revcats.cat_code = 'gltn' and biz.city='Palo Alto';
@@ -267,7 +270,9 @@ def search_bar_results():
     # get search form inputs
     # address
     search_loc = request.args.get("srch-loc")
+    print "*"*30
     print "THIS IS SEARCH LOC", search_loc
+    print "*"*30
     if not search_loc:
         search_loc = 'Palo Alto, CA'
 
@@ -281,18 +286,27 @@ def search_bar_results():
 
     state = parsed_loc[0][1].upper()
 
-    # TODO: FIND NEARBY CITY...
-    # check if city in db...
+    # get nearby cities list
+    nearby_miles = 50 # find cities within 50 miles of current city
+    nearby_cities = find_nearby_cities(city, state, nearby_miles)
+    print "tHIS IS nearby_cities", nearby_cities
 
     # search terms
     search_terms = request.args.get("srch-terms")
     search_terms = search_terms.split()
+    print "*"*30
+    print "CITY", city
+    print "*"*30
+    print "*"*30
+    print "SEARCH TERMS", search_terms
+    print "*"*30
 
     return render_template('search.html',
                            google_maps_key=google_maps_key,
                            cat_list=CAT_LISTS, state=state,
                            state_name=STATE_CODES[state],
-                           city=city, search_terms=search_terms)
+                           city=city, search_terms=search_terms,
+                           nearby_cities=nearby_cities)
 
 
 @app.route('/<search_term>/<search_city>/<search_state>/search.json')
@@ -305,7 +319,9 @@ def query_search(search_term, search_city, search_state):
     city = search_city
     state = search_state
 
+    print "*"*20
     print "SEARCH TERM", search_term
+    print "*"*20
     # search_term = search_terms.split()
     # print "THIS IS SEARCH TERMS", search_terms
     # clauses = and_( * [PlatePalReview.text.like('%'+ term + '%') for term in search_terms]) #TODO

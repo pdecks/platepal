@@ -5,23 +5,64 @@ PlatePal: Search
 {% endblock %}
 
 {% block location %}
-<div class="searchnav-outer">
-
-    <div class="searchnav left">
-        <div id="search-info">
-            <h2>Search for: {% for term in search_terms%}"<span class="search-terms">{{term}}</span>" {% endfor %}</h2>
-            <h4>near {{city}}, {{state}}</h4>
-            <p class="hidden" id="search-city">{{city}}</p>
-            <p class="hidden" id="search-state">{{state}}</p>
+<nav class="navbar navbar-default">
+    <div>
+        <button type="button" class="citynav navbar-toggle" data-toggle="collapse" data-target="#citynav-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="searchnav-left">
+            <ol class="breadcrumb">
+                <l1 id="searchinfo">Search for: 
+                    {% for term in search_terms%}
+                    "<span class="search-terms"><em>{{term}}</em></span>"
+                    {% endfor %}
+                </l1>
+                <l1>near <a href="/{{state}}/{{city}}/city.html">{{city}}</a>, 
+                    <a href="/state.html#{{state}}-list">{{state}}</a></l1>
+                <p class="hidden" id="search-city">{{city}}</p>
+                <p class="hidden" id="search-state">{{state}}</p>
+            </ol>
         </div>
     </div>
-    <div class="searchnav right">
-    </div> 
-</div> <!-- nav-outer -->
+
+    <div class="collapse navbar-collapse" id="citynav-collapse">
+        <!-- <div class="collapse navbar-collapse" id="citynav-collapse-2"> -->
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 searchnav-right" >
+            <ol class="breadcrumb nearby">
+            {% if nearby_cities is not none %}
+            {% for city in nearby_cities %}
+            <li><a href="/{{city[1]}}/{{city[0]}}/city.html">{{city[0]}}</a></li>
+            {% endfor %}
+            {% endif %}
+            </ol>
+        </div>
+    </div>
+
+</nav> <!-- nav-outer -->
 
 {% endblock %}
 
 {% block content %}
+<div class="row" id="map-tabs">
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
+    </div>
+
+        <div class="col-sm-8 col-md-8 col-lg-8" id="mapnav">
+        {% for cat in cat_list %}
+        {% if cat == 'gltn' %}
+            <div class="active map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
+        {% else %}
+            <div class="map-nav {{cat[0]}}" id="map-nav {{cat[0]}}">
+        {% endif %}
+            <a href="#filter-results" class="map-nav" data-cat-id={{cat[0]}} id="{{cat[0]}}-map-filter">{{cat[1]}}</a>
+            </div>
+        {% endfor %}
+        </div> <!-- mapnav -->
+
+</div>
 <div class="row" id="map-row"> 
         
     <div class="map_container" id="map">
@@ -79,9 +120,9 @@ PlatePal: Search
         </div> <!-- #results-list -->
 
 
-    <script type="text/javascript" src="/static/js/city-gmaps.js"></script>
+    <script type="text/javascript" src="/static/js/search-gmaps.js"></script>
 
-</div> <!-- map-row --> -->
+</div> <!-- map-row -->
 
 
 {% endblock %}

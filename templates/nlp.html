@@ -180,10 +180,40 @@ PlatePal: Sentiment Analysis
     </article>
     <article>
     <h3>Text Classification </h3>
-    <p>Bag of Words (BOW), which is a non-deep learning method, <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-4-comparing-deep-and-non-deep-learning-methods">often out-performs other more complicated models</a>, especially where resources are limited. Therefore, I initially set out to build a BOW classifier.</p>
-    <p>If time allowed, I planned to explore distributed word vector techniques, like Google's word2vec algorithm, that are part of deep learning methods. Distributed word vector techinuqes are unsupervised but <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-2-word-vectors">require much more data</a> than BOW to make predictions more accurate than BOW.</p>
-    <p>Also of note from my research on text classification is that <a href="http://nlp.stanford.edu/sentiment/">recent work out of Stanford</a> has applied deep learning to sentiment analysis using sentence parsing and a Paragraph Vector algorithm, which preserves word-order information.</p>
-          <h4>Preprocessing </h4>
+      <p>Bag of Words (BOW), which is a non-deep learning method, <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-4-comparing-deep-and-non-deep-learning-methods">often out-performs other more complicated models</a>, especially where resources are limited. Therefore, I initially set out to build a BOW classifier.</p>
+      <p>If time allowed, I planned to explore distributed word vector techniques, like Google's word2vec algorithm, that are part of deep learning methods. Distributed word vector techinuqes are unsupervised but <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-2-word-vectors">require much more data</a> than BOW to make predictions more accurate than BOW.</p>
+      <p>Also of note from my research on text classification is that <a href="http://nlp.stanford.edu/sentiment/">recent work out of Stanford</a> has applied deep learning to sentiment analysis using sentence parsing and a Paragraph Vector algorithm, which preserves word-order information.</p>
+      <h4>Warming Up for Scikit-Learn: Buidling a Naive Classifier from Scratch</h4>
+        <p>As I initially explored the problem of text classification, I first worked through document classification algorithms described in "Programming Collective Intelligence" by Toby Segaram. Chapter 6 of that book, "Document Filtering", provides a walkthrough of document classification through the lens of filtering spam emails.</p>
+        <p>This book instructs the reader on the following:
+          <ul>
+            <li>Extracting features using regular expressions to break text on any character that isn't a letter.</li>
+            <li>Representing the classifier using a class, allowing for instantiation of multiple classifiers for different purposes.</li>
+            <li>Calculating probabilities: Using Bayes' Theorem to find <b>P(Category | Document)</b></li>
+            <ul>
+              <li><b>P(Document | Category)</b>: Probability of an entire document being given a classification</li>
+              <li><b>P(Category)</b>: Probability of a Category</li>
+              <li><b>P(Document)</b>: Probability of a Document</li>
+            </ul>
+            <li>Constructing a Naive Bayesian Classifier</li>
+            <li>Constructing a Fisher Classifier</li>
+            <li>Persisting a Classifier using SQLite</li>
+          </ul>
+        </p>
+        <h4>Breaking Out the Big Guns: Scikit Learn</h4>
+        <p>Although the algorithms presented in "Programming Collective Intelligence" were a good starting point for learning about text classification, I knew that I wanted to use more powerful Python tools, specifically the Natural Language Toolkit (NLTK) and Scikit Learn. Being interested in Data Science, I wanted to experiment with as many libraries commonly used by data scientists as I could during our short project time.</p>
+        <p>I had questions about what would be the best classifier for my task at hand. I had been watching Coursera videos for a <a href="https://www.coursera.org/course/nlp">Natural Language Processing course</a> taught by Stanford instructors, and the videos, while thought provoking, gave me more questions than answers on how to proceed.</p>
+        <p>... And then one of the Hackbright TAs showed me this handy <a href="http://scikit-learn.org/stable/tutorial/machine_learning_map/">Maching Learning Map</a> on the Scikit Learn website:</p>
+        <figure>
+          <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;"><b>Finding the Right Estimator for the Job</b></figcaption>
+          <a href="http://scikit-learn.org/stable/tutorial/machine_learning_map/"><img src="/static/img/ml_map.png" style="height:500px;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
+        </figure>
+        <p>With a literal road map in hand, I proceded to work through <a href="http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html">this sklearn tutorial</a>, using the 20 Newsgroups Dataset. I learned about extracting features using sklearn's CountVectorizer, which, once fitted, contains a dictionary of feature indices. The tutorial also introduced me to the concept of term-frequence inverse-document-frequency (TF-IDF) weighting. I had been curious about how to emphasize the uniqueness of certain words, and TF-IDF seemed like a sensible way to weight my features.</p>
+        <p>Perhaps the most important takeaway from the scikit tutorial was learning how to evaluate the performance of my classifier. Being familiar with the concept of garbage in, garbage out, I sought to make sure that I was building something that didn't just work but worked well. The tutorial presented a simple evaluation of the model's predictive accuracy using numpy as well as scikit's built-in metrics for a more detailed performance analysis.</p>
+        <p>After two days of reading and researching, I was ready to dive into coding up my own classifier.</p>
+        <h4>Preprocessing </h4>
           <p>Scikit's CountVectorizer <a href="http://scikit-learn.org/stable/modules/feature_extraction.html">can be customized</a> to add token-level analysis, which was a breakthrough realization for me:</p>
           <blockquote cite="http://scikit-learn.org/stable/modules/feature_extraction.html">
           "Stemming, lemmatizing, compound splitting, filtering based on POS, etc. are not included in sklearn but can be added by customizing either the tokenizer or the analyzer."
@@ -215,7 +245,7 @@ PlatePal: Sentiment Analysis
             <p>The situation is different for languages with much more morphology (such as Spanish, German, and Finnish). Results in the European CLEF evaluations have repeatedly shown quite large gains from the use of stemmers (and compound splitting for languages like German).</p>
           </blockquote>
 
-          <h4>Extracting Features </h4>
+        <h4>Extracting Features </h4>
           <p>The accuracy of a Bag-of-Words classifier, such as a Multinomial Naive Bayes classifier, <a href="http://streamhacker.com/2010/06/16/text-classification-sentiment-analysis-eliminate-low-information-features/">can be greatly improved</a> by improving the features vectors using NLTK to remove stop words and improve tokenization while still using sklearn classifiers. I decided to use the Chi-square metric to determine the most useful features and to measure accuracy, precision, and recall of models of different feature length (e.g. 1000, 10000, 50000 top features). In statistics, the chi-square test is applied to test the independence of two events. A high chi-square value indicates that the hypothesis of independence is incorrect.</p>
           <p>Selecting features using Chi-square aims to simplify the classifier by training on only the "most important" features. A "weaker" classifier -- trained on fewer features -- is often preferable when training data is limited. Chi-square is a test of feature independence.</p>
           <p>From the Stanford NLP site on Feature Selection:</p>

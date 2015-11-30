@@ -1,7 +1,3 @@
-/*#map {
-    height: 500px;
-    width: 80%;
-}*/
 
 input#srch-terms.form-control, input#srch-loc.form-control{
     width: 50%;
@@ -14,6 +10,9 @@ input#srch-terms.form-control, input#srch-loc.form-control{
     background-color: #EAEAEA;
 }
 
+p.para{
+    font-size: 14px;
+}
 div#map-nav{
     padding-bottom:10px;
     padding-top:10px;

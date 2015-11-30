@@ -135,7 +135,7 @@ function initMap(){
     var map = new google.maps.Map(document.getElementById('map_canvas'),{
       center: geocodeJSON,
       // center: myLatLng,
-      zoom: 11,
+      zoom: 14,
 
     });
     map.setOptions({styles: styles});

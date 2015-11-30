@@ -83,6 +83,13 @@ PlatePal: Sentiment Analysis
           not just restaurants, a cursory review of the data indicated that there were enough
           relevant reviews to explore my project's concept. In addition to reviews, the dataset also contains business and user information.
           </p>
+          <figure>
+            <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;"><b>Querying the Database: finding relevant reviews.</b></figcaption>
+            <img src="/static/img/SQL_queries_light.png" style="height:700px; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
+
           <h4>Working up to Big Data</h4>
           <p>Admittedly, the Yelp dataset was a bit intimidating. The first time I tried to load
           the JSON, the reviews dataset caused my computer to crash. I anticipated that working
@@ -119,24 +126,106 @@ PlatePal: Sentiment Analysis
           <p>It was more difficult to label data for the sentiment analysis classifier, especially because the number of relevant reviews for most of the categories was quite small. I would need 1,000s of reviews to adequately train a sentiment analysis classifier for each category. As a first pass, I tried using the Yelp star ratings as a predicator of goodness, although this violated my fundamental assumption that a review could be good overall but bad for a particular dietary need, or vice versa.</p>
     </article>
     <article id="database">
-      <h3>Database Model</h3>
+      <h3>Initial Database Model: Businesses, Reviews, Users, and Categories</h3>
+      <h4>The goals:</h4>
+        <ol>
+          <li>Import the Yelp Academic Dataset JSON for businesses, reviews, and users.</li>
+            <ul><li>These tables should be isolated from PlatePal tables and will not be updated.</li></ul>
+          <li>Create PlatePal tables for businesses, reviews, and users.</li>
+            <ul><li>These tables will be updated and should be able to store information from multiple sources.</li></ul>
+          <li>Create tables for categorization</li>
+          <li>Create tables for sentiment analysis.</li>
+          <li>Nice to have: tables for users to create lists of their favorite restaurants by category.</li>
+        </ol>
+      
       <figure>
-        <img src="/static/img/IMG_4563.jpg" style="height:350px;border: 1px solid black;
-        margin-left:10%;">
-        <figcaption style="margin-left:10%;">First Pass at a Data Model. Things get much more complicated.</figcaption>
+        <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+        margin-bottom: 15px;"><b>First Pass at a Data Model.</b> Things get much more complicated.</figcaption>
+        <img src="/static/img/IMG_4563.jpg" style="height:350px;border: 1px solid black; display:block;
+        margin-left:auto;margin-right:auto;margin-bottom:50px;">
       </figure>
-      <br>
+
+      <h4>Yelp Businesses, Reviews, and Users Tables</h4>
+      <p>The reviews table serves as an associate table between businesses and users, as a user can have many reviews and a business can have many reviews.</p>
+      <p>There was some information contained in these tables that was beyond the scope of this project, namely the votes associated with a review, the neighborhoods associated with a business, and the universities (schools) associated with a business. When whiteboarding to map out my model, I included the tables as an exercise in association.</p>
+
+      <h4>PlatePal Businesses, Reviews, and Users Tables </h4>
+      <p>Similar to the Yelp tables, the PlatePal Reviews (reviews) table is an association table between users and businesses.</p>
+      <p>To allow for reference back to the Yelp tables, the PlatePal Businesses table (biz) includes a field for the Yelp business ID. Simiarly, the reviews table includes fields for Yelp Review ID, Yelp stars, and Yelp User ID. The PlatePal Users table (users) does NOT include a field for Yelp User ID because, after some consideration, I decided against automatically rolling Yelp users into the PlatePal system. The disadvantage with that choice is that Yelp users who sign up for PlatePal would not be able to manually score their own reviews imported from Yelp. However, because the Yelp Users table includes a name but not an email, there was not a clear way to verify users' identities.</p>
+      <h4>Classification Tables</h4>
+      <p>It became clear rather early on that creating a separate Categories table would be useful to allow for expansion of the categories considered on the site.</p>
+      <p>The Classification table, ReviewCategories, is an association table between reviews and categories, as a review can have many categories and a category can have many reviews.</p>
+      <h4>User-Generated Lists Tables</h4>
+      <p>A user can generate many category-specific lists, and a list can contain many entries, hence the one to many relationship from users to lists to list entries.</p>
+
+    <h3>Revised Data Model: Sentiment Analysis</h3>
+      <h4>The goals:</h4>
+        <ol>
+          <li>Allow for sentiment analysis on a review-text level.</li>
+            <ul><li>Business scores should be calculable by compiling review scores.</li></ul>
+          <li>Allow for sentiment analysis on a sentence-text level.</li>
+            <ul><li>Compare review-level scores to sentence-level scores.</li></ul>
+           </ol>
+      <h4>RevCats and SentCats</h4>
+      <p>From the first draft of my data model, I recognized that I needed an association table between reviews and classifications, ReviewCategories (aka RevCats).</p>
+      <p>Similarly, once I stored all of the sentences associated with a review in the Sentences table, there should be an association table between Sentences and Categories, SentenceCategories (aka SentCats).</p>
+      <p>I debated whether or not to indirectly link SentCats to RevCats through another table, ReviewSents, but decided against this additional complication for the sake of clarity.</p>
+      
       <figure>
-        <img src="/static/img/IMG_4602.jpg" style="height:350px;border: 1px solid black;
-        margin-left:10%;">
-        <figcaption style="margin-left:10%;">Adding Tables for Sentiment Analysis. Many-to-many Relationships Galore!</figcaption>
+        <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+        margin-bottom: 15px;"><b>Tables for Sentiment Analysis.</b> Many-to-many Relationships Galore!</figcaption>
+        <img src="/static/img/IMG_4602.jpg" style="height:350px;border: 1px solid black; display:block;
+        margin-left:auto;margin-right:auto;margin-bottom:50px;">
       </figure>
     </article>
     <article>
-      <h3>Text Classification </h3>
+    <h3>Text Classification </h3>
+    <p>Bag of Words (BOW), which is a non-deep learning method, <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-4-comparing-deep-and-non-deep-learning-methods">often out-performs other more complicated models</a>, especially where resources are limited. Therefore, I initially set out to build a BOW classifier.</p>
+    <p>If time allowed, I planned to explore distributed word vector techniques, like Google's word2vec algorithm, that are part of deep learning methods. Distributed word vector techinuqes are unsupervised but <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-2-word-vectors">require much more data</a> than BOW to make predictions more accurate than BOW.</p>
+    <p>Also of note from my research on text classification is that <a href="http://nlp.stanford.edu/sentiment/">recent work out of Stanford</a> has applied deep learning to sentiment analysis using sentence parsing and a Paragraph Vector algorithm, which preserves word-order information.</p>
           <h4>Preprocessing </h4>
-        
+          <p>Scikit's CountVectorizer <a href="http://scikit-learn.org/stable/modules/feature_extraction.html">can be customized</a> to add token-level analysis, which was a breakthrough realization for me:</p>
+          <blockquote cite="http://scikit-learn.org/stable/modules/feature_extraction.html">
+          "Stemming, lemmatizing, compound splitting, filtering based on POS, etc. are not included in sklearn but can be added by customizing either the tokenizer or the analyzer."
+          </blockquote>
+          <p>I had been using CountVectorizer straight-out-of-the-box, so to speak. This customization realization enabled me to easily encorporate some NLTK features into my Scikit models, as follows:</p>
+          <ul>
+            <li>Add sentence tokenization using nltk.tokenizer.sent_tokenizer</li>
+            <li>Use Penn Treebank Tokenizer using nltk.tokenizer.word_tokenizer</li>
+            <ul><li>This tokenizer splits contractions (e.g. don't --> do n't; can't --> ca n't; I'll --> I 'll)</li></ul>
+          </ul>
+          <p>Zooming out, my preprocessing followed these steps:</p>
+          <ol>
+            <li>Tokenize documents into sentences --> store in database</li>
+              <ul><li>sentences = sent_tokenizer(document_text)</li></ul>
+            <li>Tokenize sentences into words</li>
+            <li>Fix contractions (replace n't, 'll, with 'not', 'will', etc.)</li>
+            <li>Recombine (delimit on whitespace) and classify/train entire review (document)</li>
+          </ol>
+          <h4>To Stem, or Not To Stem</h4>
+          <p>Although Scikit's CountVectorizer allows for incorporation of stemming and lemmatization, after doing on research on the <a href="http://nlp.stanford.edu/IR-book/html/htmledition/stemming-and-lemmatization-1.html">Stanford NLP website</a>, I decided against doing so because there is not much to be gained for English text analysis.
+          <blockquote cite="http://nlp.stanford.edu/IR-book/html/htmledition/stemming-and-lemmatization-1.html">
+            <p>Rather than using a stemmer, you can use a lemmatizer , a tool from Natural Language Processing which does full morphological analysis to accurately identify the lemma for each word. Doing full morphological analysis produces at most very modest benefits for retrieval. It is hard to say more, because either form of normalization tends not to improve English information retrieval performance in aggregate - at least not by very much. While it helps a lot for some queries, it equally hurts performance a lot for others. Stemming increases recall while harming precision. As an example of what can go wrong, note that the Porter stemmer stems all of the following words: </p>
+            <p>operate operating operates operation operative operatives operational</p>
+            <p>to oper. However, since operate in its various forms is a common verb, we would expect to lose considerable precision on queries such as the following with Porter stemming:</p>
+            <p>operational and research</p>
+            <p>operating and system</p>
+            <p>operative and dentistry</p>
+            <p>For a case like this, moving to using a lemmatizer would not completely fix the problem because particular inflectional forms are used in particular collocations: a sentence with the words operate and system is not a good match for the query operating and system. Getting better value from term normalization depends more on pragmatic issues of word use than on formal issues of linguistic morphology.</p>
+            <p>The situation is different for languages with much more morphology (such as Spanish, German, and Finnish). Results in the European CLEF evaluations have repeatedly shown quite large gains from the use of stemmers (and compound splitting for languages like German).</p>
+          </blockquote>
+
           <h4>Extracting Features </h4>
+          <p>The accuracy of a Bag-of-Words classifier, such as a Multinomial Naive Bayes classifier, <a href="http://streamhacker.com/2010/06/16/text-classification-sentiment-analysis-eliminate-low-information-features/">can be greatly improved</a> by improving the features vectors using NLTK to remove stop words and improve tokenization while still using sklearn classifiers. I decided to use the Chi-square metric to determine the most useful features and to measure accuracy, precision, and recall of models of different feature length (e.g. 1000, 10000, 50000 top features). In statistics, the chi-square test is applied to test the independence of two events. A high chi-square value indicates that the hypothesis of independence is incorrect.</p>
+          <p>Selecting features using Chi-square aims to simplify the classifier by training on only the "most important" features. A "weaker" classifier -- trained on fewer features -- is often preferable when training data is limited. Chi-square is a test of feature independence.</p>
+          <p>From the Stanford NLP site on Feature Selection:</p>
+          <blockquote cite="http://nlp.stanford.edu/IR-book/html/htmledition/feature-selection-1.html">
+            We can view feature selection as a method for replacing a complex classifier (using all features) with a simpler one (using a subset of the features). It may appear counterintuitive at first that a seemingly weaker classifier is advantageous in statistical text classification, but when discussing the bias-variance tradeoff in Section 14.6, we will see that weaker models are often preferable when limited training data are available.
+          </blockquote>
+          <p>From the Stanford NLP site on using Chi-squre for Feature Selection:</p>
+          <blockquote cite="http://nlp.stanford.edu/IR-book/html/htmledition/assessing-as-a-feature-selection-methodassessing-chi-square-as-a-feature-selection-method-1.html">
+            From a statistical point of view, chi-square feature selection is problematic. [...] However, in text classification it rarely matters whether a few additional terms are added to the feature set or removed from it. Rather, the relative importance of features is important. As long as chi-square feature selection only ranks features with respect to their usefulness and is not used to make statements about statistical dependence or independence of variables, we need not be overly concerned that it does not adhere strictly to statistical theory.
+          </blockquote>
             <h5>Vectorizer Vocabulary</h5>
 
             <h5>Bag of Words</h5>

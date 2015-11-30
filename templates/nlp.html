@@ -174,15 +174,24 @@ PlatePal: Sentiment Analysis
       <figure>
         <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
         margin-bottom: 15px;"><b>Tables for Sentiment Analysis.</b> Many-to-many Relationships Galore!</figcaption>
-        <img src="/static/img/IMG_4602.jpg" style="height:350px;border: 1px solid black; display:block;
+        <img src="/static/img/IMG_4602.jpg" style="width:50%;border: 1px solid black; display:block;
         margin-left:auto;margin-right:auto;margin-bottom:50px;">
       </figure>
     </article>
+
     <article>
     <h3>Text Classification </h3>
       <p>Bag of Words (BOW), which is a non-deep learning method, <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-4-comparing-deep-and-non-deep-learning-methods">often out-performs other more complicated models</a>, especially where resources are limited. Therefore, I initially set out to build a BOW classifier.</p>
       <p>If time allowed, I planned to explore distributed word vector techniques, like Google's word2vec algorithm, that are part of deep learning methods. Distributed word vector techinuqes are unsupervised but <a href="https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-2-word-vectors">require much more data</a> than BOW to make predictions more accurate than BOW.</p>
       <p>Also of note from my research on text classification is that <a href="http://nlp.stanford.edu/sentiment/">recent work out of Stanford</a> has applied deep learning to sentiment analysis using sentence parsing and a Paragraph Vector algorithm, which preserves word-order information.</p>
+      <figure>
+        <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+        margin-bottom: 15px;"><b>Armadanno Supervising my Supervised Learning</b></figcaption>
+        <img src="/static/img/armadanno.jpg" style="width:50%;border: 1px solid black; display:block;
+        margin-left:auto;margin-right:auto;margin-bottom:50px;">
+      </figure>
+      
+
       <h4>Warming Up for Scikit-Learn: Buidling a Naive Classifier from Scratch</h4>
         <p>As I initially explored the problem of text classification, I first worked through document classification algorithms described in "Programming Collective Intelligence" by Toby Segaram. Chapter 6 of that book, "Document Filtering", provides a walkthrough of document classification through the lens of filtering spam emails.</p>
         <p>This book instructs the reader on the following:
@@ -200,6 +209,13 @@ PlatePal: Sentiment Analysis
             <li>Persisting a Classifier using SQLite</li>
           </ul>
         </p>
+        <figure>
+          <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;"><b>Understanding the Differences between Naive Bayes and Fisher Method</b></figcaption>
+          <img src="/static/img/naive_fisher.jpg" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;">
+        </figure>
+        
         <h4>Breaking Out the Big Guns: Scikit Learn</h4>
         <p>Although the algorithms presented in "Programming Collective Intelligence" were a good starting point for learning about text classification, I knew that I wanted to use more powerful Python tools, specifically the Natural Language Toolkit (NLTK) and Scikit Learn. Being interested in Data Science, I wanted to experiment with as many libraries commonly used by data scientists as I could during our short project time.</p>
         <p>I had questions about what would be the best classifier for my task at hand. I had been watching Coursera videos for a <a href="https://www.coursera.org/course/nlp">Natural Language Processing course</a> taught by Stanford instructors, and the videos, while thought provoking, gave me more questions than answers on how to proceed.</p>
@@ -207,12 +223,23 @@ PlatePal: Sentiment Analysis
         <figure>
           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
           margin-bottom: 15px;"><b>Finding the Right Estimator for the Job</b></figcaption>
-          <a href="http://scikit-learn.org/stable/tutorial/machine_learning_map/"><img src="/static/img/ml_map.png" style="height:500px;border: 1px solid black; display:block;
+          <a href="http://scikit-learn.org/stable/tutorial/machine_learning_map/"><img src="/static/img/ml_map.png" style="width:50%;border: 1px solid black; display:block;
           margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
         </figure>
         <p>With a literal road map in hand, I proceded to work through <a href="http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html">this sklearn tutorial</a>, using the 20 Newsgroups Dataset. I learned about extracting features using sklearn's CountVectorizer, which, once fitted, contains a dictionary of feature indices. The tutorial also introduced me to the concept of term-frequence inverse-document-frequency (TF-IDF) weighting. I had been curious about how to emphasize the uniqueness of certain words, and TF-IDF seemed like a sensible way to weight my features.</p>
         <p>Perhaps the most important takeaway from the scikit tutorial was learning how to evaluate the performance of my classifier. Being familiar with the concept of garbage in, garbage out, I sought to make sure that I was building something that didn't just work but worked well. The tutorial presented a simple evaluation of the model's predictive accuracy using numpy as well as scikit's built-in metrics for a more detailed performance analysis.</p>
-        <p>After two days of reading and researching, I was ready to dive into coding up my own classifier.</p>
+        <p>And then I learned about cross validation.</p>
+        <p>The Stanford NLP Coursera videos first introduced me to the concept of cross validation, but, again, it left me feeling uncertain of how to proceed.</p>
+        <figure>
+          <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;"><b>Cross Validation Slide from Stanford NLP Coursera Course</b></figcaption>
+          <a href="https://www.coursera.org/course/nlp"><img src="/static/img/cv.png" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
+        </figure>
+        <p>Enter the same awesome Hackbright TA, who pointed me in the direction of scikit's <a href="http://scikit-learn.org/stable/modules/cross_validation.html">Cross Validation module</a>. Once I figured out how to implement KFold, I was able to assess my initial model's performance.</p>
+        <p>At last, after a week of reading and researching, tinkering and training, I was ready to dive into coding up my own classifier.</p>
+
+
         <h4>Preprocessing </h4>
           <p>Scikit's CountVectorizer <a href="http://scikit-learn.org/stable/modules/feature_extraction.html">can be customized</a> to add token-level analysis, which was a breakthrough realization for me:</p>
           <blockquote cite="http://scikit-learn.org/stable/modules/feature_extraction.html">

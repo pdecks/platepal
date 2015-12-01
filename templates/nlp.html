@@ -86,7 +86,7 @@ PlatePal: Sentiment Analysis
           <figure>
             <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
             margin-bottom: 15px;"><b>Querying the Database: finding relevant reviews.</b></figcaption>
-            <img src="/static/img/SQL_queries_light.png" style="height:700px; display:block;
+            <img src="/static/img/SQL_queries_light.png" style="width:50%; display:block;
             margin-left:auto;margin-right:auto;margin-bottom:50px;">
           </figure>
 
@@ -283,79 +283,130 @@ PlatePal: Sentiment Analysis
           <blockquote cite="http://nlp.stanford.edu/IR-book/html/htmledition/assessing-as-a-feature-selection-methodassessing-chi-square-as-a-feature-selection-method-1.html">
             From a statistical point of view, chi-square feature selection is problematic. [...] However, in text classification it rarely matters whether a few additional terms are added to the feature set or removed from it. Rather, the relative importance of features is important. As long as chi-square feature selection only ranks features with respect to their usefulness and is not used to make statements about statistical dependence or independence of variables, we need not be overly concerned that it does not adhere strictly to statistical theory.
           </blockquote>
-            <h5>Vectorizer Vocabulary</h5>
+   
+        <h4>Experimenting with Matplotlib</h4>
+        <p>
+        <h6>Author's Reviews: Classification</h6>
+          <figure>
+          <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;"><b>Exploring the Story Plotline for "The Lion King"</b></figcaption>
+          <a href="https://www.coursera.org/course/nlp"><img src="/static/img/overlay-LK.gif" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
+        </figure>
 
-            <h5>Bag of Words</h5>
-            <h5>Word2Vec</h5>
-            <h5>KFolds</h5>
-              <h6>Author's Reviews: Classification</h6>
-              <p>
-                <img src="/static/img/k2_toyset.png"><br>
-                Author Reviews, K=2
-              </p>
-              <p>
-                <img src="/static/img/k3_toyset.png"><br>
-                Author Reviews, K=3
-              </p>
-              <p>
-                <img src="/static/img/k4_toyset.png"><br>
-                Author Reviews, K=4
-              </p>
-              <p>
-                <img src="/static/img/k4-10_toyset_subplots.png"><br>
-                Author Reviews, K=4-10
-              </p>
+              <figure>
+                 <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, K=2</figcaption>
+                <img src="/static/img/k2_toyset.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+              
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, K=3</figcaption>
+                <img src="/static/img/k3_toyset.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, K=4</figcaption>
+                <img src="/static/img/k4_toyset.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, K=4 thru K=10</figcaption>
+                <img src="/static/img/k4-10_toyset_subplots.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
               <h6>Yelp Academic Dataset: Classification</h6>
-              <p>
-                <img src="/static/img/k2-10_yelpgltn_onePlot.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/k2-10_yelpgltn_subplots.png"><br>
-                ???
-              </p>
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, ???</figcaption>
+                <img src="/static/img/k2-10_yelpgltn_onePlot.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, ???</figcaption>
+                <img src="/static/img/k2-10_yelpgltn_subplots.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
               <h6>Yelp Academic Dataset: Sentiment</h6>
-              <p>
-                <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/sentiment_gltn_k2-10_onePlot.png"><br>
-                ???
-              </p>
-              <p>
-                <img src="/static/img/sentiment_gltn_k2-10_subPlots.png"><br>
-                ???
-              </p>
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, ???</figcaption>
+                <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, ???</figcaption>
+                <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, ???</figcaption>
+                <img src="/static/img/sentiment_gltn_k2-10_onePlot.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
+
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Author Reviews, ???</figcaption>
+                <img src="/static/img/sentiment_gltn_k2-10_subPlots.png" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
               
               
 
 
           <h4>Picking a Classifier </h4>
             <h5>MultinomialNB vs. LinearSVC </h5>
-          <h4>Sentiment Analysis</h4>
-              <h5>Categorization</h5>
-              <p> categorizing reviews into one of five categories.
-              </p>
-              <h5>Single-label classifier </h5>
-              <p> each review could only have one category,
-               each sentence could only have one category</p>
+          <h4>Multi-label vs. Single-label</h4>
+              <figure>
+               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+                margin-bottom: 15px;">Thinking about Binarizing my Multilabel Classifier</figcaption>
+                <img src="/static/img/IMG_4624.jpg" style="width:50%;border: 1px solid black; display:block;
+                margin-left:auto;margin-right:auto;margin-bottom:50px;">
+              </figure>
               
 
-              <h5>Multilabel Classifier </h5>
+              <!-- <h5>Categorization</h5> -->
+              <!-- <p> categorizing reviews into one of five categories. -->
+              <!-- </p> -->
+              <!-- <h5>Single-label classifier </h5>
+              <p> each review could only have one category,
+               each sentence could only have one category</p>
+               -->
+
+<!--               <h5>Multilabel Classifier </h5>
                 <h6>One vs. Rest</h6>
                 <h6>KMeans Clustering</h6>
 
               <h5>Classifying as "good" or "bad"
-            
+ -->            
               
             
-        <h3> Sentiment Analysis with Python</h3>
-          <p>link to lightning talk slides </h3>
+        <h4> Sentiment Analysis with Python</h4>
+        <p>What inspired me to learn about text classification and sentiment analysis was a <a href="https://indico.io/blog/plotlines/">blog post on indico.io</a> I read pre-Hackbright (even before I was planning to apply to Hackbright) about the shape of stories.</p>
+        <p>The author Kurt Vonnegut, whose novels include Breakfast of Champions and Cat’s Cradle, surmised that a story’s shape can be graphed following the main character’s ups (good fortune) and downs (ill fortune). The indico.io post applied this concept to several Disney movies, comparing the plotlines to see how formulaic Disney plots can be.</p>
+        <figure>
+          <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;"><b>Exploring the Story Plotline for "The Lion King"</b></figcaption>
+          <a href="https://www.coursera.org/course/nlp"><img src="/static/img/overlay-LK.gif" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
+        </figure>
+
+        <p>When it came time for me to give a lightning talk at Hackbright on a technical topic, my choice was clear -- I wanted to learn about sentiment analysis and about NLTK. After much learning and several iterations of my presentation -- from a high-level discussion of NLTK to a detailed discussion on NLTK back to a high-level discussion of sentiment analysis -- I gave <a href="https://docs.google.com/presentation/d/1qLbHFT345-TR2DB9-wFkLJHxNxy4GlVUkfpSprlTLRE/edit?usp=sharing">this talk</a>, which laid a solid foundation for my understanding of sentiment analysis. Enjoy!</h3>
     </article>
 </div> <!-- content block -->
 

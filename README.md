@@ -1,7 +1,7 @@
 # platepal
 
 Project Motivation
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Speaking from personal experience, it can be difficult to dine out
 safely when you have a special dietary need. As someone who cannot eat
@@ -20,7 +20,7 @@ Gluten-Free, Vegan, Kosher, Allergy, and Paleo.
 
 
 Project Objectives
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Being able to perform the sentiment analysis involved the following:
 
@@ -36,7 +36,7 @@ Being able to perform the sentiment analysis involved the following:
 
 
 Wrangling Data
-~~~~~~~~~~~~~~
+--------------
 
 Good data is hard to find, but for my learning purposes, the `Yelp
 Academic Dataset`_ was a great place to start. The dataset contains
@@ -50,7 +50,7 @@ business and user information.
 
 
 Working up to Big Data
-``````````````````````
+----------------------
 
 Admittedly, the Yelp dataset was a bit intimidating. The first time I
 tried to load the JSON, the reviews dataset caused my computer to
@@ -62,7 +62,7 @@ successful testing.
 
 
 Tricia's Plan for Data Sanity
-`````````````````````````````
+-----------------------------
 
 
 + Use set of 45 personal reviews to test concepts.
@@ -87,22 +87,19 @@ Tricia's Plan for Data Sanity
 
 
 Data Challenges
-```````````````
+---------------
 
 Although there was a large amount of relevant data in the datset, it
 was not labeled, as least not in a way that I needed it to be. There
 were two labels that I needed my data to have, as I was essentially
 classifying each review twice:
 
-
-#. Categorize the review for a dietary need (e.g. "vegan", "unknown").
-#. Score the "goodness" of the review for each relevant dietary need.
-
-
++ Categorize the review for a dietary need (e.g. "vegan", "unknown").
++ Score the "goodness" of the review for each relevant dietary need.
 
 
 Categorizing Reviews
-````````````````````
+--------------------
 
 To get around hand-labeling reviews in the dataset -- ain't nobody got
 time for that! -- I created helper functions to find reviews
@@ -112,7 +109,7 @@ then labeled those reviews as belonging to the appropriate category.
 
 
 Scoring "Goodness"
-``````````````````
+------------------
 
 It was more difficult to label data for the sentiment analysis
 classifier, especially because the number of relevant reviews for most
@@ -126,35 +123,27 @@ vice versa.
 
 
 Initial Database Model: Businesses, Reviews, Users, and Categories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------------------------
 
 
 
 The goals:
-``````````
 
-
-#. Import the Yelp Academic Dataset JSON for businesses, reviews, and
++ Import the Yelp Academic Dataset JSON for businesses, reviews, and
    users.
-
-    + These tables should be isolated from PlatePal tables and will not be
-      updated.
-
-#. Create PlatePal tables for businesses, reviews, and users.
-
-    + These tables will be updated and should be able to store information
-      from multiple sources.
-
-#. Create tables for categorization
-#. Create tables for sentiment analysis.
-#. Nice to have: tables for users to create lists of their favorite
+    + These tables should be isolated from PlatePal tables and will not be updated.
++ Create PlatePal tables for businesses, reviews, and users.
+    + These tables will be updated and should be able to store information from multiple sources.
++ Create tables for categorization
++ Create tables for sentiment analysis.
++ Nice to have: tables for users to create lists of their favorite
    restaurants by category.
 
 **First Pass at a Data Model.** Things get much more complicated.
 
 
 Yelp Businesses, Reviews, and Users Tables
-``````````````````````````````````````````
+------------------------------------------
 
 The reviews table serves as an associate table between businesses and
 users, as a user can have many reviews and a business can have many
@@ -169,7 +158,7 @@ model, I included the tables as an exercise in association.
 
 
 PlatePal Businesses, Reviews, and Users Tables
-``````````````````````````````````````````````
+----------------------------------------------
 
 Similar to the Yelp tables, the PlatePal Reviews (reviews) table is an
 association table between users and businesses.
@@ -189,7 +178,7 @@ identities.
 
 
 Classification Tables
-`````````````````````
+---------------------
 
 It became clear rather early on that creating a separate Categories
 table would be useful to allow for expansion of the categories
@@ -202,7 +191,7 @@ and a category can have many reviews.
 
 
 User-Generated Lists Tables
-```````````````````````````
+---------------------------
 
 A user can generate many category-specific lists, and a list can
 contain many entries, hence the one to many relationship from users to
@@ -211,19 +200,19 @@ lists to list entries.
 
 
 Revised Data Model: Sentiment Analysis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 
 
 The goals:
-``````````
+----------
 
 
-#. Allow for sentiment analysis on a review-text level.
+1. Allow for sentiment analysis on a review-text level.
 
     + Business scores should be calculable by compiling review scores.
 
-#. Allow for sentiment analysis on a sentence-text level.
+2. Allow for sentiment analysis on a sentence-text level.
 
     + Compare review-level scores to sentence-level scores.
 
@@ -232,7 +221,7 @@ The goals:
 
 
 RevCats and SentCats
-````````````````````
+--------------------
 
 From the first draft of my data model, I recognized that I needed an
 association table between reviews and classifications,
@@ -249,7 +238,7 @@ additional complication for the sake of clarity.
 
 
 Text Classification
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Bag of Words (BOW), which is a non-deep learning method, `often out-
 performs other more complicated models`_, especially where resources
@@ -269,7 +258,7 @@ preserves word-order information.
 
 
 Warming Up for Scikit-Learn: Buidling a Naive Classifier from Scratch
-`````````````````````````````````````````````````````````````````````
+---------------------------------------------------------------------
 
 As I initially explored the problem of text classification, I first
 worked through document classification algorithms described in
@@ -283,8 +272,7 @@ This book instructs the reader on the following:
   character that isn't a letter.
 + Representing the classifier using a class, allowing for
   instantiation of multiple classifiers for different purposes.
-+ Calculating probabilities: Using Bayes' Theorem to find **P(Category
-  | Document)**
++ Calculating probabilities: Using Bayes' Theorem to find **P(Category | Document)**
 
     + **P(Document | Category)**: Probability of an entire document being
       given a classification
@@ -301,7 +289,7 @@ Method**
 
 
 Breaking Out the Big Guns: Scikit Learn
-```````````````````````````````````````
+---------------------------------------
 
 Although the algorithms presented in "Programming Collective
 Intelligence" were a good starting point for learning about text
@@ -320,6 +308,7 @@ proceed.
 ... And then one of the Hackbright TAs showed me this handy `Maching
 Learning Map`_ on the Scikit Learn website:
 **Finding the Right Estimator for the Job** ` `_
+
 With a literal road map in hand, I proceded to work through `this
 sklearn tutorial`_, using the 20 Newsgroups Dataset. I learned about
 extracting features using sklearn's CountVectorizer, which, once
@@ -353,7 +342,7 @@ training, I was ready to dive into coding up my own classifier.
 
 
 Preprocessing
-`````````````
+-------------
 
 Scikit's CountVectorizer `can be customized`_ to add token-level
 analysis, which was a breakthrough realization for me:
@@ -376,20 +365,20 @@ NLTK features into my Scikit models, as follows:
 Zooming out, my preprocessing followed these steps:
 
 
-#. Tokenize documents into sentences --> store in database
+1. Tokenize documents into sentences --> store in database
 
     + sentences = sent_tokenizer(document_text)
 
-#. Tokenize sentences into words
-#. Fix contractions (replace n't, 'll, with 'not', 'will', etc.)
-#. Recombine (delimit on whitespace) and classify/train entire review
+2. Tokenize sentences into words
+3. Fix contractions (replace n't, 'll, with 'not', 'will', etc.)
+4. Recombine (delimit on whitespace) and classify/train entire review
    (document)
 
 
 
 
 To Stem, or Not To Stem
-```````````````````````
+-----------------------
 
 Although Scikit's CountVectorizer allows for incorporation of stemming
 and lemmatization, after doing on research on the `Stanford NLP
@@ -433,7 +422,7 @@ stemmers (and compound splitting for languages like German).
 
 
 Extracting Features
-```````````````````
+-------------------
 
 The accuracy of a Bag-of-Words classifier, such as a Multinomial Naive
 Bayes classifier, `can be greatly improved`_ by improving the features
@@ -471,7 +460,7 @@ theory.
 
 
 Experimenting with Matplotlib
-`````````````````````````````
+-----------------------------
 
 As I worked on implementing `Cross Validation`_ on my toy dataset of
 45 reviews that I had personally authored, I realized that some plots
@@ -492,7 +481,7 @@ Dataset: Vectorizer for Sentiment Analysis
 
 
 Picking a Categorization Classifier: Multi-label vs. Single-label
-`````````````````````````````````````````````````````````````````
+-----------------------------------------------------------------
 
 The problem that I initially set out to solve -- determining the
 "goodness" of a restaurant review for a dietary need -- requires first
@@ -527,7 +516,7 @@ multilabel classification.
 
 
 Picking a Sentiment Analysis Classifier
-```````````````````````````````````````
+---------------------------------------
 
 So, after all of this, what did I learn about the performance of
 different classifiers for the problems of categorization and sentiment
@@ -558,7 +547,7 @@ time, Random Forest `could be a superior choice`_.
 
 
 Sentiment Analysis with Python
-``````````````````````````````
+------------------------------
 
 What inspired me to learn about text classification and sentiment
 analysis was a `blog post on indico.io`_ I read pre-Hackbright (even
@@ -579,8 +568,7 @@ iterations of my presentation -- from a high-level discussion of NLTK
 to a detailed discussion on NLTK back to a high-level discussion of
 sentiment analysis -- I gave `this talk`_, which laid a solid
 foundation for my understanding of sentiment analysis. Enjoy!
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{% endblock %} {% block footer %} {% endblock%}
+
 
 
 .. _this talk: https://docs.google.com/presentation/d/1qLbHFT345-TR2DB9-wFkLJHxNxy4GlVUkfpSprlTLRE/edit?usp=sharing

@@ -1,4 +1,4 @@
-# platepal
+# PlatePal
 
 Project Motivation
 ------------------

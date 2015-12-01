@@ -6,50 +6,51 @@ PlatePal: {{biz.name}}
 
 
 {% block location %}
-<div class="biznav-outer">
+<nav class="navbar navbar-default biznav-outer">
 
-    <div class="biznav left">
-        <div id="biz-info">
-            <h2>{{biz.name}}</h2>
-            <h4><a href="/{{biz.state}}/{{biz.city}}/city.html">{{biz.city}}, {{biz.state}}</a></h4>
-            <h4>{{avg_star}}, {{num_rev}} review{% if num_rev > 1 %}s{% endif %}</h4>
-        </div>
-        <div id="biz-img">
-            <img src={{biz.photo_url}} id="biz-photo">
-        </div>
+    
+    <div class="col-lg-1 col-md-1 col-sm-2 col-xs-2" id="biz-img">
+        <img src={{biz.photo_url}} id="biz-photo">
     </div>
-    <div class="biznav right">
-        <h4>Add a PlatePal Score</h4>
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="biznav-left">
+        <ol class="breadcrumb" id="biz-info">
+            <li>{{biz.name}}</li>
+            <li><a href="/{{biz.state}}/{{biz.city}}/city.html">{{biz.city}}, {{biz.state}}</a></li>
+            <li>Average Stars {{"{:.2f}".format(avg_star)}}</li>
+            <li>{{num_rev}} review{% if num_rev > 1 %}s{% endif %}</li>
+        </ol>
+        
+    </div>
+    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 biznav-right">
+        <ol class="breadcrumb" style="text-align: right;">
+            <li>Add a PlatePal Score</li>
+        </ol>
     </div> 
 
     <!-- end JINJA for loop here -->
-</div> <!-- citynav-outer -->
+</nav> <!-- citynav-outer -->
 
 {% endblock %}
 
 {% block content %}
+<div id="review-padding" style="margin-top: 20px;">
+</div>
 <!--  cat_reviews[cat][i] = (review, user, revcats) -->
 <div id="biz-reviews">
     {% for cat in cats %}
         {% for review in cat_reviews[cat]%}
         <article id="review{{review[0].review_id}}">
-            <h3> Yelp User ID: {{review[1].name}}</h3>
-            <h3> Yelp Stars: {{review[0].yelp_stars}}</h3>
+          <ol class="breadcrumb review-header">
+            <li> Yelp User ID: {{review[1].name}}</li>
+            <li> Yelp Stars: {{review[0].yelp_stars}}</li>
             {% for revcat in review[2] %}
-            <h4> {{revcat.cat_code}} Score: {{revcat.sen_score}}</h4> 
+            <li> {{revcat.cat_code}} Score: {{"{:.2f}".format(revcat.sen_score)}}</li> 
             {% endfor %}
-            <p>{{review[0].text}}</p>
+          </ol>
+          <p>{{review[0].text}}</p>
         </article>
         {% endfor %} <!-- inner loop -->
     {% endfor %}
-    <article>
-            <h3> Review Title</h3>
-            <p>Lorum Ipsum</p>
-        </article>
-        <article>
-            <h3> Review Title</h3>
-            <p>Lorum Ipsum</p>
-    </article>
-        
+
 </div>
 {% endblock %}

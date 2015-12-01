@@ -89,7 +89,7 @@ div#citynav-right ol{
     width: auto;
 }
 
-div#citynav-left.col-lg-6.col-md-6.col-sm-6.col-xs-6, div#searchnav-left{
+div#citynav-left.col-lg-6.col-md-6.col-sm-6.col-xs-6, div#searchnav-left, div#biznav-{
     padding: 0;
 }
 div#citynav-right.col-lg-6.col-md-6.col-sm-6.col-xs-6, div#searchnav-right{
@@ -97,6 +97,10 @@ div#citynav-right.col-lg-6.col-md-6.col-sm-6.col-xs-6, div#searchnav-right{
     list-style: none;
     background-color: #f5f5f5;
     text-align: right;
+}
+
+nav.biznav-outer, nav.navbar.navbar-default.citynav-outer, nav.statenav-outer{
+    background-color: #f5f5f5;
 }
 
 div#d3graphs {
@@ -204,19 +208,38 @@ div.biznav-outer {
 
 }
 
+ol.breadcrumb.review-header{
+    padding-left: 0;
+    background-color: white;
+    font-weight: bold;
+}
+
+div.col-lg-4.col-md-4.col-sm-4.col-xs-4.biznav-right{
+    margin-left: 4%;
+}
 div#biz-reviews {
-    padding-left: 5%;
+    padding-left: 3%;
 }
 div#biz-info, div#biz-img {
     display: inline-block;
     vertical-align: top;
 }
 
+div#biz-img{
+    margin-left: 3%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+ol#biz-info.breadcrumb{
+    padding-left: 3%;
+}
 img#biz-photo {
-    margin-left: 10%;
+    /*margin-left: 10%;*/
     /*margin-top: */
     border: 2px solid gray;
     display: inline-block;
+    height: 75px;
  
 }
 

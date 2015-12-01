@@ -38,8 +38,7 @@ Being able to perform the sentiment analysis involved the following:
 Wrangling Data
 --------------
 
-Good data is hard to find, but for my learning purposes, the `Yelp
-Academic Dataset`_ was a great place to start. The dataset contains
+Good data is hard to find, but for my learning purposes, the [Yelp Academic Dataset](https://www.yelp.com/academic_dataset) was a great place to start. The dataset contains
 more than 200,000 reviews for businesses clustered around 30
 universities. Even though the dataset contains reviews of many kinds
 of businesses, not just restaurants, a cursory review of the data
@@ -248,20 +247,20 @@ additional complication for the sake of clarity.
 Text Classification
 -------------------
 
-Bag of Words (BOW), which is a non-deep learning method, `often out-
-performs other more complicated models`_, especially where resources
+Bag of Words (BOW), which is a non-deep learning method, 
+[often out-performs other more complicated models]( https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-4-comparing-deep-and-non-deep-learning-methods), especially where resources
 are limited. Therefore, I initially set out to build a BOW classifier.
 
 If time allowed, I planned to explore distributed word vector
 techniques, like Google's word2vec algorithm, that are part of deep
 learning methods. Distributed word vector techinuqes are unsupervised
-but `require much more data`_ than BOW to make predictions more
+but [require much more data](https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-2-word-vectors) than BOW to make predictions more
 accurate than BOW.
 
-Also of note from my research on text classification is that `recent
-work out of Stanford`_ has applied deep learning to sentiment analysis
+Also of note from my research on text classification is that [recent work out of Stanford](http://nlp.stanford.edu/sentiment/) has applied deep learning to sentiment analysis
 using sentence parsing and a Paragraph Vector algorithm, which
 preserves word-order information.
+
 **Armadanno Supervising my Supervised Learning**
 ![Armadanno](https://cloud.githubusercontent.com/assets/1440268/11493684/1080d632-97b0-11e5-8f7e-b5bf6717269c.jpg)
 
@@ -309,18 +308,15 @@ as many libraries commonly used by data scientists as I could during
 our short project time.
 
 I had questions about what would be the best classifier for my task at
-hand. I had been watching Coursera videos for a `Natural Language
-Processing course`_ taught by Stanford instructors, and the videos,
+hand. I had been watching Coursera videos for a [Natural Language Processing course](https://www.coursera.org/course/nlp) taught by Stanford instructors, and the videos,
 while thought provoking, gave me more questions than answers on how to
 proceed.
 
-... And then one of the Hackbright TAs showed me this handy `Maching
-Learning Map`_ on the Scikit Learn website:
+... And then one of the Hackbright TAs showed me this handy [Machine Learning Map](http://scikit-learn.org/stable/tutorial/machine_learning_map/) on the Scikit Learn website:
 **Finding the Right Estimator for the Job**
 ![ml_map](https://cloud.githubusercontent.com/assets/1440268/11493695/1fcc35be-97b0-11e5-9699-e8081880cdea.png)
 
-With a literal road map in hand, I proceded to work through `this
-sklearn tutorial`_, using the 20 Newsgroups Dataset. I learned about
+With a literal road map in hand, I proceded to work through [this sklearn tutorial](http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html), using the 20 Newsgroups Dataset. I learned about
 extracting features using sklearn's CountVectorizer, which, once
 fitted, contains a dictionary of feature indices. The tutorial also
 introduced me to the concept of term-frequence inverse-document-
@@ -344,7 +340,7 @@ proceed.
 **Cross Validation Slide from Stanford NLP Coursera Course**
 ![cv](https://cloud.githubusercontent.com/assets/1440268/11493690/17f4231a-97b0-11e5-99c5-348bc82ec597.png)
 Enter the same awesome Hackbright TA, who pointed me in the direction
-of scikit's `Cross Validation module`_. Once I figured out how to
+of scikit's [Cross Validation module](http://scikit-learn.org/stable/modules/cross_validation.html). Once I figured out how to
 implement KFold, I was able to assess my initial model's performance.
 
 At last, after a week of reading and researching, tinkering and
@@ -355,7 +351,7 @@ training, I was ready to dive into coding up my own classifier.
 Preprocessing
 -------------
 
-Scikit's CountVectorizer `can be customized`_ to add token-level
+Scikit's CountVectorizer [can be customized](http://scikit-learn.org/stable/modules/feature_extraction.html) to add token-level
 analysis, which was a breakthrough realization for me:
 "Stemming, lemmatizing, compound splitting, filtering based on POS,
 etc. are not included in sklearn but can be added by customizing
@@ -392,11 +388,9 @@ To Stem, or Not To Stem
 -----------------------
 
 Although Scikit's CountVectorizer allows for incorporation of stemming
-and lemmatization, after doing on research on the `Stanford NLP
-website`_, I decided against doing so because there is not much to be
+and lemmatization, after doing on research on the [Stanford NLP website](http://nlp.stanford.edu/IR-book/html/htmledition/stemming-and-lemmatization-1.html), I decided against doing so because there is not much to be
 gained for English text analysis.
-Rather than using a stemmer, you can use a lemmatizer , a tool from
-Natural Language Processing which does full morphological analysis to
+> Rather than using a stemmer, you can use a lemmatizer , a tool from Natural Language Processing which does full morphological analysis to
 accurately identify the lemma for each word. Doing full morphological
 analysis produces at most very modest benefits for retrieval. It is
 hard to say more, because either form of normalization tends not to
@@ -405,27 +399,21 @@ least not by very much. While it helps a lot for some queries, it
 equally hurts performance a lot for others. Stemming increases recall
 while harming precision. As an example of what can go wrong, note that
 the Porter stemmer stems all of the following words:
-
 operate operating operates operation operative operatives operational
-
 to oper. However, since operate in its various forms is a common verb,
 we would expect to lose considerable precision on queries such as the
 following with Porter stemming:
-
 operational and research
-
 operating and system
-
 operative and dentistry
 
-For a case like this, moving to using a lemmatizer would not
-completely fix the problem because particular inflectional forms are
+> For a case like this, moving to using a lemmatizer would not completely fix the problem because particular inflectional forms are
 used in particular collocations: a sentence with the words operate and
 system is not a good match for the query operating and system. Getting
 better value from term normalization depends more on pragmatic issues
 of word use than on formal issues of linguistic morphology.
 
-The situation is different for languages with much more morphology
+> The situation is different for languages with much more morphology
 (such as Spanish, German, and Finnish). Results in the European CLEF
 evaluations have repeatedly shown quite large gains from the use of
 stemmers (and compound splitting for languages like German).
@@ -436,7 +424,8 @@ Extracting Features
 -------------------
 
 The accuracy of a Bag-of-Words classifier, such as a Multinomial Naive
-Bayes classifier, `can be greatly improved`_ by improving the features
+Bayes classifier, [can be greatly improved](http://streamhacker.com/2010/06/16/text-classification-sentiment-analysis-eliminate-low-information-features/)
+ by improving the features
 vectors using NLTK to remove stop words and improve tokenization while
 still using sklearn classifiers. I decided to use the Chi-square
 metric to determine the most useful features and to measure accuracy,
@@ -451,16 +440,16 @@ training on only the "most important" features. A "weaker" classifier
 is limited. Chi-square is a test of feature independence.
 
 From the Stanford NLP site on Feature Selection:
-We can view feature selection as a method for replacing a complex
+> We can view feature selection as a method for replacing a complex
 classifier (using all features) with a simpler one (using a subset of
 the features). It may appear counterintuitive at first that a
 seemingly weaker classifier is advantageous in statistical text
 classification, but when discussing the bias-variance tradeoff in
 Section 14.6, we will see that weaker models are often preferable when
 limited training data are available.
+
 From the Stanford NLP site on using Chi-squre for Feature Selection:
-From a statistical point of view, chi-square feature selection is
-problematic. [...] However, in text classification it rarely matters
+> From a statistical point of view, chi-square feature selection is problematic. [...] However, in text classification it rarely matters
 whether a few additional terms are added to the feature set or removed
 from it. Rather, the relative importance of features is important. As
 long as chi-square feature selection only ranks features with respect
@@ -516,8 +505,7 @@ For the first couple of weeks of my project, I was working with a
 single label classifier. That is, given a document, my classifier
 would return a single category that it predicted as the best category
 for that text. And then, at the beginning of Week 4 of project time --
-of 4 available weeks -- I had an epiphany. It was a `multilabel
-classifier`_ that I *truly* wanted, because I wanted my classifier to
+of 4 available weeks -- I had an epiphany. It was a [multilabel classifier](http://scikit-learn.org/stable/modules/multiclass.html) that I *truly* wanted, because I wanted my classifier to
 return not a SINGLE label but MANY labels for a given document. After
 all, a restaurant could potentially accommodate or alienate people
 with varying dietary needs!
@@ -556,22 +544,26 @@ A whole lot.
 TLDR; Multinominal Naive Bayes really does perform well. I had worked
 with a LinearSVC classifier, which had slightly better performance
 than the Naive Bayes model. The disadvantage of LinearSVC, however,
-was that `I could not extract a probability score for the
-prediction.`_
+was that [I could not extract a probability score for the prediction.]( http://stackoverflow.com/questions/26478000/converting-linearsvcs-decision-function-to-probabilities-scikit-learn-python)
 
 According to the wisdom that is Stack Overflow:
-... libsvm will train a probability transformation model on top of the
+
+> ... libsvm will train a probability transformation model on top of the
 SVM's outputs based on idea of Platt Scaling. ...I actually don't know
-why this post-processing is not available for LinearSVC. Otherwise,
-you would just call predict_proba(X) to get the probability estimate.
--- greeness It's not available because it isn't built into Liblinear,
+ why this post-processing is not available for LinearSVC. Otherwise,
+ you would just call predict_proba(X) to get the probability estimate.
+-- greeness 
+
+And also this:
+> It's not available because it isn't built into Liblinear,
 which implements LinearSVC, and also because LogisticRegression is
 already available (though linear SVM + Platt scaling might have some
 benefits over straight LR, I never tried that). The Platt scaling in
 SVC comes from LibSVM. – larsmans
+
 Therefore, for what I wanted to do, I needed to use MultinomialNB for
 my sentiment classifiers. However, were I to have more data and more
-time, Random Forest `could be a superior choice`_.
+time, Random Forest [could be a superior choice](http://www.ijcsit.com/docs/Volume%205/vol5issue05/ijcsit2014050557.pdf).
 
 
 
@@ -579,7 +571,7 @@ Sentiment Analysis with Python
 ------------------------------
 
 What inspired me to learn about text classification and sentiment
-analysis was a `blog post on indico.io`_ I read pre-Hackbright (even
+analysis was a [blog post on indico.io](https://indico.io/blog/plotlines/) I read pre-Hackbright (even
 before I was planning to apply to Hackbright) about the shape of
 stories.
 
@@ -598,33 +590,28 @@ technical topic, my choice was clear -- I wanted to learn about
 sentiment analysis and about NLTK. After much learning and several
 iterations of my presentation -- from a high-level discussion of NLTK
 to a detailed discussion on NLTK back to a high-level discussion of
-sentiment analysis -- I gave `this talk`_, which laid a solid
+sentiment analysis -- I gave [this talk](https://docs.google.com/presentation/d/1qLbHFT345-TR2DB9-wFkLJHxNxy4GlVUkfpSprlTLRE/edit?usp=sharing), which laid a solid
 foundation for my understanding of sentiment analysis. Enjoy!
 
 
 
-.. _this talk: https://docs.google.com/presentation/d/1qLbHFT345-TR2DB9-wFkLJHxNxy4GlVUkfpSprlTLRE/edit?usp=sharing
-.. _Business: /analytics#area3
-.. _this sklearn tutorial: http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
-.. _Cross Validation: /nlp#cross-validation
-.. _can be greatly improved: http://streamhacker.com/2010/06/16/text-classification-sentiment-analysis-eliminate-low-information-features/
-.. _could be a superior choice: http://www.ijcsit.com/docs/Volume%205/vol5issue05/ijcsit2014050557.pdf
-.. _Regional: /analytics#forceregion
-.. _Stanford NLP website: http://nlp.stanford.edu/IR-book/html/htmledition/stemming-and-lemmatization-1.html
-.. _often out-performs other more complicated models: https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-4-comparing-deep-and-non-deep-learning-methods
-.. _require much more data: https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-2-word-vectors
-.. _I could not extract a probability score for the prediction.: http://stackoverflow.com/questions/26478000/converting-linearsvcs-decision-function-to-probabilities-scikit-learn-python
-.. _Natural Language Processing course: https://www.coursera.org/course/nlp
-.. _can be customized: http://scikit-learn.org/stable/modules/feature_extraction.html
-.. _need: /nlp#motivation
-.. _FiveThirtyEight: http://localhost:5000/analytics
-.. _multilabel classifier: http://scikit-learn.org/stable/modules/multiclass.html
-.. _Maching Learning Map: http://scikit-learn.org/stable/tutorial/machine_learning_map/
-.. _recent work out of Stanford: http://nlp.stanford.edu/sentiment/
-.. _Cross Validation module: http://scikit-learn.org/stable/modules/cross_validation.html
-.. _blog post on indico.io: https://indico.io/blog/plotlines/
-.. _Local: /analytics#treemap
-.. _Yelp Academic Dataset: https://www.yelp.com/academic_dataset
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

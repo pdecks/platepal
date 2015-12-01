@@ -3,6 +3,15 @@ input#srch-terms.form-control, input#srch-loc.form-control{
     width: 50%;
 }
 
+article{
+    padding-bottom: 25px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid gray;
+}
+
+article#sentiment-analysis{
+    border-bottom: 0px solid gray;
+}
 .footer {
     padding-top: 25px;
     text-align: center;

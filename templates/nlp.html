@@ -191,7 +191,8 @@ PlatePal: Sentiment Analysis
         margin-left:auto;margin-right:auto;margin-bottom:50px;">
       </figure>
       
-
+    </article>
+    <article id="scratch">
       <h4>Warming Up for Scikit-Learn: Buidling a Naive Classifier from Scratch</h4>
         <p>As I initially explored the problem of text classification, I first worked through document classification algorithms described in "Programming Collective Intelligence" by Toby Segaram. Chapter 6 of that book, "Document Filtering", provides a walkthrough of document classification through the lens of filtering spam emails.</p>
         <p>This book instructs the reader on the following:
@@ -215,7 +216,8 @@ PlatePal: Sentiment Analysis
           <img src="/static/img/naive_fisher.jpg" style="width:50%;border: 1px solid black; display:block;
           margin-left:auto;margin-right:auto;margin-bottom:50px;">
         </figure>
-        
+    </article>
+    <article id="scikit">
         <h4>Breaking Out the Big Guns: Scikit Learn</h4>
         <p>Although the algorithms presented in "Programming Collective Intelligence" were a good starting point for learning about text classification, I knew that I wanted to use more powerful Python tools, specifically the Natural Language Toolkit (NLTK) and Scikit Learn. Being interested in Data Science, I wanted to experiment with as many libraries commonly used by data scientists as I could during our short project time.</p>
         <p>I had questions about what would be the best classifier for my task at hand. I had been watching Coursera videos for a <a href="https://www.coursera.org/course/nlp">Natural Language Processing course</a> taught by Stanford instructors, and the videos, while thought provoking, gave me more questions than answers on how to proceed.</p>
@@ -227,6 +229,8 @@ PlatePal: Sentiment Analysis
           margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
         </figure>
         <p>With a literal road map in hand, I proceded to work through <a href="http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html">this sklearn tutorial</a>, using the 20 Newsgroups Dataset. I learned about extracting features using sklearn's CountVectorizer, which, once fitted, contains a dictionary of feature indices. The tutorial also introduced me to the concept of term-frequence inverse-document-frequency (TF-IDF) weighting. I had been curious about how to emphasize the uniqueness of certain words, and TF-IDF seemed like a sensible way to weight my features.</p>
+      </article>
+      <article id="cross-validation">
         <p>Perhaps the most important takeaway from the scikit tutorial was learning how to evaluate the performance of my classifier. Being familiar with the concept of garbage in, garbage out, I sought to make sure that I was building something that didn't just work but worked well. The tutorial presented a simple evaluation of the model's predictive accuracy using numpy as well as scikit's built-in metrics for a more detailed performance analysis.</p>
         <p>And then I learned about cross validation.</p>
         <p>The Stanford NLP Coursera videos first introduced me to the concept of cross validation, but, again, it left me feeling uncertain of how to proceed.</p>
@@ -239,7 +243,8 @@ PlatePal: Sentiment Analysis
         <p>Enter the same awesome Hackbright TA, who pointed me in the direction of scikit's <a href="http://scikit-learn.org/stable/modules/cross_validation.html">Cross Validation module</a>. Once I figured out how to implement KFold, I was able to assess my initial model's performance.</p>
         <p>At last, after a week of reading and researching, tinkering and training, I was ready to dive into coding up my own classifier.</p>
 
-
+      </article>
+      <article id="text-processing">
         <h4>Preprocessing </h4>
           <p>Scikit's CountVectorizer <a href="http://scikit-learn.org/stable/modules/feature_extraction.html">can be customized</a> to add token-level analysis, which was a breakthrough realization for me:</p>
           <blockquote cite="http://scikit-learn.org/stable/modules/feature_extraction.html">
@@ -283,103 +288,114 @@ PlatePal: Sentiment Analysis
           <blockquote cite="http://nlp.stanford.edu/IR-book/html/htmledition/assessing-as-a-feature-selection-methodassessing-chi-square-as-a-feature-selection-method-1.html">
             From a statistical point of view, chi-square feature selection is problematic. [...] However, in text classification it rarely matters whether a few additional terms are added to the feature set or removed from it. Rather, the relative importance of features is important. As long as chi-square feature selection only ranks features with respect to their usefulness and is not used to make statements about statistical dependence or independence of variables, we need not be overly concerned that it does not adhere strictly to statistical theory.
           </blockquote>
-   
+      </article>
+      <article id="matplotlib">
         <h4>Experimenting with Matplotlib</h4>
-        <p>
-        <h6>Author's Reviews: Classification</h6>
-          <figure>
-          <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-          margin-bottom: 15px;"><b>Exploring the Story Plotline for "The Lion King"</b></figcaption>
-          <a href="https://www.coursera.org/course/nlp"><img src="/static/img/overlay-LK.gif" style="width:50%;border: 1px solid black; display:block;
-          margin-left:auto;margin-right:auto;margin-bottom:50px;"></a>
+        <p>As I worked on implementing <a href="/nlp#cross-validation">Cross Validation</a> on my toy dataset of 45 reviews that I had personally authored, I realized that some plots would help me better understand my classifier's performance. I first implemented some nicely styled plots for one k-value at a time (i.e., K = 2) that were formatted similar to graphs on <a href="http://localhost:5000/analytics">FiveThirtyEight</a>:</p> 
+        <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;">Author Reviews, K=2</figcaption>
+          <img src="/static/img/k2_toyset.png" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;">
+        </figure>
+        
+        <figure>
+         <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;">Author Reviews, K=3</figcaption>
+          <img src="/static/img/k3_toyset.png" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;">
         </figure>
 
-              <figure>
-                 <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, K=2</figcaption>
-                <img src="/static/img/k2_toyset.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
-              
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, K=3</figcaption>
-                <img src="/static/img/k3_toyset.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
+        <figure>
+         <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+          margin-bottom: 15px;">Author Reviews, K=4</figcaption>
+          <img src="/static/img/k4_toyset.png" style="width:50%;border: 1px solid black; display:block;
+          margin-left:auto;margin-right:auto;margin-bottom:50px;">
+        </figure>
+        <p>But the real power of these plots would be in comparing the results across different numbers of folds. BEHOLD! Subplots!</p>         
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Author Reviews, K=4 thru K=10</figcaption>
+            <img src="/static/img/k4-10_toyset_subplots.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
 
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, K=4</figcaption>
-                <img src="/static/img/k4_toyset.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
+        <p>Eventually, when I was ready to work with the Yelp dataset, these plots became extremely helpful.</p>
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Yelp "Gluten" Dataset: Vectorizer for Categorization</figcaption>
+            <img src="/static/img/k2-10_yelpgltn_onePlot.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
 
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, K=4 thru K=10</figcaption>
-                <img src="/static/img/k4-10_toyset_subplots.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Yelp "Gluten" Dataset: Vectorizer for Categorization</figcaption>
+            <img src="/static/img/k2-10_yelpgltn_subplots.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
 
-              <h6>Yelp Academic Dataset: Classification</h6>
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, ???</figcaption>
-                <img src="/static/img/k2-10_yelpgltn_onePlot.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Toy Dataset: Vectorizer for Sentiment Analysis</figcaption>
+            <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
 
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, ???</figcaption>
-                <img src="/static/img/k2-10_yelpgltn_subplots.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Toy Dataset: Vectorizer for Sentiment Analysis</figcaption>
+            <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
 
-              <h6>Yelp Academic Dataset: Sentiment</h6>
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, ???</figcaption>
-                <img src="/static/img/sentiment_5-1_gltn_k2-10_onePlot.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Yelp "Gluten" Dataset: Vectorizer for Sentiment Analysis</figcaption>
+            <img src="/static/img/sentiment_gltn_k2-10_onePlot.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
 
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, ???</figcaption>
-                <img src="/static/img/sentiment_5-1_gltn_k2-10_subPlots.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
-
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, ???</figcaption>
-                <img src="/static/img/sentiment_gltn_k2-10_onePlot.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
-
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Author Reviews, ???</figcaption>
-                <img src="/static/img/sentiment_gltn_k2-10_subPlots.png" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
-              
+          <figure>
+           <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+            margin-bottom: 15px;">Yelp "Gluten" Dataset: Vectorizer for Sentiment Analysis</figcaption>
+            <img src="/static/img/sentiment_gltn_k2-10_subPlots.png" style="width:50%;border: 1px solid black; display:block;
+            margin-left:auto;margin-right:auto;margin-bottom:50px;">
+          </figure>
+      </article>
               
 
+    <article>
+    <h4>Picking a Categorization Classifier: Multi-label vs. Single-label</h4>
+    <p>The problem that I initially set out to solve -- determining the "goodness" of a restaurant review for a dietary need -- requires first identifying relevant reviews for that dietary need. Hence the <a href="/nlp#motivation">need</a> for a document classifier that would categorize reviews.</p>
+    <p>For the first couple of weeks of my project, I was working with a single label classifier. That is, given a document, my classifier would return a single category that it predicted as the best category for that text. And then, at the beginning of Week 4 of project time -- of 4 available weeks -- I had an epiphany. It was a <a href="http://scikit-learn.org/stable/modules/multiclass.html">multilabel classifier</a> that I <em>truly</em> wanted, because I wanted my classifier to return not a SINGLE label but MANY labels for a given document. After all, a restaurant could potentially accommodate or alienate people with varying dietary needs!</p>
+    <blockquote cite="http://scikit-learn.org/stable/modules/multiclass.html">
+      Multilabel classification assigns to each sample a set of target labels. This can be thought as predicting properties of a data-point that are not mutually exclusive, such as topics that are relevant for a document. A text might be about any of religion, politics, finance or education at the same time or none of these.
+    </blockquote>
+    <p>So I thought about how to come up with a way to store multiple labels with my existing data model. It was too late to drop tables and reseed most of my database. My computer was literally tired of seeding tables. (It nearly died in Week 2 of project time when I had the CPU crunching away at capacity for many hours a day over many days.)</p>
+      <figure>
+       <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
+        margin-bottom: 15px;">Thinking about Binarizing my Multilabel Classifier</figcaption>
+        <img src="/static/img/IMG_4624.jpg" style="width:50%;border: 1px solid black; display:block;
+        margin-left:auto;margin-right:auto;margin-bottom:50px;">
+      </figure>
+    <p>In the end, I experimented with using a OneVsRestClassifier built with a RandomForest classifier, because scikit so helpfully summarized classifiers capable of multiclass and classifiers supporting multilabel classification.</p>
+  </article>
+  <article>
+    <h4>Picking a Sentiment Analysis Classifier </h4>
+    <p>So, after all of this, what did I learn about the performance of different classifiers for the problems of categorization and sentiment analysis?</p>
+    <p>A whole lot.</p>
+    <p>TLDR; Multinominal Naive Bayes really does perform well. I had worked with a LinearSVC classifier, which had slightly better performance than the Naive Bayes model. The disadvantage of LinearSVC, however, was that <a href="http://stackoverflow.com/questions/26478000/converting-linearsvcs-decision-function-to-probabilities-scikit-learn-python">I could not extract a probability score for the prediction.</a></p>
+    <p>According to the wisdom that is Stack Overflow:</p>
+      <blockquote>... libsvm will train a probability transformation model on top of the SVM's outputs based on idea of Platt Scaling. ...I actually don't know why this post-processing is not available for LinearSVC. Otherwise, you would just call predict_proba(X) to get the probability estimate. -- greeness
+      </blockquote>
+      <blockquote>
+      It's not available because it isn't built into Liblinear, which implements LinearSVC, and also because LogisticRegression is already available (though linear SVM + Platt scaling might have some benefits over straight LR, I never tried that). The Platt scaling in SVC comes from LibSVM. – larsmans
+      </blockquote>
+    <p>Therefore, for what I wanted to do, I needed to use MultinomialNB for my sentiment classifiers. However, were I to have more data and more time, Random Forest <a href="http://www.ijcsit.com/docs/Volume%205/vol5issue05/ijcsit2014050557.pdf">could be a superior choice</a>.</p>
+    
 
-          <h4>Picking a Classifier </h4>
-            <h5>MultinomialNB vs. LinearSVC </h5>
-          <h4>Multi-label vs. Single-label</h4>
-              <figure>
-               <figcaption style="display:block;text-align:center;margin-left:auto;margin-right:auto;margin-top: 25px;
-                margin-bottom: 15px;">Thinking about Binarizing my Multilabel Classifier</figcaption>
-                <img src="/static/img/IMG_4624.jpg" style="width:50%;border: 1px solid black; display:block;
-                margin-left:auto;margin-right:auto;margin-bottom:50px;">
-              </figure>
-              
-
+    
               <!-- <h5>Categorization</h5> -->
               <!-- <p> categorizing reviews into one of five categories. -->
               <!-- </p> -->
@@ -395,7 +411,9 @@ PlatePal: Sentiment Analysis
               <h5>Classifying as "good" or "bad"
  -->            
               
-            
+    </article>
+
+    <article id="sentiment-analysis">
         <h4> Sentiment Analysis with Python</h4>
         <p>What inspired me to learn about text classification and sentiment analysis was a <a href="https://indico.io/blog/plotlines/">blog post on indico.io</a> I read pre-Hackbright (even before I was planning to apply to Hackbright) about the shape of stories.</p>
         <p>The author Kurt Vonnegut, whose novels include Breakfast of Champions and Cat’s Cradle, surmised that a story’s shape can be graphed following the main character’s ups (good fortune) and downs (ill fortune). The indico.io post applied this concept to several Disney movies, comparing the plotlines to see how formulaic Disney plots can be.</p>

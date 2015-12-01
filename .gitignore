@@ -19,3 +19,6 @@ plots/
 templates/state-old.html
 static/tsv/
 static/js/generateColors.js
+_build
+_static
+_templates

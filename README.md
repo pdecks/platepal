@@ -46,7 +46,14 @@ of businesses, not just restaurants, a cursory review of the data
 indicated that there were enough relevant reviews to explore my
 project's concept. In addition to reviews, the dataset also contains
 business and user information.
-**Querying the Database: finding relevant reviews.**
+
+.. figure:: /static/img/SQL_queries_light.png
+    :width: 50%
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
+    
+    Querying the Database: finding relevant reviews.
 
 
 Working up to Big Data

@@ -47,13 +47,10 @@ indicated that there were enough relevant reviews to explore my
 project's concept. In addition to reviews, the dataset also contains
 business and user information.
 
-.. figure:: /static/img/SQL_queries_light.png
-    :width: 50%
-    :align: center
-    :alt: alternate text
-    :figclass: align-center
-    
-    Querying the Database: finding relevant reviews.
+**Querying the Database: finding relevant reviews.**
+![sql_queries_light](https://cloud.githubusercontent.com/assets/1440268/11493714/352b6b0a-97b0-11e5-8579-3886f73dec1a.png)
+
+
 
 
 Working up to Big Data
@@ -104,6 +101,8 @@ classifying each review twice:
 + Categorize the review for a dietary need (e.g. "vegan", "unknown").
 + Score the "goodness" of the review for each relevant dietary need.
 
+**Outlining my Text Processing Process**
+![classify_score](https://cloud.githubusercontent.com/assets/1440268/11493686/1429cfbe-97b0-11e5-926d-7118b24b1cf6.jpg)
 
 Categorizing Reviews
 --------------------
@@ -147,7 +146,7 @@ The goals:
    restaurants by category.
 
 **First Pass at a Data Model.** Things get much more complicated.
-
+![img_4563](https://cloud.githubusercontent.com/assets/1440268/11493691/1b23c6f8-97b0-11e5-81ec-0ffe1010aa32.JPG)
 
 Yelp Businesses, Reviews, and Users Tables
 ------------------------------------------
@@ -241,7 +240,9 @@ Sentences and Categories, SentenceCategories (aka SentCats).
 I debated whether or not to indirectly link SentCats to RevCats
 through another table, ReviewSents, but decided against this
 additional complication for the sake of clarity.
+
 **Tables for Sentiment Analysis.** Many-to-many Relationships Galore!
+![img_4602](https://cloud.githubusercontent.com/assets/1440268/11493692/1b3bf57a-97b0-11e5-9255-95e0502b1e78.JPG)
 
 
 Text Classification
@@ -262,6 +263,7 @@ work out of Stanford`_ has applied deep learning to sentiment analysis
 using sentence parsing and a Paragraph Vector algorithm, which
 preserves word-order information.
 **Armadanno Supervising my Supervised Learning**
+![Armadanno](https://cloud.githubusercontent.com/assets/1440268/11493684/1080d632-97b0-11e5-8f7e-b5bf6717269c.jpg)
 
 
 Warming Up for Scikit-Learn: Buidling a Naive Classifier from Scratch
@@ -293,7 +295,7 @@ This book instructs the reader on the following:
 
 **Understanding the Differences between Naive Bayes and Fisher
 Method**
-
+![naive_fisher](https://cloud.githubusercontent.com/assets/1440268/11493700/23d81826-97b0-11e5-8933-e897bf51ee37.jpg)
 
 Breaking Out the Big Guns: Scikit Learn
 ---------------------------------------
@@ -314,7 +316,8 @@ proceed.
 
 ... And then one of the Hackbright TAs showed me this handy `Maching
 Learning Map`_ on the Scikit Learn website:
-**Finding the Right Estimator for the Job** ` `_
+**Finding the Right Estimator for the Job**
+![ml_map](https://cloud.githubusercontent.com/assets/1440268/11493695/1fcc35be-97b0-11e5-9699-e8081880cdea.png)
 
 With a literal road map in hand, I proceded to work through `this
 sklearn tutorial`_, using the 20 Newsgroups Dataset. I learned about
@@ -338,7 +341,8 @@ And then I learned about cross validation.
 The Stanford NLP Coursera videos first introduced me to the concept of
 cross validation, but, again, it left me feeling uncertain of how to
 proceed.
-**Cross Validation Slide from Stanford NLP Coursera Course** ` `_
+**Cross Validation Slide from Stanford NLP Coursera Course**
+![cv](https://cloud.githubusercontent.com/assets/1440268/11493690/17f4231a-97b0-11e5-99c5-348bc82ec597.png)
 Enter the same awesome Hackbright TA, who pointed me in the direction
 of scikit's `Cross Validation module`_. Once I figured out how to
 implement KFold, I was able to assess my initial model's performance.
@@ -474,17 +478,30 @@ As I worked on implementing `Cross Validation`_ on my toy dataset of
 would help me better understand my classifier's performance. I first
 implemented some nicely styled plots for one k-value at a time (i.e.,
 K = 2) that were formatted similar to graphs on `FiveThirtyEight`_:
-Author Reviews, K=2 Author Reviews, K=3 Author Reviews, K=4
+
+Author Reviews, K=2
+![k2_toyset](https://cloud.githubusercontent.com/assets/1440268/11493709/3076b646-97b0-11e5-9f97-221f49b64dd2.png)
+
+Author Reviews, K=3
+![k3_toyset](https://cloud.githubusercontent.com/assets/1440268/11493711/3238474c-97b0-11e5-9649-cd7df9516da6.png)
+
+Author Reviews, K=4
+![k4_toyset](https://cloud.githubusercontent.com/assets/1440268/11493712/323a9664-97b0-11e5-81a1-a320d2c79f15.png)
+
 But the real power of these plots would be in comparing the results
 across different numbers of folds. BEHOLD! Subplots!
+
 Author Reviews, K=4 thru K=10
+![k4-10_toyset_subplots](https://cloud.githubusercontent.com/assets/1440268/11493866/ec8bf08e-97b1-11e5-9502-4e7fb0c37a41.png)
+
 Eventually, when I was ready to work with the Yelp dataset, these
 plots became extremely helpful.
-Yelp "Gluten" Dataset: Vectorizer for Categorization Yelp "Gluten"
-Dataset: Vectorizer for Categorization Toy Dataset: Vectorizer for
-Sentiment Analysis Toy Dataset: Vectorizer for Sentiment Analysis Yelp
-"Gluten" Dataset: Vectorizer for Sentiment Analysis Yelp "Gluten"
-Dataset: Vectorizer for Sentiment Analysis
+
+Yelp "Gluten" Dataset: Vectorizer for Sentiment Analysis
+![sentiment_gltn_k2-10_oneplot](https://cloud.githubusercontent.com/assets/1440268/11493706/2e5bc78e-97b0-11e5-82d0-1bf99925efe3.png)
+Yelp "Gluten" Dataset: Vectorizer for Sentiment Analysis
+![sentiment_gltn_k2-10_subplots](https://cloud.githubusercontent.com/assets/1440268/11493707/2e5fd2f2-97b0-11e5-868e-49ab44d2f477.png)
+
 
 
 Picking a Categorization Classifier: Multi-label vs. Single-label
@@ -504,17 +521,22 @@ classifier`_ that I *truly* wanted, because I wanted my classifier to
 return not a SINGLE label but MANY labels for a given document. After
 all, a restaurant could potentially accommodate or alienate people
 with varying dietary needs!
+
 Multilabel classification assigns to each sample a set of target
 labels. This can be thought as predicting properties of a data-point
 that are not mutually exclusive, such as topics that are relevant for
 a document. A text might be about any of religion, politics, finance
 or education at the same time or none of these.
+
 So I thought about how to come up with a way to store multiple labels
 with my existing data model. It was too late to drop tables and reseed
 most of my database. My computer was literally tired of seeding
 tables. (It nearly died in Week 2 of project time when I had the CPU
 crunching away at capacity for many hours a day over many days.)
-Thinking about Binarizing my Multilabel Classifier
+
+**Thinking about Binarizing my Multilabel Classifier**
+![img_4624](https://cloud.githubusercontent.com/assets/1440268/11493693/1b3f4a2c-97b0-11e5-9a4e-1af7f34b7942.JPG)
+
 In the end, I experimented with using a OneVsRestClassifier built with
 a RandomForest classifier, because scikit so helpfully summarized
 classifiers capable of multiclass and classifiers supporting
@@ -567,7 +589,10 @@ following the main character’s ups (good fortune) and downs (ill
 fortune). The indico.io post applied this concept to several Disney
 movies, comparing the plotlines to see how formulaic Disney plots can
 be.
-**Exploring the Story Plotline for "The Lion King"** ` `_
+
+**Exploring the Story Plotline for "The Lion King"**
+![overlay-lk](https://cloud.githubusercontent.com/assets/1440268/11493701/25dec5e8-97b0-11e5-9561-9be354409fcc.gif)
+
 When it came time for me to give a lightning talk at Hackbright on a
 technical topic, my choice was clear -- I wanted to learn about
 sentiment analysis and about NLTK. After much learning and several
@@ -600,5 +625,13 @@ foundation for my understanding of sentiment analysis. Enjoy!
 .. _blog post on indico.io: https://indico.io/blog/plotlines/
 .. _Local: /analytics#treemap
 .. _Yelp Academic Dataset: https://www.yelp.com/academic_dataset
+
+
+
+
+
+
+
+
 
 

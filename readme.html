@@ -1,43 +1,3 @@
-{% extends 'base.html' %}
-
-{% block title %}
-PlatePal: Sentiment Analysis
-{% endblock%}
-
-{% block head %}
-
-{% endblock %}
-
-{% block location %}
-<nav class="navbar navbar-default" role="navigation">
-    <div >
-        <button type="button" class="citynav navbar-toggle" data-toggle="collapse" data-target="#citynav-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        </button>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="citynav-left">
-            <ol class="breadcrumb">
-              <li><a href="/analytics#forceregion">Regional</a></li>
-              <li><a href="/analytics#treemap">Local</a></li>
-              <li><a href="/analytics#area3">Business</a></li>
-            </ol>
-        </div>
-    </div>
-
-    <div class="collapse navbar-collapse" id="citynav-collapse">
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 citynav-right" >
-            <ol class="breadcrumb nearby">
-
-            <li><a href="/"></a></li>
-            
-            </ol>
-        </div>
-    </div>
-</nav> 
-
-<!-- <div class="analytics-outer">
 <!DOCTYPE html>
 <head>
 </head>
@@ -383,23 +343,7 @@ PlatePal: Sentiment Analysis
       It's not available because it isn't built into Liblinear, which implements LinearSVC, and also because LogisticRegression is already available (though linear SVM + Platt scaling might have some benefits over straight LR, I never tried that). The Platt scaling in SVC comes from LibSVM. – larsmans
       </blockquote>
     <p>Therefore, for what I wanted to do, I needed to use MultinomialNB for my sentiment classifiers. However, were I to have more data and more time, Random Forest <a href="http://www.ijcsit.com/docs/Volume%205/vol5issue05/ijcsit2014050557.pdf">could be a superior choice</a>.</p>
-    
-
-    
-              <!-- <h5>Categorization</h5> -->
-              <!-- <p> categorizing reviews into one of five categories. -->
-              <!-- </p> -->
-              <!-- <h5>Single-label classifier </h5>
-              <p> each review could only have one category,
-               each sentence could only have one category</p>
-               -->
-
-<!--               <h5>Multilabel Classifier </h5>
-                <h6>One vs. Rest</h6>
-                <h6>KMeans Clustering</h6>
-
-              <h5>Classifying as "good" or "bad"
- -->            
+        
               
     </article>
 
@@ -416,8 +360,7 @@ PlatePal: Sentiment Analysis
 
         <p>When it came time for me to give a lightning talk at Hackbright on a technical topic, my choice was clear -- I wanted to learn about sentiment analysis and about NLTK. After much learning and several iterations of my presentation -- from a high-level discussion of NLTK to a detailed discussion on NLTK back to a high-level discussion of sentiment analysis -- I gave <a href="https://docs.google.com/presentation/d/1qLbHFT345-TR2DB9-wFkLJHxNxy4GlVUkfpSprlTLRE/edit?usp=sharing">this talk</a>, which laid a solid foundation for my understanding of sentiment analysis. Enjoy!</h3>
     </article>
-</div> <!-- content block -->
-
+</div>
 
 
 </body>

@@ -18,6 +18,22 @@ Currently, PlatePal scores restaurants for the following categories:
 Gluten-Free, Vegan, Kosher, Allergy, and Paleo.
 
 
+Screenshots
+-----------
+###Landing Page
+![screen shot 2015-12-05 at 6 28 07 pm](https://cloud.githubusercontent.com/assets/1440268/11826393/08f5bef6-a33a-11e5-871c-078ab592a61e.png)
+###State Page
+![screen shot 2015-12-05 at 6 28 21 pm](https://cloud.githubusercontent.com/assets/1440268/11826399/09185092-a33a-11e5-84cd-a689d51752df.png)
+###Search Results Page
+![screen shot 2015-12-05 at 6 29 10 pm](https://cloud.githubusercontent.com/assets/1440268/11826395/0912ed5a-a33a-11e5-8254-16e531c0104f.png)
+###Link to Analytics
+![screen shot 2015-12-05 at 6 29 31 pm](https://cloud.githubusercontent.com/assets/1440268/11826398/091708ae-a33a-11e5-82ca-9d43e1339148.png)
+###D3 Force Layout
+![screen shot 2015-12-05 at 6 29 47 pm](https://cloud.githubusercontent.com/assets/1440268/11826397/09164dce-a33a-11e5-81b2-9a8fb168fa2b.png)
+###D3 Zoomable Sunburst
+![screen shot 2015-12-05 at 6 29 58 pm](https://cloud.githubusercontent.com/assets/1440268/11826396/091573e0-a33a-11e5-8060-b1458c25faf4.png)
+###D3 Scatterplot
+![screen shot 2015-12-05 at 6 30 19 pm](https://cloud.githubusercontent.com/assets/1440268/11826394/090cfcec-a33a-11e5-8206-733ee4df3d7b.png)
 
 Project Objectives
 ------------------
